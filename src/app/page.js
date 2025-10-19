@@ -53,7 +53,7 @@ export default function HomePage() {
           variants={itemVariants}
           className="text-5xl md:text-6xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
         >
-          KarirKu
+          H-Mate
         </motion.h1>
 
         <motion.p

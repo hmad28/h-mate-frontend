@@ -12,7 +12,7 @@ export default function KonsultasiPage() {
     {
       role: "assistant",
       content:
-        "Halo! Aku KarirKu AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
+        "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
     },
   ]);
   const [input, setInput] = useState("");
@@ -64,7 +64,7 @@ export default function KonsultasiPage() {
         {
           role: "assistant",
           content:
-            "Maaf, terjadi kesalahan. Coba lagi ya! Pastikan backend sudah running.",
+            "Maaf, saat ini sedang terjadi kesalahan. Mohon coba lagi sesaat ya!",
         },
       ]);
     } finally {

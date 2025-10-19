@@ -32,7 +32,7 @@ export default function TesMinatPage() {
       setStep("test");
     } catch (error) {
       console.error("Error generating questions:", error);
-      alert("Gagal generate pertanyaan. Pastikan backend running!");
+      alert("Gagal generate pertanyaan. Silakan coba lagi ya!");
       setStep("start");
     }
   };
