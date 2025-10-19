@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Loader2, ArrowLeft, Bot, User } from "lucide-react";
+import { Send, Loader2, ArrowLeft, Bot, User, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { sendConsultation } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
@@ -19,7 +19,6 @@ export default function KonsultasiPage() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Auto scroll ke bawah setiap ada message baru
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -35,13 +34,11 @@ export default function KonsultasiPage() {
     const userMessage = input.trim();
     setInput("");
 
-    // Tambah user message ke state
     const newMessages = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      // Kirim ke backend dengan history
       const history = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -49,7 +46,6 @@ export default function KonsultasiPage() {
 
       const response = await sendConsultation(userMessage, history);
 
-      // Tambah AI response ke state
       setMessages([
         ...newMessages,
         {
@@ -73,24 +69,66 @@ export default function KonsultasiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex flex-col">
+    <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, -50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+      <div className="bg-slate-900/50 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-10">
+        <div className="container mx-auto px-5 py-4 flex items-center gap-4">
           <Link href="/">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, x: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-slate-800/50 rounded-xl transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-slate-400" />
             </motion.button>
           </Link>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">
-              Konsultasi Karier
-            </h1>
-            <p className="text-sm text-gray-500">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-white">
+                Konsultasi Karier
+              </h1>
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                <Sparkles className="w-4 h-4 text-yellow-400" />
+              </motion.div>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
               Tanya apa aja seputar kariermu
             </p>
           </div>
@@ -98,99 +136,126 @@ export default function KonsultasiPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <AnimatePresence>
+      <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto relative z-10">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <AnimatePresence mode="popLayout">
             {messages.map((message, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{
+                  duration: 0.4,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
                 className={`flex gap-3 ${
                   message.role === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
               >
                 {/* Avatar */}
-                <div
-                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{
+                    delay: 0.1,
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 17,
+                  }}
+                  className={`flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center ${
                     message.role === "user"
-                      ? "bg-blue-500"
-                      : "bg-gradient-to-br from-purple-500 to-blue-500"
+                      ? "bg-yellow-500/20 border border-yellow-500/30"
+                      : "bg-slate-800/50 border border-slate-700/50"
                   }`}
                 >
                   {message.role === "user" ? (
-                    <User className="w-5 h-5 text-white" />
+                    <User className="w-5 h-5 text-yellow-400" />
                   ) : (
-                    <Bot className="w-5 h-5 text-white" />
+                    <Bot className="w-5 h-5 text-yellow-400" />
                   )}
-                </div>
+                </motion.div>
 
                 {/* Message Bubble */}
-                <div
-                  className={`flex-1 max-w-[80%] ${
+                <motion.div
+                  className={`flex-1 max-w-[85%] ${
                     message.role === "user"
-                      ? "bg-blue-500 text-white rounded-2xl rounded-tr-md"
-                      : "bg-white text-gray-800 rounded-2xl rounded-tl-md shadow-sm"
-                  } px-4 py-3`}
+                      ? "bg-yellow-500/10 border border-yellow-500/20 rounded-3xl rounded-tr-lg"
+                      : "bg-slate-900/50 border border-slate-800/50 rounded-3xl rounded-tl-lg"
+                  } px-5 py-4 backdrop-blur-sm`}
+                  whileHover={{ scale: 1.01 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
                   {message.role === "user" ? (
-                    <p className="whitespace-pre-wrap leading-relaxed">
+                    <p className="text-slate-100 whitespace-pre-wrap leading-relaxed text-sm">
                       {message.content}
                     </p>
                   ) : (
-                    <div className="prose prose-sm max-w-none">
+                    <div className="prose prose-sm prose-invert max-w-none">
                       <ReactMarkdown
                         components={{
-                          // Bold text styling
                           strong: ({ node, ...props }) => (
                             <strong
-                              className="font-bold text-purple-700"
+                              className="font-bold text-yellow-400"
                               {...props}
                             />
                           ),
-                          // Paragraph styling
                           p: ({ node, ...props }) => (
                             <p
-                              className="mb-3 last:mb-0 leading-relaxed"
+                              className="mb-3 last:mb-0 leading-relaxed text-slate-300 text-sm"
                               {...props}
                             />
                           ),
-                          // Ordered list (1. 2. 3.)
                           ol: ({ node, ...props }) => (
                             <ol
-                              className="list-decimal ml-5 mb-3 space-y-1"
+                              className="list-decimal ml-5 mb-3 space-y-2 text-slate-300"
                               {...props}
                             />
                           ),
-                          // Unordered list (bullets)
                           ul: ({ node, ...props }) => (
                             <ul
-                              className="list-disc ml-5 mb-3 space-y-1"
+                              className="list-disc ml-5 mb-3 space-y-2 text-slate-300"
                               {...props}
                             />
                           ),
-                          // List items
                           li: ({ node, ...props }) => (
-                            <li className="leading-relaxed" {...props} />
+                            <li
+                              className="leading-relaxed text-sm"
+                              {...props}
+                            />
                           ),
-                          // Code blocks (jika ada)
                           code: ({ node, inline, ...props }) =>
                             inline ? (
                               <code
-                                className="bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded text-sm"
+                                className="bg-yellow-500/10 text-yellow-300 px-2 py-0.5 rounded-lg text-sm border border-yellow-500/20"
                                 {...props}
                               />
                             ) : (
                               <code
-                                className="block bg-gray-100 p-3 rounded-lg text-sm overflow-x-auto"
+                                className="block bg-slate-800/50 p-4 rounded-xl text-sm overflow-x-auto border border-slate-700/50 text-slate-300"
                                 {...props}
                               />
                             ),
-                          // Emphasis (italic)
                           em: ({ node, ...props }) => (
-                            <em className="italic text-gray-700" {...props} />
+                            <em className="italic text-slate-400" {...props} />
+                          ),
+                          h1: ({ node, ...props }) => (
+                            <h1
+                              className="text-xl font-bold text-white mb-3 mt-4"
+                              {...props}
+                            />
+                          ),
+                          h2: ({ node, ...props }) => (
+                            <h2
+                              className="text-lg font-bold text-white mb-2 mt-3"
+                              {...props}
+                            />
+                          ),
+                          h3: ({ node, ...props }) => (
+                            <h3
+                              className="text-base font-bold text-white mb-2 mt-2"
+                              {...props}
+                            />
                           ),
                         }}
                       >
@@ -198,7 +263,7 @@ export default function KonsultasiPage() {
                       </ReactMarkdown>
                     </div>
                   )}
-                </div>
+                </motion.div>
               </motion.div>
             ))}
           </AnimatePresence>
@@ -208,15 +273,33 @@ export default function KonsultasiPage() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
               className="flex gap-3"
             >
-              <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <div className="bg-white rounded-2xl rounded-tl-md shadow-sm px-4 py-3">
-                <div className="flex items-center gap-2 text-gray-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Sedang berpikir...</span>
+              <motion.div
+                className="flex-shrink-0 w-10 h-10 rounded-2xl flex items-center justify-center bg-slate-800/50 border border-slate-700/50"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <Bot className="w-5 h-5 text-yellow-400" />
+              </motion.div>
+              <div className="bg-slate-900/50 border border-slate-800/50 rounded-3xl rounded-tl-lg px-5 py-4 backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
+                  >
+                    <Loader2 className="w-4 h-4" />
+                  </motion.div>
+                  <span className="text-sm">Sedang berpikir...</span>
                 </div>
               </div>
             </motion.div>
@@ -227,34 +310,63 @@ export default function KonsultasiPage() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white/80 backdrop-blur-sm border-t border-gray-200 sticky bottom-0">
+      <div className="bg-slate-900/50 backdrop-blur-xl border-t border-slate-800/50 sticky bottom-0 z-10">
         <div className="container mx-auto px-4 py-4">
-          <form
-            onSubmit={handleSubmit}
-            className="max-w-3xl mx-auto flex gap-3"
-          >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Tanya seputar karier, skill, atau edukasi..."
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              disabled={isLoading}
-            />
+          <div className="max-w-3xl mx-auto flex gap-3">
+            <motion.div
+              className="flex-1 relative"
+              whileFocus={{ scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="Tanya seputar karier, skill, atau edukasi..."
+                className="w-full px-5 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-yellow-500/50 focus:bg-slate-800/70 transition-all text-sm"
+                disabled={isLoading}
+              />
+            </motion.div>
             <motion.button
-              type="submit"
+              type="button"
+              onClick={handleSubmit}
               disabled={!input.trim() || isLoading}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-5 py-3.5 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:bg-slate-800/30 disabled:border-slate-700/30 disabled:text-slate-600 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 min-w-[56px]"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 1,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Loader2 className="w-5 h-5" />
+                </motion.div>
               ) : (
                 <Send className="w-5 h-5" />
               )}
             </motion.button>
-          </form>
+          </div>
+
+          {/* Hint text */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center text-xs text-slate-600 mt-3"
+          >
+            Tekan Enter untuk mengirim
+          </motion.p>
         </div>
       </div>
     </div>

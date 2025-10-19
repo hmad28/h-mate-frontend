@@ -8,23 +8,28 @@ import {
   CheckCircle2,
   ChevronRight,
   ChevronLeft,
+  Target,
+  Sparkles,
+  TrendingUp,
+  Lightbulb,
+  Rocket,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { generateQuestions, analyzeResults } from "@/lib/api";
 
 export default function TesMinatPage() {
-  const router = useRouter();
-  const [step, setStep] = useState("start"); // 'start', 'loading', 'test', 'analyzing', 'result'
+  const [step, setStep] = useState("start");
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [selectedOption, setSelectedOption] = useState(null);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
-  // Generate questions saat tombol mulai ditekan
   const handleStartTest = async () => {
     setStep("loading");
+    setError(null);
 
     try {
       const response = await generateQuestions(10);
@@ -32,12 +37,11 @@ export default function TesMinatPage() {
       setStep("test");
     } catch (error) {
       console.error("Error generating questions:", error);
-      alert("Gagal generate pertanyaan. Silakan coba lagi ya!");
-      setStep("start");
+      setError("Gagal generate pertanyaan. Silakan coba lagi ya!");
+      setStep("error");
     }
   };
 
-  // Handle jawab pertanyaan
   const handleAnswer = () => {
     if (!selectedOption) return;
 
@@ -53,16 +57,13 @@ export default function TesMinatPage() {
     setAnswers(newAnswers);
     setSelectedOption(null);
 
-    // Cek apakah sudah selesai semua
     if (currentQuestionIndex === questions.length - 1) {
-      // Analisis hasil
       analyzeTest(newAnswers);
     } else {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
-  // Analisis hasil tes
   const analyzeTest = async (finalAnswers) => {
     setStep("analyzing");
 
@@ -77,7 +78,6 @@ export default function TesMinatPage() {
     }
   };
 
-  // Back to previous question
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
@@ -93,23 +93,67 @@ export default function TesMinatPage() {
       : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, -50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+      <div className="bg-slate-900/50 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-10">
+        <div className="container mx-auto px-5 py-4 flex items-center gap-4">
           <Link href="/">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, x: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-slate-800/50 rounded-xl transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-slate-400" />
             </motion.button>
           </Link>
-          <div>
-            <h1 className="text-xl font-bold text-gray-800">Tes Minat Bakat</h1>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-white">Tes Minat Bakat</h1>
+              {step !== "start" && step !== "loading" && (
+                <motion.div
+                  animate={{ rotate: [0, 360] }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Target className="w-4 h-4 text-yellow-400" />
+                </motion.div>
+              )}
+            </div>
             {step === "test" && (
-              <p className="text-sm text-gray-500">
+              <p className="text-xs text-slate-400 mt-0.5">
                 Pertanyaan {currentQuestionIndex + 1} dari {questions.length}
               </p>
             )}
@@ -119,7 +163,7 @@ export default function TesMinatPage() {
         {/* Progress Bar */}
         {step === "test" && (
           <motion.div
-            className="h-1 bg-gradient-to-r from-purple-500 to-blue-500"
+            className="h-1 bg-gradient-to-r from-yellow-500 to-yellow-400"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.3 }}
@@ -127,7 +171,7 @@ export default function TesMinatPage() {
         )}
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <AnimatePresence mode="wait">
           {/* START SCREEN */}
           {step === "start" && (
@@ -136,26 +180,38 @@ export default function TesMinatPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
               className="max-w-2xl mx-auto text-center"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-8 md:p-12">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 className="w-10 h-10 text-white" />
-                </div>
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8 md:p-12">
+                <motion.div
+                  className="w-20 h-20 bg-yellow-500/20 border border-yellow-500/30 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                  animate={{
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Target className="w-10 h-10 text-yellow-400" />
+                </motion.div>
 
-                <h2 className="text-3xl font-bold text-gray-800 mb-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
                   Siap Temukan Karier Impianmu?
                 </h2>
 
-                <p className="text-gray-600 mb-8 leading-relaxed">
+                <p className="text-slate-300 mb-8 leading-relaxed">
                   Tes ini akan memberikan 10 pertanyaan interaktif yang
                   di-generate oleh AI. Jawab dengan jujur sesuai kepribadian dan
                   minatmu. Hasil tes akan memberikan rekomendasi karier yang
                   cocok untukmu! 🎯
                 </p>
 
-                <div className="bg-purple-50 rounded-xl p-4 mb-8">
-                  <p className="text-sm text-purple-800">
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mb-8">
+                  <p className="text-sm text-yellow-400">
                     ⏱️ Estimasi waktu: 5-7 menit
                     <br />
                     📊 Hasil personalized dari AI
@@ -166,7 +222,7 @@ export default function TesMinatPage() {
                   onClick={handleStartTest}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold text-lg hover:shadow-lg transition-all"
+                  className="px-8 py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold text-lg hover:bg-yellow-500/30 transition-all"
                 >
                   Mulai Tes Sekarang
                 </motion.button>
@@ -183,12 +239,21 @@ export default function TesMinatPage() {
               exit={{ opacity: 0 }}
               className="max-w-2xl mx-auto text-center"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-12">
-                <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-6" />
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-12">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
+                </motion.div>
+                <h2 className="text-2xl font-bold text-white mb-2">
                   Mempersiapkan Pertanyaan...
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-slate-400">
                   AI sedang membuat pertanyaan khusus untukmu
                 </p>
               </div>
@@ -205,9 +270,9 @@ export default function TesMinatPage() {
               transition={{ duration: 0.3 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 md:p-10">
                 {/* Question */}
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-8 leading-snug">
+                <h2 className="text-xl md:text-2xl font-bold text-white mb-8 leading-snug">
                   {currentQuestion.question}
                 </h2>
 
@@ -219,25 +284,35 @@ export default function TesMinatPage() {
                       onClick={() => setSelectedOption(option.value)}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
+                      className={`w-full text-left p-4 rounded-2xl border transition-all ${
                         selectedOption === option.value
-                          ? "border-purple-500 bg-purple-50 shadow-md"
-                          : "border-gray-200 hover:border-purple-300 hover:bg-purple-50/50"
+                          ? "border-yellow-500/50 bg-yellow-500/10 shadow-lg shadow-yellow-500/10"
+                          : "border-slate-700/50 bg-slate-800/30 hover:border-yellow-500/30 hover:bg-slate-800/50"
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                             selectedOption === option.value
-                              ? "border-purple-500 bg-purple-500"
-                              : "border-gray-300"
+                              ? "border-yellow-400 bg-yellow-400"
+                              : "border-slate-600"
                           }`}
                         >
                           {selectedOption === option.value && (
-                            <CheckCircle2 className="w-4 h-4 text-white" />
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 400,
+                                damping: 17,
+                              }}
+                            >
+                              <div className="w-2 h-2 bg-slate-900 rounded-full" />
+                            </motion.div>
                           )}
                         </div>
-                        <span className="text-lg text-gray-700">
+                        <span className="text-base text-slate-200">
                           {option.text}
                         </span>
                       </div>
@@ -246,16 +321,16 @@ export default function TesMinatPage() {
                 </div>
 
                 {/* Navigation */}
-                <div className="flex justify-between gap-4">
+                <div className="flex justify-between gap-3">
                   <motion.button
                     onClick={handlePrevious}
                     disabled={currentQuestionIndex === 0}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                    className="px-5 py-3 border border-slate-700/50 bg-slate-800/30 text-slate-300 rounded-2xl font-semibold hover:bg-slate-800/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                   >
                     <ChevronLeft className="w-5 h-5" />
-                    Sebelumnya
+                    <span className="hidden sm:inline">Sebelumnya</span>
                   </motion.button>
 
                   <motion.button
@@ -263,11 +338,13 @@ export default function TesMinatPage() {
                     disabled={!selectedOption}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                    className="px-5 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2"
                   >
-                    {currentQuestionIndex === questions.length - 1
-                      ? "Selesai"
-                      : "Selanjutnya"}
+                    <span>
+                      {currentQuestionIndex === questions.length - 1
+                        ? "Selesai"
+                        : "Selanjutnya"}
+                    </span>
                     <ChevronRight className="w-5 h-5" />
                   </motion.button>
                 </div>
@@ -284,12 +361,21 @@ export default function TesMinatPage() {
               exit={{ opacity: 0 }}
               className="max-w-2xl mx-auto text-center"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-12">
-                <Loader2 className="w-16 h-16 text-purple-500 animate-spin mx-auto mb-6" />
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-12">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
+                </motion.div>
+                <h2 className="text-2xl font-bold text-white mb-2">
                   Menganalisis Jawabanmu...
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-slate-400">
                   AI sedang memproses hasil tes dan mencocokkan dengan karier
                   yang tepat
                 </p>
@@ -306,127 +392,169 @@ export default function TesMinatPage() {
               exit={{ opacity: 0 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 md:p-10">
                 {/* Header Result */}
                 <div className="text-center mb-8">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="w-10 h-10 text-white" />
-                  </div>
-                  <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                  <motion.div
+                    className="w-20 h-20 bg-yellow-500/20 border border-yellow-500/30 rounded-3xl flex items-center justify-center mx-auto mb-4"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 5, -5, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                  >
+                    <CheckCircle2 className="w-10 h-10 text-yellow-400" />
+                  </motion.div>
+                  <h2 className="text-3xl font-bold text-white mb-2">
                     Hasil Tes Minat Bakatmu
                   </h2>
-                  <p className="text-gray-600">
+                  <p className="text-slate-400">
                     Ini dia rekomendasi karier yang cocok untukmu!
                   </p>
                 </div>
 
                 {/* Personality Type */}
-                <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-6 mb-8">
-                  <h3 className="text-lg font-semibold text-purple-800 mb-2">
-                    Tipe Kepribadian Kamu
-                  </h3>
-                  <p className="text-2xl font-bold text-gray-800 mb-2">
+                <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/20 rounded-2xl p-6 mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
+                    <h3 className="text-base font-semibold text-yellow-400">
+                      Tipe Kepribadian Kamu
+                    </h3>
+                  </div>
+                  <p className="text-2xl font-bold text-white mb-2">
                     {result.personality_type}
                   </p>
-                  <p className="text-gray-700">{result.description}</p>
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    {result.description}
+                  </p>
                 </div>
 
                 {/* Recommended Careers */}
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    🎯 Karier yang Cocok Untukmu
-                  </h3>
-                  <div className="space-y-4">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Target className="w-5 h-5 text-yellow-400" />
+                    <h3 className="text-xl font-bold text-white">
+                      Karier yang Cocok Untukmu
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
                     {result.recommended_careers.map((career, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="border-2 border-gray-200 rounded-xl p-5 hover:border-purple-300 transition-colors"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-5 hover:border-yellow-500/30 hover:bg-slate-800/50 transition-all"
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="text-xl font-semibold text-gray-800">
+                        <div className="flex items-start justify-between mb-2 gap-3">
+                          <h4 className="text-lg font-bold text-white">
                             {career.title}
                           </h4>
-                          <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">
+                          <span className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                             {career.match_percentage}% Match
                           </span>
                         </div>
-                        <p className="text-gray-600 mb-3">{career.reason}</p>
+                        <p className="text-slate-400 text-sm mb-3 leading-relaxed">
+                          {career.reason}
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {career.skills_needed.map((skill, idx) => (
                             <span
                               key={idx}
-                              className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm"
+                              className="bg-slate-700/30 text-slate-300 px-3 py-1 rounded-lg text-xs border border-slate-600/30"
                             >
                               {skill}
                             </span>
                           ))}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
 
                 {/* Strengths */}
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    💪 Kekuatanmu
-                  </h3>
-                  <div className="grid md:grid-cols-3 gap-3">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Award className="w-5 h-5 text-yellow-400" />
+                    <h3 className="text-xl font-bold text-white">Kekuatanmu</h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                     {result.strengths.map((strength, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="bg-green-50 text-green-800 px-4 py-3 rounded-xl text-center font-medium"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-xl text-center text-sm font-semibold"
                       >
                         {strength}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
 
                 {/* Development Areas */}
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    🚀 Area yang Bisa Dikembangkan
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-3">
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <TrendingUp className="w-5 h-5 text-yellow-400" />
+                    <h3 className="text-xl font-bold text-white">
+                      Area yang Bisa Dikembangkan
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {result.development_areas.map((area, index) => (
-                      <div
+                      <motion.div
                         key={index}
-                        className="bg-orange-50 text-orange-800 px-4 py-3 rounded-xl font-medium"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="bg-orange-500/10 border border-orange-500/20 text-orange-400 px-4 py-3 rounded-xl text-sm font-semibold"
                       >
                         {area}
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
 
                 {/* Next Steps */}
                 <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">
-                    ✨ Langkah Selanjutnya
-                  </h3>
-                  <ol className="space-y-3">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Rocket className="w-5 h-5 text-yellow-400" />
+                    <h3 className="text-xl font-bold text-white">
+                      Langkah Selanjutnya
+                    </h3>
+                  </div>
+                  <div className="space-y-3">
                     {result.next_steps.map((step, index) => (
-                      <li
+                      <motion.div
                         key={index}
-                        className="flex gap-3 items-start bg-gray-50 p-4 rounded-xl"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex gap-3 items-start bg-slate-800/30 border border-slate-700/50 p-4 rounded-xl"
                       >
-                        <span className="flex-shrink-0 w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold">
+                        <span className="flex-shrink-0 w-7 h-7 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-lg flex items-center justify-center text-sm font-bold">
                           {index + 1}
                         </span>
-                        <span className="text-gray-700 pt-1">{step}</span>
-                      </li>
+                        <span className="text-slate-300 text-sm pt-0.5 leading-relaxed">
+                          {step}
+                        </span>
+                      </motion.div>
                     ))}
-                  </ol>
+                  </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Link href="/konsultasi" className="flex-1">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                      className="w-full px-6 py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold hover:bg-yellow-500/30 transition-all"
                     >
                       Konsultasi Lebih Lanjut
                     </motion.button>
@@ -435,7 +563,7 @@ export default function TesMinatPage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full px-6 py-4 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all"
+                      className="w-full px-6 py-4 border border-slate-700/50 bg-slate-800/30 text-slate-300 rounded-2xl font-bold hover:bg-slate-800/50 transition-all"
                     >
                       Kembali ke Beranda
                     </motion.button>

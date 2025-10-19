@@ -4,7 +4,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "KarirKu - Platform AI Bimbingan Karier",
+  title: "H-Mate - Your Digital Mentor",
   description:
     "Temukan karier impianmu dengan bantuan AI. Platform edukasi untuk Indonesia Emas 2045.",
   keywords: [

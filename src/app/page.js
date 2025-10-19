@@ -1,38 +1,83 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import { MessageSquare, Target, Sparkles, ArrowRight } from "lucide-react";
+import { MessageSquare, Target, Sparkles, ArrowRight, Zap } from "lucide-react";
 
 export default function HomePage() {
-  // Variants untuk animasi stagger children
+  const { scrollYProgress } = useScroll();
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.15,
+        delayChildren: 0.1,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 30, opacity: 0 },
     visible: {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.6,
-        ease: "easeOut",
+        duration: 0.7,
+        ease: [0.22, 1, 0.36, 1],
+      },
+    },
+  };
+
+  const floatingVariants = {
+    initial: { y: 0 },
+    animate: {
+      y: [-10, 10, -10],
+      transition: {
+        duration: 4,
+        repeat: Infinity,
+        ease: "easeInOut",
       },
     },
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 -left-32 w-64 h-64 bg-yellow-500/10 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 -right-32 w-96 h-96 bg-yellow-500/10 rounded-full blur-3xl"
+          animate={{
+            x: [0, -50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
       {/* Hero Section */}
       <motion.section
-        className="container mx-auto px-4 pt-20 pb-16"
+        className="container mx-auto px-5 pt-16 pb-12 relative z-10"
         initial="hidden"
         animate="visible"
         variants={containerVariants}
@@ -40,69 +85,135 @@ export default function HomePage() {
         {/* Badge */}
         <motion.div
           variants={itemVariants}
-          className="flex justify-center mb-6"
+          className="flex justify-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
-            <Sparkles className="w-4 h-4" />
+          <motion.div
+            className="inline-flex items-center gap-2 bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-medium"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              <Sparkles className="w-4 h-4" />
+            </motion.div>
             <span>Powered by Gemini AI</span>
-          </div>
+          </motion.div>
         </motion.div>
 
         {/* Heading */}
-        <motion.h1
-          variants={itemVariants}
-          className="text-5xl md:text-6xl font-bold text-center mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
-        >
-          H-Mate
-        </motion.h1>
+        <motion.div variants={itemVariants} className="text-center mb-6">
+          <motion.h1
+            className="text-6xl md:text-7xl font-black mb-3 tracking-tight"
+            style={{ y }}
+          >
+            <span className="text-white">H</span>
+            <span className="text-yellow-400">-</span>
+            <span className="text-white">Mate</span>
+          </motion.h1>
+          <motion.div
+            className="h-1 w-24 mx-auto bg-gradient-to-r from-transparent via-yellow-400 to-transparent"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 1, delay: 0.5 }}
+          />
+        </motion.div>
 
         <motion.p
           variants={itemVariants}
-          className="text-xl md:text-2xl text-gray-600 text-center mb-4 max-w-2xl mx-auto"
+          className="text-xl md:text-2xl text-slate-300 text-center mb-3 max-w-2xl mx-auto font-medium"
         >
           Kenali dirimu, temukan karier impianmu
         </motion.p>
 
         <motion.p
           variants={itemVariants}
-          className="text-gray-500 text-center mb-12 max-w-xl mx-auto"
+          className="text-slate-400 text-center mb-12 max-w-xl mx-auto leading-relaxed"
         >
           Platform AI yang membantu generasi muda Indonesia menemukan arah
           karier yang tepat di era digital
         </motion.p>
 
+        {/* Floating CTA hint */}
+        <motion.div
+          variants={floatingVariants}
+          initial="initial"
+          animate="animate"
+          className="mt-12 flex justify-center"
+        >
+          <div className="text-slate-500 text-sm">
+            ↓ Pilih layanan untuk memulai
+          </div>
+        </motion.div>
+
         {/* CTA Cards */}
         <motion.div
           variants={itemVariants}
-          className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
+          className="space-y-4 mt-10 flex flex-col md:flex-row max-w-md md:max-w-4xl md:gap-4 mx-auto"
         >
           {/* Card 1: Konsultasi */}
           <Link href="/konsultasi">
             <motion.div
-              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer"
-              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl p-6 overflow-hidden cursor-pointer"
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              {/* Background gradient on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Gradient overlay on hover */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100"
+                transition={{ duration: 0.3 }}
+              />
 
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-500 group-hover:scale-110 transition-all duration-300">
-                  <MessageSquare className="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" />
-                </div>
+              {/* Animated border on hover */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl"
+                initial={false}
+                whileHover={{
+                  boxShadow: "0 0 0 1px rgba(234, 179, 8, 0.3)",
+                }}
+                transition={{ duration: 0.3 }}
+              />
 
-                <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
-                  Konsultasi Karier
-                </h3>
+              <div className="relative z-10 flex items-start gap-4">
+                <motion.div
+                  className="w-12 h-12 bg-yellow-500/10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  whileHover={{ rotate: 5, scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <MessageSquare className="w-6 h-6 text-yellow-400" />
+                </motion.div>
 
-                <p className="text-gray-600 mb-4">
-                  Tanya jawab langsung dengan AI tentang pilihan karier, skill
-                  yang dibutuhkan, dan tips membangun portfolio
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">
+                    Konsultasi Karier
+                  </h3>
 
-                <div className="flex items-center text-blue-600 font-medium group-hover:gap-2 transition-all">
-                  Mulai Konsultasi
-                  <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                  <p className="text-slate-400 text-sm mb-3 leading-relaxed">
+                    Tanya jawab langsung dengan AI tentang pilihan karier, skill
+                    yang dibutuhkan, dan tips membangun portfolio
+                  </p>
+
+                  <div className="flex items-center text-yellow-400 text-sm font-semibold">
+                    Mulai Konsultasi
+                    <motion.div
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -111,30 +222,59 @@ export default function HomePage() {
           {/* Card 2: Tes Minat */}
           <Link href="/tes-minat">
             <motion.div
-              className="group relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer"
-              whileHover={{ y: -8, scale: 1.02 }}
+              className="group relative bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl p-6 overflow-hidden cursor-pointer"
+              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              {/* Background gradient on hover */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-purple-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Gradient overlay on hover */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100"
+                transition={{ duration: 0.3 }}
+              />
 
-              <div className="relative z-10">
-                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-500 group-hover:scale-110 transition-all duration-300">
-                  <Target className="w-6 h-6 text-purple-600 group-hover:text-white transition-colors" />
-                </div>
+              {/* Animated border on hover */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl"
+                initial={false}
+                whileHover={{
+                  boxShadow: "0 0 0 1px rgba(234, 179, 8, 0.3)",
+                }}
+                transition={{ duration: 0.3 }}
+              />
 
-                <h3 className="text-2xl font-bold text-gray-800 mb-2 group-hover:text-purple-600 transition-colors">
-                  Tes Minat Bakat
-                </h3>
+              <div className="relative z-10 flex items-start gap-4">
+                <motion.div
+                  className="w-12 h-12 bg-yellow-500/10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  whileHover={{ rotate: -5, scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Target className="w-6 h-6 text-yellow-400" />
+                </motion.div>
 
-                <p className="text-gray-600 mb-4">
-                  Jawab pertanyaan interaktif dan dapatkan rekomendasi karier
-                  yang cocok dengan kepribadian dan minatmu
-                </p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">
+                    Tes Minat Bakat
+                  </h3>
 
-                <div className="flex items-center text-purple-600 font-medium group-hover:gap-2 transition-all">
-                  Mulai Tes
-                  <ArrowRight className="w-5 h-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                  <p className="text-slate-400 text-sm mb-3 leading-relaxed">
+                    Jawab pertanyaan interaktif dan dapatkan rekomendasi karier
+                    yang cocok dengan kepribadian dan minatmu
+                  </p>
+
+                  <div className="flex items-center text-yellow-400 text-sm font-semibold">
+                    Mulai Tes
+                    <motion.div
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -144,26 +284,64 @@ export default function HomePage() {
         {/* Stats Section */}
         <motion.div
           variants={itemVariants}
-          className="mt-16 grid grid-cols-3 gap-4 max-w-2xl mx-auto"
+          className="mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto"
         >
           {[
-            { label: "AI-Powered", value: "100%" },
+            { label: "AI-Powered", value: "100%", icon: Zap },
             { label: "Gratis", value: "∞" },
-            { label: "Personalized", value: "✨" },
+            { label: "Personal", value: "✨" },
           ].map((stat, index) => (
-            <div key={index} className="text-center">
-              <div className="text-3xl font-bold text-gray-800 mb-1">
+            <motion.div
+              key={index}
+              className="text-center bg-slate-900/30 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-4"
+              whileHover={{
+                scale: 1.05,
+                borderColor: "rgba(234, 179, 8, 0.2)",
+              }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              {stat.icon && (
+                <motion.div
+                  className="flex justify-center mb-2"
+                  animate={{ rotate: [0, 360] }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                >
+                  <stat.icon className="w-5 h-5 text-yellow-400" />
+                </motion.div>
+              )}
+              <div className="text-2xl font-bold text-white mb-1">
                 {stat.value}
               </div>
-              <div className="text-sm text-gray-500">{stat.label}</div>
-            </div>
+              <div className="text-xs text-slate-400 font-medium">
+                {stat.label}
+              </div>
+            </motion.div>
           ))}
         </motion.div>
       </motion.section>
 
       {/* Footer */}
-      <footer className="text-center py-8 text-gray-500 text-sm">
-        <p>Dibuat untuk Indonesia Emas 2045 🇮🇩 | Powered by Gemini AI</p>
+      <footer className="relative z-10 text-center py-8 text-slate-500 text-xs border-t border-slate-800/50">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mb-2"
+        >
+          Dibuat oleh <span className="text-yellow-400">Hammad</span> untuk
+          Indonesia Emas 2045 🇮🇩
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+        >
+          Powered by Gemini AI
+        </motion.p>
       </footer>
     </div>
   );
