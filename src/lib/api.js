@@ -69,3 +69,44 @@ export async function checkHealth() {
     return { status: "ERROR" };
   }
 }
+
+// ===== ROADMAP APIs =====
+
+/**
+ * Generate mini test untuk career interest
+ */
+export async function generateMiniTest(questionCount = 7) {
+  return apiCall("/api/roadmap/mini-test", { questionCount });
+}
+
+/**
+ * Analyze mini test results
+ */
+export async function analyzeMiniTest(answers) {
+  return apiCall("/api/roadmap/analyze-mini-test", { answers });
+}
+
+/**
+ * Generate career roadmap
+ */
+export async function generateRoadmap(data) {
+  return apiCall("/api/roadmap/generate", data);
+}
+
+/**
+ * Get next steps based on current progress
+ */
+export async function getNextSteps(roadmap, completedPhases, currentSkills) {
+  return apiCall("/api/roadmap/next-steps", {
+    roadmap,
+    completedPhases,
+    currentSkills,
+  });
+}
+
+/**
+ * Consultation chat untuk roadmap
+ */
+export async function roadmapConsultation(message, context) {
+  return apiCall("/api/roadmap/consultation", { message, context });
+}

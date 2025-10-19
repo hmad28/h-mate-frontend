@@ -156,7 +156,7 @@ export default function HomePage() {
         {/* CTA Cards */}
         <motion.div
           variants={itemVariants}
-          className="space-y-4 mt-10 flex flex-col md:flex-row max-w-md md:max-w-4xl md:gap-4 mx-auto"
+          className="space-y-4 mt-10 flex flex-col md:flex-row max-w-md md:max-w-5xl md:gap-4 mx-auto"
         >
           {/* Card 1: Konsultasi */}
           <Link href="/konsultasi">
@@ -264,6 +264,69 @@ export default function HomePage() {
 
                   <div className="flex items-center text-yellow-400 text-sm font-semibold">
                     Mulai Tes
+                    <motion.div
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </Link>
+
+          {/* Card 3: Roadmap NEW! */}
+          <Link href="/roadmap">
+            <motion.div
+              className="group relative bg-slate-900/50 backdrop-blur-md border border-slate-800 rounded-3xl p-6 overflow-hidden cursor-pointer"
+              whileHover={{ y: -8, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {/* Gradient overlay on hover */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-br from-yellow-500/20 via-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100"
+                transition={{ duration: 0.3 }}
+              />
+
+              {/* Animated border on hover */}
+              <motion.div
+                className="absolute inset-0 rounded-3xl"
+                initial={false}
+                whileHover={{
+                  boxShadow: "0 0 0 1px rgba(234, 179, 8, 0.3)",
+                }}
+                transition={{ duration: 0.3 }}
+              />
+
+              <div className="relative z-10 flex items-start gap-4">
+                <motion.div
+                  className="w-12 h-12 bg-yellow-500/10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  whileHover={{ rotate: 5, scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  <Sparkles className="w-6 h-6 text-yellow-400" />
+                </motion.div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-yellow-400 transition-colors">
+                    Roadmap Karier
+                    <span className="ml-2 text-xs bg-slate-900/50 border text-yellow-400 px-2 py-1 rounded-full">
+                      NEW
+                    </span>
+                  </h3>
+
+                  <p className="text-slate-400 text-sm mb-3 leading-relaxed">
+                    Dapatkan panduan lengkap step-by-step untuk mencapai karier
+                    impianmu dengan AI
+                  </p>
+
+                  <div className="flex items-center text-yellow-400 text-sm font-semibold">
+                    Mulai Roadmap
                     <motion.div
                       animate={{ x: [0, 5, 0] }}
                       transition={{
