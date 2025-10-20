@@ -32,7 +32,7 @@ export default function TesMinatPage() {
     setError(null);
 
     try {
-      const response = await generateQuestions(10);
+      const response = await generateQuestions(20);
       setQuestions(response.data.questions);
       setStep("test");
     } catch (error) {
