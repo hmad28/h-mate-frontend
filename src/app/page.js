@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import { MessageSquare, Target, Sparkles, ArrowRight, Zap } from "lucide-react";
+import { MessageSquare, Target, Sparkles, ArrowRight, Zap, ClipboardList, Map } from "lucide-react";
 import Image from "next/image";
 
 export default function HomePage() {
@@ -259,7 +259,7 @@ export default function HomePage() {
                   whileHover={{ rotate: -5, scale: 1.1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Target className="w-6 h-6 text-yellow-400" />
+                  <ClipboardList className="w-6 h-6 text-yellow-400" />
                 </motion.div>
 
                 <div className="flex-1 min-w-0">
@@ -319,7 +319,7 @@ export default function HomePage() {
                   whileHover={{ rotate: 5, scale: 1.1 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Sparkles className="w-6 h-6 text-yellow-400" />
+                  <Map className="w-6 h-6 text-yellow-400" />
                 </motion.div>
 
                 <div className="flex-1 min-w-0">
