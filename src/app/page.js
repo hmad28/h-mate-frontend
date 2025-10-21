@@ -2,8 +2,9 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
-import { MessageSquare, Target, Sparkles, ArrowRight, Zap, ClipboardList, Map } from "lucide-react";
+import { MessageSquare, Target, Sparkles, ArrowRight, Zap, ClipboardList, Map, Heart, Globe } from "lucide-react";
 import Image from "next/image";
+import Footer from "@/components/Footer";
 
 export default function HomePage() {
   const { scrollYProgress } = useScroll();
@@ -353,70 +354,9 @@ export default function HomePage() {
             </motion.div>
           </Link>
         </motion.div>
-
-        {/* Stats Section */}
-        <motion.div
-          variants={itemVariants}
-          className="mt-16 grid grid-cols-3 gap-4 max-w-md mx-auto"
-        >
-          {[
-            { label: "AI-Powered", value: "100%", icon: Zap },
-            { label: "Gratis", value: "∞" },
-            { label: "Personal", value: "✨" },
-          ].map((stat, index) => (
-            <motion.div
-              key={index}
-              className="text-center bg-slate-900/30 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-4"
-              whileHover={{
-                scale: 1.05,
-                borderColor: "rgba(234, 179, 8, 0.2)",
-              }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              {stat.icon && (
-                <motion.div
-                  className="flex justify-center mb-2"
-                  animate={{ rotate: [0, 360] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                >
-                  <stat.icon className="w-5 h-5 text-yellow-400" />
-                </motion.div>
-              )}
-              <div className="text-2xl font-bold text-white mb-1">
-                {stat.value}
-              </div>
-              <div className="text-xs text-slate-400 font-medium">
-                {stat.label}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
       </motion.section>
 
-      {/* Footer */}
-      <footer className="relative z-10 text-center py-8 text-slate-500 text-xs border-t border-slate-800/50">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mb-2"
-        >
-          Dibuat oleh <span className="text-yellow-400">Hammad</span> untuk
-          Indonesia Emas 2045 🇮🇩
-        </motion.p>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-slate-800"
-        >
-          Powered by Gemini AI
-        </motion.p>
-      </footer>
+      <Footer />
     </div>
   );
 }
