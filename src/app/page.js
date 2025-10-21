@@ -84,7 +84,7 @@ export default function HomePage() {
         variants={containerVariants}
       >
         {/* Badge */}
-        <Link href="hammad.biz.id">
+        <Link href="https://www.hammad.biz.id/">
           <motion.div
             variants={itemVariants}
             className="flex justify-center mb-8"
@@ -121,7 +121,7 @@ export default function HomePage() {
             <span className="text-yellow-400">-</span>
             <span className="text-white">Mate</span> */}
             <Image
-              src="/images/mate.png"
+              src="/images/Mate.png"
               alt="H-Mate Logo"
               width={300}
               height={100}
