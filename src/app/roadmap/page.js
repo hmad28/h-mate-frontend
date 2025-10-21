@@ -840,7 +840,7 @@ export default function RoadmapPage() {
                         {loadingMessage}
                       </span>
                     ) : (
-                      "🎯 Belum tahu? Ikuti Tes Minat (7 pertanyaan)"
+                      "🎯 Belum tahu? Ikuti Tes Minat (15 pertanyaan)"
                     )}
                   </motion.button>
                 </div>
