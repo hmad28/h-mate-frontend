@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { MessageSquare, Target, Sparkles, ArrowRight, Zap } from "lucide-react";
+import Image from "next/image";
 
 export default function HomePage() {
   const { scrollYProgress } = useScroll();
@@ -83,30 +84,32 @@ export default function HomePage() {
         variants={containerVariants}
       >
         {/* Badge */}
-        <motion.div
-          variants={itemVariants}
-          className="flex justify-center mb-8"
-        >
+        <Link href="hammad.biz.id">
           <motion.div
-            className="inline-flex items-center gap-2 bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-medium"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            variants={itemVariants}
+            className="flex justify-center mb-8"
           >
             <motion.div
-              animate={{
-                rotate: [0, 360],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "linear",
-              }}
+              className="inline-flex items-center gap-2 bg-yellow-500/10 backdrop-blur-sm border border-yellow-500/20 text-yellow-400 px-4 py-2 rounded-full text-sm font-medium"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              <Sparkles className="w-4 h-4" />
+              <motion.div
+                animate={{
+                  rotate: [0, 360],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                <Sparkles className="w-4 h-4" />
+              </motion.div>
+              <span>by Hammad</span>
             </motion.div>
-            <span>Powered by Gemini AI</span>
           </motion.div>
-        </motion.div>
+        </Link>
 
         {/* Heading */}
         <motion.div variants={itemVariants} className="text-center mb-6">
@@ -114,9 +117,16 @@ export default function HomePage() {
             className="text-6xl md:text-7xl font-black mb-3 tracking-tight"
             style={{ y }}
           >
-            <span className="text-white">H</span>
+            {/* <span className="text-white">H</span>
             <span className="text-yellow-400">-</span>
-            <span className="text-white">Mate</span>
+            <span className="text-white">Mate</span> */}
+            <Image
+              src="/images/mate.png"
+              alt="H-Mate Logo"
+              width={300}
+              height={100}
+              className="inline-block ml-2 -mt-4"
+            />
           </motion.h1>
           <motion.div
             className="h-1 w-24 mx-auto bg-gradient-to-r from-transparent via-yellow-400 to-transparent"
@@ -402,6 +412,7 @@ export default function HomePage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}
+          className="text-slate-800"
         >
           Powered by Gemini AI
         </motion.p>

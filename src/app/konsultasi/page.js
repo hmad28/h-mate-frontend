@@ -6,6 +6,7 @@ import { Send, Loader2, ArrowLeft, Bot, User, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { sendConsultation } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
+import Image from "next/image";
 
 export default function KonsultasiPage() {
   const [messages, setMessages] = useState([
@@ -172,7 +173,8 @@ export default function KonsultasiPage() {
                   {message.role === "user" ? (
                     <User className="w-5 h-5 text-yellow-400" />
                   ) : (
-                    <Bot className="w-5 h-5 text-yellow-400" />
+                    // <Bot className="w-5 h-5 text-yellow-400" />
+                    <Image src="/images/h-logo.png" alt="H-Mate Logo" width={25} height={25} />
                   )}
                 </motion.div>
 
