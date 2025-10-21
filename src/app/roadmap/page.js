@@ -259,7 +259,7 @@ export default function RoadmapPage() {
     setLoadingMessage("Mempersiapkan tes minat...");
 
     try {
-      const response = await generateMiniTest(7);
+      const response = await generateMiniTest(15);
       setMiniTestQuestions(response.data.questions);
       setHasGoal(false);
       showToast("Tes siap dimulai! 💪");
