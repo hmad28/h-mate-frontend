@@ -15,6 +15,8 @@ import {
   Circle,
   X,
   Sparkles,
+  Bot,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -40,12 +42,12 @@ const Toast = ({ message, type = "success", onClose }) => {
       className="fixed top-4 right-4 left-4 sm:left-auto z-50 max-w-sm mx-auto sm:mx-0"
     >
       <div
-        className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg backdrop-blur-sm ${
+        className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-xl border ${
           type === "success"
-            ? "bg-green-500/95 text-white"
+            ? "bg-green-500/90 border-green-400/30 text-white"
             : type === "error"
-            ? "bg-red-500/95 text-white"
-            : "bg-blue-500/95 text-white"
+            ? "bg-red-500/90 border-red-400/30 text-white"
+            : "bg-yellow-500/90 border-yellow-400/30 text-white"
         }`}
       >
         {type === "success" ? (
@@ -75,18 +77,19 @@ const StepIndicator = ({ steps, currentStep }) => {
         {steps.map((step, idx) => (
           <div key={idx} className="flex items-center flex-1">
             <div className="flex flex-col items-center flex-1">
-              <div
-                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+              <motion.div
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center font-bold text-sm transition-all ${
                   idx <= currentStep
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500 text-white scale-110"
-                    : "bg-gray-200 text-gray-400"
+                    ? "bg-yellow-500/20 border-2 border-yellow-500/50 text-yellow-400 scale-110"
+                    : "bg-slate-800/30 border-2 border-slate-700/50 text-slate-600"
                 }`}
+                whileHover={{ scale: idx <= currentStep ? 1.15 : 1 }}
               >
                 {idx + 1}
-              </div>
+              </motion.div>
               <span
                 className={`text-xs sm:text-sm mt-2 font-medium hidden sm:block ${
-                  idx <= currentStep ? "text-purple-600" : "text-gray-400"
+                  idx <= currentStep ? "text-yellow-400" : "text-slate-600"
                 }`}
               >
                 {step}
@@ -96,8 +99,8 @@ const StepIndicator = ({ steps, currentStep }) => {
               <div
                 className={`h-1 flex-1 mx-2 rounded transition-all ${
                   idx < currentStep
-                    ? "bg-gradient-to-r from-purple-500 to-blue-500"
-                    : "bg-gray-200"
+                    ? "bg-gradient-to-r from-yellow-500 to-yellow-400"
+                    : "bg-slate-800/30"
                 }`}
               />
             )}
@@ -113,10 +116,10 @@ const RoadmapTimeline = ({ roadmap, completedPhases, onPhaseToggle }) => {
   return (
     <div>
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
           {roadmap.title}
         </h2>
-        <p className="text-sm sm:text-base text-gray-600">
+        <p className="text-sm sm:text-base text-slate-400">
           Estimasi: {roadmap.estimatedTime || roadmap.totalDuration}
         </p>
       </div>
@@ -131,15 +134,15 @@ const RoadmapTimeline = ({ roadmap, completedPhases, onPhaseToggle }) => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: idx * 0.1 }}
               className={`relative pl-8 sm:pl-12 pb-6 sm:pb-8 border-l-4 transition-all ${
-                isCompleted ? "border-green-500" : "border-gray-300"
+                isCompleted ? "border-green-500" : "border-slate-700/50"
               }`}
             >
               <button
                 onClick={() => onPhaseToggle(idx)}
                 className={`absolute -left-3 sm:-left-4 top-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 ${
                   isCompleted
-                    ? "bg-green-500 text-white"
-                    : "bg-white border-4 border-gray-300"
+                    ? "bg-green-500 text-white border-4 border-green-600"
+                    : "bg-slate-900 border-4 border-slate-700"
                 }`}
               >
                 {isCompleted && (
@@ -148,28 +151,28 @@ const RoadmapTimeline = ({ roadmap, completedPhases, onPhaseToggle }) => {
               </button>
 
               <div
-                className={`p-4 sm:p-6 rounded-xl border-2 transition-all ${
+                className={`p-4 sm:p-6 rounded-2xl border-2 backdrop-blur-sm transition-all ${
                   isCompleted
-                    ? "bg-green-50 border-green-200"
-                    : "bg-white border-gray-200"
+                    ? "bg-green-500/10 border-green-500/30"
+                    : "bg-slate-800/30 border-slate-700/50"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                  <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+                  <h3 className="text-lg sm:text-xl font-bold text-white">
                     {phase.phase}
                   </h3>
-                  <span className="text-sm font-medium text-purple-600 bg-purple-100 px-3 py-1 rounded-full w-fit">
+                  <span className="text-sm font-medium text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-3 py-1 rounded-full w-fit">
                     {phase.duration}
                   </span>
                 </div>
-                <p className="text-sm sm:text-base text-gray-600 mb-3">
+                <p className="text-sm sm:text-base text-slate-300 mb-3">
                   {phase.description}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {phase.skills.map((skill, skillIdx) => (
                     <span
                       key={skillIdx}
-                      className="text-xs sm:text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full"
+                      className="text-xs sm:text-sm bg-slate-700/30 text-slate-300 px-3 py-1 rounded-lg border border-slate-600/30"
                     >
                       {skill}
                     </span>
@@ -219,7 +222,6 @@ export default function RoadmapPage() {
     setToast({ message, type });
   };
 
-  // Auto scroll chat
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [consultationMessages]);
@@ -389,7 +391,6 @@ export default function RoadmapPage() {
     setLoadingMessage("Menganalisis progress...");
 
     try {
-      // Get skills dari completed phases
       const completedSkills = completedPhases.flatMap(
         (idx) => roadmap.phases[idx].skills
       );
@@ -469,14 +470,14 @@ export default function RoadmapPage() {
               color: #333;
             }
             h1 { 
-              color: #6b21a8; 
-              border-bottom: 4px solid #6b21a8; 
+              color: #eab308; 
+              border-bottom: 4px solid #eab308; 
               padding-bottom: 15px; 
               margin-bottom: 30px;
               font-size: 32px;
             }
             h2 { 
-              color: #1e40af; 
+              color: #1e293b; 
               margin-top: 40px; 
               margin-bottom: 20px;
               font-size: 24px;
@@ -488,27 +489,28 @@ export default function RoadmapPage() {
               margin-bottom: 10px;
             }
             .info-section {
-              background: #f3f4f6;
+              background: #f8fafc;
               padding: 20px;
               border-radius: 10px;
               margin-bottom: 30px;
+              border-left: 4px solid #eab308;
             }
             .info-section p {
               margin: 8px 0;
               font-size: 14px;
             }
             .info-section strong {
-              color: #6b21a8;
+              color: #eab308;
             }
             .phase { 
               margin: 25px 0; 
               padding: 20px; 
-              border-left: 5px solid #6b21a8; 
+              border-left: 5px solid #eab308; 
               background: #fafafa;
               page-break-inside: avoid;
             }
             .phase h3 {
-              color: #6b21a8;
+              color: #eab308;
               margin-top: 0;
             }
             .skills { 
@@ -518,11 +520,11 @@ export default function RoadmapPage() {
               margin-top: 15px; 
             }
             .skill { 
-              background: #e0e7ff; 
+              background: #fef3c7; 
               padding: 6px 14px; 
               border-radius: 20px; 
               font-size: 13px;
-              color: #4c1d95;
+              color: #854d0e;
               font-weight: 500;
             }
             .next-steps {
@@ -542,10 +544,10 @@ export default function RoadmapPage() {
             .footer { 
               margin-top: 60px; 
               text-align: center; 
-              color: #6b7280; 
+              color: #64748b; 
               font-size: 12px;
               padding-top: 30px;
-              border-top: 2px solid #e5e7eb;
+              border-top: 2px solid #e2e8f0;
             }
             @media print {
               body { padding: 20px; }
@@ -581,7 +583,7 @@ export default function RoadmapPage() {
                 (phase, idx) => `
             <div class="phase">
               <h3>${phase.phase} (${phase.duration})</h3>
-              <p style="margin: 10px 0; color: #4b5563;">${
+              <p style="margin: 10px 0; color: #475569;">${
                 phase.description
               }</p>
               <div class="skills">
@@ -641,7 +643,37 @@ export default function RoadmapPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-slate-950 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, -50, 0],
+            y: [0, -30, 0],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
       <AnimatePresence>
         {toast && (
           <Toast
@@ -652,29 +684,42 @@ export default function RoadmapPage() {
         )}
       </AnimatePresence>
 
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
+      {/* Header */}
+      <div className="bg-slate-900/50 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-10">
+        <div className="container mx-auto px-5 py-4 flex items-center gap-4">
           <Link href="/">
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, x: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-slate-800/50 rounded-xl transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-slate-400" />
             </motion.button>
           </Link>
-          <div>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-800">
-              Roadmap Karier AI
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-500">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-bold text-white">
+                Roadmap Karier AI
+              </h1>
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear",
+                }}
+              >
+                <Target className="w-4 h-4 text-yellow-400" />
+              </motion.div>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
               Temukan arah kariermu dengan panduan AI
             </p>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 sm:py-8">
+      <div className="container mx-auto px-4 py-6 sm:py-8 relative z-10">
         <StepIndicator steps={steps} currentStep={currentStep} />
 
         <AnimatePresence mode="wait">
@@ -687,11 +732,11 @@ export default function RoadmapPage() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-12 text-center">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-12 text-center">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">
                   Mulai Perjalanan Kariermu! 🚀
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">
+                <p className="text-sm sm:text-base text-slate-400 mb-6 sm:mb-8">
                   Pilih status kamu saat ini untuk mendapatkan roadmap yang
                   sesuai
                 </p>
@@ -701,13 +746,13 @@ export default function RoadmapPage() {
                     onClick={() => handleUserTypeSelect("pelajar")}
                     whileHover={{ scale: 1.05, y: -5 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-6 sm:p-8 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                    className="p-6 sm:p-8 bg-yellow-500/10 border-2 border-yellow-500/30 text-white rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all"
                   >
-                    <GraduationCap className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4" />
+                    <GraduationCap className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-yellow-400" />
                     <h3 className="text-xl sm:text-2xl font-bold mb-2">
                       Pelajar
                     </h3>
-                    <p className="text-blue-100 text-xs sm:text-sm">
+                    <p className="text-slate-400 text-xs sm:text-sm">
                       Siswa, mahasiswa, atau fresh graduate
                     </p>
                   </motion.button>
@@ -716,13 +761,13 @@ export default function RoadmapPage() {
                     onClick={() => handleUserTypeSelect("profesional")}
                     whileHover={{ scale: 1.05, y: -5 }}
                     whileTap={{ scale: 0.95 }}
-                    className="p-6 sm:p-8 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all"
+                    className="p-6 sm:p-8 bg-yellow-500/10 border-2 border-yellow-500/30 text-white rounded-2xl hover:bg-yellow-500/20 hover:border-yellow-500/50 transition-all"
                   >
-                    <Briefcase className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4" />
+                    <Briefcase className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 text-yellow-400" />
                     <h3 className="text-xl sm:text-2xl font-bold mb-2">
                       Profesional
                     </h3>
-                    <p className="text-purple-100 text-xs sm:text-sm">
+                    <p className="text-slate-400 text-xs sm:text-sm">
                       Sudah bekerja dan ingin berkembang
                     </p>
                   </motion.button>
@@ -740,14 +785,14 @@ export default function RoadmapPage() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 md:p-12">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 text-center">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8 md:p-12">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center">
                   Apakah kamu sudah punya cita-cita atau target karier?
                 </h2>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-slate-400 mb-2">
                       Kalau sudah, tulis di sini:
                     </label>
                     <input
@@ -755,7 +800,7 @@ export default function RoadmapPage() {
                       value={goalInput}
                       onChange={(e) => setGoalInput(e.target.value)}
                       placeholder="Contoh: Frontend Developer, UI/UX Designer"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-sm sm:text-base"
+                      className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 rounded-2xl focus:outline-none focus:border-yellow-500/50 transition-all text-sm sm:text-base"
                       onKeyPress={(e) =>
                         e.key === "Enter" && handlePelajarWithGoal()
                       }
@@ -765,7 +810,7 @@ export default function RoadmapPage() {
                       disabled={!goalInput.trim() || isLoading}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="w-full mt-4 px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
                       {isLoading ? (
                         <span className="flex items-center justify-center gap-2">
@@ -779,7 +824,7 @@ export default function RoadmapPage() {
                   </div>
 
                   <div className="text-center py-4">
-                    <span className="text-gray-400">atau</span>
+                    <span className="text-slate-600">atau</span>
                   </div>
 
                   <motion.button
@@ -787,7 +832,7 @@ export default function RoadmapPage() {
                     disabled={isLoading}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full px-6 py-3 border-2 border-purple-500 text-purple-600 rounded-xl font-semibold hover:bg-purple-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="w-full px-6 py-3 border border-yellow-500/30 bg-slate-800/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -816,9 +861,9 @@ export default function RoadmapPage() {
                 exit={{ opacity: 0, x: -50 }}
                 className="max-w-2xl mx-auto"
               >
-                <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
                   <div className="mb-6">
-                    <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-2">
+                    <div className="flex justify-between text-xs sm:text-sm text-slate-400 mb-2">
                       <span>
                         Pertanyaan {currentQuestionIndex + 1} dari{" "}
                         {miniTestQuestions.length}
@@ -832,9 +877,9 @@ export default function RoadmapPage() {
                         %
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-slate-800/50 rounded-full h-2">
                       <motion.div
-                        className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full"
+                        className="bg-gradient-to-r from-yellow-500 to-yellow-400 h-2 rounded-full"
                         initial={{ width: 0 }}
                         animate={{
                           width: `${
@@ -848,7 +893,7 @@ export default function RoadmapPage() {
                     </div>
                   </div>
 
-                  <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
                     {miniTestQuestions[currentQuestionIndex].question}
                   </h3>
 
@@ -860,13 +905,32 @@ export default function RoadmapPage() {
                           onClick={() => setSelectedOption(option.value)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full text-left p-4 rounded-xl border-2 transition-all text-sm sm:text-base ${
+                          className={`w-full text-left p-4 rounded-2xl border transition-all text-sm sm:text-base ${
                             selectedOption === option.value
-                              ? "border-purple-500 bg-purple-50"
-                              : "border-gray-200 hover:border-purple-300"
+                              ? "border-yellow-500/50 bg-yellow-500/10"
+                              : "border-slate-700/50 bg-slate-800/30 hover:border-yellow-500/30"
                           }`}
                         >
-                          {option.text}
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                selectedOption === option.value
+                                  ? "border-yellow-400 bg-yellow-400"
+                                  : "border-slate-600"
+                              }`}
+                            >
+                              {selectedOption === option.value && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="w-2 h-2 bg-slate-900 rounded-full"
+                                />
+                              )}
+                            </div>
+                            <span className="text-slate-200">
+                              {option.text}
+                            </span>
+                          </div>
                         </motion.button>
                       )
                     )}
@@ -877,7 +941,7 @@ export default function RoadmapPage() {
                     disabled={!selectedOption}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="w-full px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     {currentQuestionIndex === miniTestQuestions.length - 1
                       ? "Selesai"
@@ -895,11 +959,11 @@ export default function RoadmapPage() {
               animate={{ opacity: 1, y: 0 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 text-center">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 text-center">
                   Karier yang Cocok Untukmu! 🎯
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600 text-center mb-6 sm:mb-8">
+                <p className="text-sm sm:text-base text-slate-400 text-center mb-6 sm:mb-8">
                   Berdasarkan jawabanmu, ini rekomendasi karier terbaik
                 </p>
 
@@ -911,17 +975,17 @@ export default function RoadmapPage() {
                       disabled={isLoading}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full text-left p-4 sm:p-6 border-2 border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all disabled:opacity-50"
+                      className="w-full text-left p-4 sm:p-6 bg-slate-800/30 border border-slate-700/50 rounded-2xl hover:border-yellow-500/50 hover:bg-slate-800/50 transition-all disabled:opacity-50"
                     >
                       <div className="flex justify-between items-start mb-2 gap-3">
-                        <h3 className="text-lg sm:text-xl font-bold text-gray-800">
+                        <h3 className="text-lg sm:text-xl font-bold text-white">
                           {job.title}
                         </h3>
-                        <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap">
+                        <span className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-3 py-1 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap">
                           {job.match_score}% Match
                         </span>
                       </div>
-                      <p className="text-sm sm:text-base text-gray-600">
+                      <p className="text-sm sm:text-base text-slate-400">
                         {job.reason}
                       </p>
                     </motion.button>
@@ -942,14 +1006,14 @@ export default function RoadmapPage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-2xl mx-auto"
               >
-                <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
                     Ceritakan tentang kariermu saat ini
                   </h2>
 
                   <div className="space-y-4 mb-6">
                     <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-medium text-slate-400 mb-2">
                         Profesi saat ini:
                       </label>
                       <input
@@ -957,12 +1021,12 @@ export default function RoadmapPage() {
                         value={professionInput}
                         onChange={(e) => setProfessionInput(e.target.value)}
                         placeholder="Contoh: Marketing Manager, Backend Developer"
-                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-purple-500 text-sm sm:text-base"
+                        className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 rounded-2xl focus:outline-none focus:border-yellow-500/50 text-sm sm:text-base"
                       />
                     </div>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold text-white mb-4">
                     Apa yang ingin kamu lakukan?
                   </h3>
 
@@ -975,13 +1039,13 @@ export default function RoadmapPage() {
                       disabled={!professionInput.trim() || isLoading}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="p-6 bg-yellow-500/10 border-2 border-yellow-500/30 text-white rounded-2xl hover:bg-yellow-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
-                      <Target className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
+                      <Target className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 text-yellow-400" />
                       <h4 className="font-bold text-base sm:text-lg mb-2">
                         Tingkatkan Skill
                       </h4>
-                      <p className="text-blue-100 text-xs sm:text-sm">
+                      <p className="text-slate-400 text-xs sm:text-sm">
                         Upgrade di bidang yang sama
                       </p>
                     </motion.button>
@@ -991,13 +1055,13 @@ export default function RoadmapPage() {
                       disabled={!professionInput.trim() || isLoading}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="p-6 bg-yellow-500/10 border-2 border-yellow-500/30 text-white rounded-2xl hover:bg-yellow-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                     >
-                      <Briefcase className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3" />
+                      <Briefcase className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 text-yellow-400" />
                       <h4 className="font-bold text-base sm:text-lg mb-2">
                         Switch Karier
                       </h4>
-                      <p className="text-purple-100 text-xs sm:text-sm">
+                      <p className="text-slate-400 text-xs sm:text-sm">
                         Pindah ke bidang baru
                       </p>
                     </motion.button>
@@ -1016,13 +1080,13 @@ export default function RoadmapPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-2xl mx-auto"
               >
-                <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4">
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4">
                     Mau switch ke karier apa?
                   </h2>
-                  <p className="text-sm sm:text-base text-gray-600 mb-6">
+                  <p className="text-sm sm:text-base text-slate-400 mb-6">
                     Dari{" "}
-                    <span className="font-semibold text-purple-600">
+                    <span className="font-semibold text-yellow-400">
                       {professionInput}
                     </span>{" "}
                     ke...
@@ -1033,7 +1097,7 @@ export default function RoadmapPage() {
                     value={switchTarget}
                     onChange={(e) => setSwitchTarget(e.target.value)}
                     placeholder="Contoh: Data Scientist, Product Manager"
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-purple-500 mb-4 text-sm sm:text-base"
+                    className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 rounded-2xl focus:outline-none focus:border-yellow-500/50 mb-4 text-sm sm:text-base"
                     onKeyPress={(e) =>
                       e.key === "Enter" && handleProfessionalSwitch()
                     }
@@ -1044,7 +1108,7 @@ export default function RoadmapPage() {
                     disabled={!switchTarget.trim() || isLoading}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="w-full px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center gap-2">
@@ -1068,7 +1132,7 @@ export default function RoadmapPage() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
                 <RoadmapTimeline
                   roadmap={roadmap}
                   completedPhases={completedPhases}
@@ -1080,7 +1144,7 @@ export default function RoadmapPage() {
                     onClick={proceedToProgress}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm sm:text-base"
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold hover:bg-yellow-500/30 transition-all text-sm sm:text-base"
                   >
                     Lanjut: Cek Progress Saya
                   </motion.button>
@@ -1089,7 +1153,7 @@ export default function RoadmapPage() {
             </motion.div>
           )}
 
-          {/* STEP 3: Progress Check - FIXED VERSION */}
+          {/* STEP 3: Progress Check */}
           {currentStep === 3 && roadmap && (
             <motion.div
               key="step-3"
@@ -1098,11 +1162,11 @@ export default function RoadmapPage() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-2xl mx-auto"
             >
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 text-center">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 text-center">
                   Bagian mana yang sudah kamu pelajari?
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600 text-center mb-6">
+                <p className="text-sm sm:text-base text-slate-400 text-center mb-6">
                   Klik phase yang sudah kamu selesaikan
                 </p>
 
@@ -1116,35 +1180,35 @@ export default function RoadmapPage() {
                         onClick={() => handlePhaseToggle(idx)}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
-                        className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 transition-all text-left ${
+                        className={`w-full flex items-start gap-3 p-4 rounded-2xl border-2 transition-all text-left ${
                           isCompleted
-                            ? "border-green-500 bg-green-50"
-                            : "border-gray-200 hover:border-gray-300"
+                            ? "border-green-500/50 bg-green-500/10"
+                            : "border-slate-700/50 bg-slate-800/30 hover:border-slate-600"
                         }`}
                       >
                         {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 flex-shrink-0 mt-0.5" />
                         ) : (
-                          <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 flex-shrink-0 mt-0.5" />
+                          <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 flex-shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-800 text-sm sm:text-base mb-1">
+                          <p className="font-semibold text-white text-sm sm:text-base mb-1">
                             {phase.phase}
                           </p>
-                          <p className="text-xs sm:text-sm text-gray-500">
+                          <p className="text-xs sm:text-sm text-slate-500">
                             {phase.duration}
                           </p>
                           <div className="flex flex-wrap gap-1 mt-2">
                             {phase.skills.slice(0, 3).map((skill, skillIdx) => (
                               <span
                                 key={skillIdx}
-                                className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
+                                className="text-xs bg-slate-700/30 text-slate-400 px-2 py-1 rounded border border-slate-600/30"
                               >
                                 {skill}
                               </span>
                             ))}
                             {phase.skills.length > 3 && (
-                              <span className="text-xs text-gray-500 px-2 py-1">
+                              <span className="text-xs text-slate-500 px-2 py-1">
                                 +{phase.skills.length - 3} lainnya
                               </span>
                             )}
@@ -1156,8 +1220,8 @@ export default function RoadmapPage() {
                 </div>
 
                 {completedPhases.length > 0 && (
-                  <div className="mt-6 p-4 bg-green-50 rounded-xl border-2 border-green-200">
-                    <p className="text-sm text-green-800 font-medium">
+                  <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl">
+                    <p className="text-sm text-green-400 font-medium">
                       ✓ {completedPhases.length} phase sudah selesai
                     </p>
                   </div>
@@ -1168,7 +1232,7 @@ export default function RoadmapPage() {
                   disabled={isLoading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="w-full mt-6 px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -1183,7 +1247,7 @@ export default function RoadmapPage() {
             </motion.div>
           )}
 
-          {/* STEP 4: Next Steps & Consultation */}
+          {/* STEP 4: Next Steps & Consultation - PART 1 */}
           {currentStep === 4 && nextStepsData && (
             <motion.div
               key="step-4"
@@ -1193,22 +1257,22 @@ export default function RoadmapPage() {
               className="max-w-4xl mx-auto space-y-4 sm:space-y-6"
             >
               {/* Next Steps */}
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">
                   🎯 Langkah Selanjutnya
                 </h2>
 
                 {/* Progress Bar */}
                 <div className="mb-6">
-                  <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-2">
+                  <div className="flex justify-between text-xs sm:text-sm text-slate-400 mb-2">
                     <span>Progress Kamu</span>
-                    <span className="font-semibold">
+                    <span className="font-semibold text-yellow-400">
                       {nextStepsData.progressPercentage}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div className="w-full bg-slate-800/50 rounded-full h-3">
                     <motion.div
-                      className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full"
+                      className="bg-gradient-to-r from-green-400 to-yellow-400 h-3 rounded-full"
                       initial={{ width: 0 }}
                       animate={{
                         width: `${nextStepsData.progressPercentage}%`,
@@ -1218,28 +1282,28 @@ export default function RoadmapPage() {
                   </div>
                 </div>
 
-                <p className="text-sm sm:text-base text-gray-600 mb-6">
+                <p className="text-sm sm:text-base text-slate-400 mb-6">
                   Saat ini kamu di:{" "}
-                  <span className="font-semibold text-purple-600">
+                  <span className="font-semibold text-yellow-400">
                     {nextStepsData.currentPhase}
                   </span>
                 </p>
 
                 {/* Next Steps List */}
                 <div className="mb-6">
-                  <h3 className="font-semibold text-gray-800 mb-3 text-sm sm:text-base">
+                  <h3 className="font-semibold text-white mb-3 text-sm sm:text-base">
                     Yang Perlu Dilakukan:
                   </h3>
                   <div className="space-y-3">
                     {nextStepsData.nextSteps.map((step, idx) => (
                       <div
                         key={idx}
-                        className={`p-4 rounded-xl border-2 ${
+                        className={`p-4 rounded-2xl border ${
                           step.priority === "high"
-                            ? "border-red-200 bg-red-50"
+                            ? "border-red-500/30 bg-red-500/10"
                             : step.priority === "medium"
-                            ? "border-yellow-200 bg-yellow-50"
-                            : "border-gray-200 bg-gray-50"
+                            ? "border-yellow-500/30 bg-yellow-500/10"
+                            : "border-slate-700/50 bg-slate-800/30"
                         }`}
                       >
                         <div className="flex items-start gap-3">
@@ -1251,10 +1315,10 @@ export default function RoadmapPage() {
                               : "💡"}
                           </span>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-800 text-sm sm:text-base">
+                            <p className="font-medium text-white text-sm sm:text-base">
                               {step.step}
                             </p>
-                            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                            <p className="text-xs sm:text-sm text-slate-400 mt-1">
                               Estimasi: {step.estimatedTime}
                             </p>
                           </div>
@@ -1268,7 +1332,7 @@ export default function RoadmapPage() {
                 {nextStepsData.recommendedCertifications &&
                   nextStepsData.recommendedCertifications.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2 text-sm sm:text-base">
+                      <h3 className="font-semibold text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
                         🏆 Sertifikasi Rekomendasi
                       </h3>
                       <div className="space-y-3">
@@ -1276,17 +1340,17 @@ export default function RoadmapPage() {
                           (cert, idx) => (
                             <div
                               key={idx}
-                              className="p-4 bg-purple-50 rounded-xl border-2 border-purple-200"
+                              className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl"
                             >
                               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                                <p className="font-medium text-gray-800 text-sm sm:text-base">
+                                <p className="font-medium text-white text-sm sm:text-base">
                                   {cert.name}
                                 </p>
                                 <span
                                   className={`text-xs px-2 py-1 rounded w-fit ${
                                     cert.urgency === "high"
-                                      ? "bg-red-100 text-red-700"
-                                      : "bg-yellow-100 text-yellow-700"
+                                      ? "bg-red-500/20 border border-red-500/30 text-red-400"
+                                      : "bg-yellow-500/20 border border-yellow-500/30 text-yellow-400"
                                   }`}
                                 >
                                   {cert.urgency === "high"
@@ -1294,7 +1358,7 @@ export default function RoadmapPage() {
                                     : "Recommended"}
                                 </span>
                               </div>
-                              <p className="text-xs sm:text-sm text-gray-600">
+                              <p className="text-xs sm:text-sm text-slate-400">
                                 {cert.reason}
                               </p>
                             </div>
@@ -1306,21 +1370,21 @@ export default function RoadmapPage() {
 
                 {/* Motivational Message */}
                 {nextStepsData.motivationalMessage && (
-                  <div className="p-4 sm:p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200">
-                    <p className="text-sm sm:text-base text-gray-700 italic">
+                  <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border border-yellow-500/30 rounded-2xl">
+                    <p className="text-sm sm:text-base text-slate-300 italic">
                       💪 {nextStepsData.motivationalMessage}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Consultation Section - FIXED MARKDOWN */}
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-3 sm:mb-4 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+              {/* Consultation Section */}
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
                   Konsultasi
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600 mb-6">
+                <p className="text-sm sm:text-base text-slate-400 mb-6">
                   Ada pertanyaan tentang roadmap atau langkah selanjutnya? Tanya
                   di sini!
                 </p>
@@ -1328,7 +1392,7 @@ export default function RoadmapPage() {
                 {/* Chat Messages */}
                 <div className="space-y-4 mb-4 max-h-[60vh] sm:max-h-96 overflow-y-auto">
                   {consultationMessages.length === 0 && (
-                    <div className="text-center text-gray-400 py-8 text-sm">
+                    <div className="text-center text-slate-600 py-8 text-sm">
                       Belum ada percakapan. Mulai tanya sesuatu! 💬
                     </div>
                   )}
@@ -1340,28 +1404,37 @@ export default function RoadmapPage() {
                       }`}
                     >
                       <div
-                        className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold ${
+                        className={`flex-shrink-0 w-8 h-8 rounded-2xl flex items-center justify-center ${
                           msg.role === "user"
-                            ? "bg-blue-500 text-white"
-                            : "bg-purple-500 text-white"
+                            ? "bg-yellow-500/20 border border-yellow-500/30"
+                            : "bg-slate-800/50 border border-slate-700/50"
                         }`}
                       >
-                        {msg.role === "user" ? "K" : "AI"}
+                        {msg.role === "user" ? (
+                          <User className="w-4 h-4 text-yellow-400" />
+                        ) : (
+                          <Bot className="w-4 h-4 text-yellow-400" />
+                        )}
                       </div>
                       <div
                         className={`flex-1 max-w-[85%] sm:max-w-[80%] ${
                           msg.role === "user"
-                            ? "bg-blue-500 text-white rounded-2xl rounded-tr-md"
-                            : "bg-gray-100 text-gray-800 rounded-2xl rounded-tl-md"
-                        } px-3 sm:px-4 py-2 sm:py-3`}
+                            ? "bg-yellow-500/10 border border-yellow-500/20 rounded-3xl rounded-tr-lg"
+                            : "bg-slate-900/50 border border-slate-800/50 rounded-3xl rounded-tl-lg"
+                        } px-4 py-3 backdrop-blur-sm`}
                       >
                         <div
                           className={`text-xs sm:text-sm leading-relaxed ${
-                            msg.role === "user" ? "text-white" : "text-gray-800"
+                            msg.role === "user"
+                              ? "text-slate-100"
+                              : "text-slate-300"
                           }`}
                           dangerouslySetInnerHTML={{
                             __html: msg.content
-                              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                              .replace(
+                                /\*\*(.*?)\*\*/g,
+                                "<strong class='text-yellow-400'>$1</strong>"
+                              )
                               .replace(/\n/g, "<br />")
                               .replace(/- (.*?)(<br \/>|$)/g, "• $1$2"),
                           }}
@@ -1371,11 +1444,19 @@ export default function RoadmapPage() {
                   ))}
                   {isLoading && (
                     <div className="flex gap-2 sm:gap-3">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-purple-500 flex items-center justify-center">
-                        <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 text-white animate-spin" />
-                      </div>
-                      <div className="bg-gray-100 rounded-2xl rounded-tl-md px-3 sm:px-4 py-2 sm:py-3">
-                        <p className="text-xs sm:text-sm text-gray-600">
+                      <motion.div
+                        className="w-8 h-8 rounded-2xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center"
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      >
+                        <Bot className="w-4 h-4 text-yellow-400" />
+                      </motion.div>
+                      <div className="bg-slate-900/50 border border-slate-800/50 rounded-3xl rounded-tl-lg px-4 py-3 backdrop-blur-sm">
+                        <p className="text-xs sm:text-sm text-slate-400">
                           Sedang mengetik...
                         </p>
                       </div>
@@ -1395,14 +1476,14 @@ export default function RoadmapPage() {
                     }
                     placeholder="Tanya apa saja..."
                     disabled={isLoading}
-                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-purple-500 disabled:bg-gray-100 transition-colors text-sm sm:text-base"
+                    className="flex-1 px-4 py-3 bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 rounded-2xl focus:outline-none focus:border-yellow-500/50 disabled:bg-slate-800/30 transition-colors text-sm sm:text-base"
                   />
                   <motion.button
                     onClick={handleConsultationSend}
                     disabled={!consultationInput.trim() || isLoading}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="px-4 sm:px-5 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   >
                     <Send className="w-4 h-4 sm:w-5 sm:h-5" />
                   </motion.button>
@@ -1410,11 +1491,11 @@ export default function RoadmapPage() {
               </div>
 
               {/* Export PDF */}
-              <div className="bg-white rounded-3xl shadow-xl p-6 sm:p-8 text-center">
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8 text-center">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
                   Simpan Roadmap Kamu
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                <p className="text-sm sm:text-base text-slate-400 mb-4 sm:mb-6">
                   Unduh semua informasi roadmap, rekomendasi, dan konsultasi
                   dalam satu file PDF
                 </p>
@@ -1422,7 +1503,7 @@ export default function RoadmapPage() {
                   onClick={handleExportPDF}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm sm:text-base"
+                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-green-500/20 border border-green-500/30 text-green-400 rounded-2xl font-bold hover:bg-green-500/30 transition-all text-sm sm:text-base"
                 >
                   <Download className="w-4 h-4 sm:w-5 sm:h-5" />
                   Download PDF
