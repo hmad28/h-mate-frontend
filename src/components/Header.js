@@ -104,7 +104,7 @@ export default function Header() {
                 <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
                   {/* H-Mate */}
                   <Image
-                    src="/images/mate-aja.png"
+                    src="/images/Mate-aja.png"
                     alt="H-Mate Tagline"
                     width={80}
                     height={20}
