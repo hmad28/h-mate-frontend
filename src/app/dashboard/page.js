@@ -19,10 +19,12 @@ import Link from "next/link";
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchUser();
+    fetchProfile();
   }, []);
 
   const fetchUser = async () => {
@@ -34,6 +36,18 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error fetching user:", error);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("/api/profile");
+      if (res.ok) {
+        const data = await res.json();
+        setProfileData(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
     }
@@ -135,7 +149,7 @@ export default function DashboardPage() {
           </motion.button>
         </motion.div>
 
-        {/* Stats Card - ONLY PROGRESS */}
+        {/* Stats Card - REAL PROGRESS */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,13 +165,144 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-slate-400 text-sm mb-1">Progress Belajar</p>
-                <p className="text-3xl font-bold text-white">0%</p>
-                <p className="text-xs text-slate-500 mt-1">Mulai roadmap untuk tracking progress</p>
+                <p className="text-3xl font-bold text-white">
+                  {profileData?.stats?.overallProgress || 0}%
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  {profileData?.stats?.totalRoadmaps > 0
+                    ? `${profileData.stats.totalRoadmaps} roadmap aktif`
+                    : "Mulai roadmap untuk tracking progress"}
+                </p>
               </div>
               <TrendingUp className="w-10 h-10 text-blue-400" />
             </div>
           </motion.div>
         </motion.div>
+
+        {/* Career Summary Card - IF EXISTS */}
+        {profileData?.profile && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-12"
+          >
+            <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-xl border border-yellow-500/30 rounded-xl p-6 shadow-xl">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="w-6 h-6 text-yellow-400" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                    Career Match Kamu
+                    <Sparkles className="w-5 h-5 text-yellow-400" />
+                  </h2>
+                  <p className="text-slate-300 text-sm mb-4">
+                    {profileData.profile.personalityTraits?.type ||
+                      "Personality type kamu"}
+                  </p>
+
+                  {profileData.profile.careerMatches &&
+                    profileData.profile.careerMatches.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs text-slate-400 mb-2">
+                          Top Career Matches:
+                        </p>
+                        {profileData.profile.careerMatches
+                          .slice(0, 3)
+                          .map((career, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-3"
+                            >
+                              <span className="text-sm text-white font-medium">
+                                {career.title}
+                              </span>
+                              <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">
+                                {career.match_percentage}% Match
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                  <p className="text-xs text-slate-500 mt-4">
+                    💡 AI Confidence:{" "}
+                    {profileData.profile.aiConfidenceScore || 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Latest Test Result Card - IF EXISTS */}
+        {profileData?.latestTests && profileData.latestTests.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mb-12"
+          >
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <ClipboardList className="w-5 h-5 text-green-400" />
+                Hasil Rekomendasi Karir Terakhir
+              </h2>
+
+              {(() => {
+                const latestTest = profileData.latestTests[0];
+                const careers =
+                  latestTest.aiAnalysis?.recommended_careers || [];
+
+                if (careers.length === 0) return null;
+
+                return (
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-400 mb-3">
+                      Dari tes minat bakat -{" "}
+                      {new Date(latestTest.createdAt).toLocaleDateString(
+                        "id-ID",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
+                    </p>
+
+                    {careers.slice(0, 5).map((career, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 hover:border-green-500/30 transition"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-base font-semibold text-white">
+                              {career.title}
+                            </span>
+                            <span className="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-2 py-1 rounded-full">
+                              {career.match_percentage}% Match
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-400">
+                            {career.reason}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+
+                    {careers.length > 5 && (
+                      <p className="text-xs text-slate-500 text-center mt-2">
+                        +{careers.length - 5} karir lainnya
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </motion.div>
+        )}
 
         {/* Quick Actions */}
         <motion.div
@@ -193,6 +338,56 @@ export default function DashboardPage() {
             ))}
           </div>
         </motion.div>
+
+        {/* Recent Activity - IF EXISTS */}
+        {profileData?.latestTests && profileData.latestTests.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">
+              Aktivitas Terakhir
+            </h2>
+            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
+              <div className="space-y-4">
+                {profileData.latestTests.map((test, idx) => (
+                  <div
+                    key={test.id}
+                    className="flex items-center justify-between p-4 bg-slate-800/30 border border-slate-700/50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center justify-center">
+                        <ClipboardList className="w-5 h-5 text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-white">
+                          {test.testType === "minat_bakat"
+                            ? "Tes Minat Bakat"
+                            : "Mini Test"}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(test.createdAt).toLocaleDateString(
+                            "id-ID",
+                            {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-full">
+                      Selesai
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* User Profile Card */}
         <motion.div

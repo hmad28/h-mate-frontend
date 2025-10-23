@@ -18,6 +18,7 @@ export default function KonsultasiPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -28,10 +29,26 @@ export default function KonsultasiPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Load chat history on mount
+  // Load user info and chat history on mount
   useEffect(() => {
-    loadChatHistory();
+    const initPage = async () => {
+      await fetchCurrentUser();
+      await loadChatHistory();
+    };
+    initPage();
   }, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  };
 
   const loadChatHistory = async () => {
     try {
@@ -82,12 +99,24 @@ export default function KonsultasiPage() {
       // Save user message to DB
       await saveConversation("user", userMessage);
 
+      // Prepare history with user context
       const history = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
       }));
 
-      const response = await sendConsultation(userMessage, history);
+      // Add system context about user at the beginning (if user info is available)
+      const contextualHistory = currentUser
+        ? [
+            {
+              role: "assistant",
+              content: `[SYSTEM CONTEXT: User ini adalah ${currentUser.username}, umur ${currentUser.age} tahun. Panggil dia dengan username-nya dan sesuaikan saran karir dengan umurnya.]`,
+            },
+            ...history,
+          ]
+        : history;
+
+      const response = await sendConsultation(userMessage, contextualHistory);
 
       const assistantMessage = response.data.response;
 

@@ -18,10 +18,12 @@ import {
 import Link from "next/link";
 import { generateQuestions, analyzeResults } from "@/lib/api";
 
-// TAMBAHKAN IMPORT INI DI BAGIAN ATAS FILE (setelah import yang ada)
+// 1. TAMBAHKAN IMPORT INI DI BARIS 15 (setelah import { generateQuestions, analyzeResults } from "@/lib/api";)
 import { saveTestResult } from "@/lib/api";
+import { toast } from "sonner"
 
-// GANTI FUNGSI analyzeTest DENGAN KODE INI:
+// 2. GANTI FUNGSI analyzeTest (sekitar baris 80-95) DENGAN KODE INI:
+
 const analyzeTest = async (finalAnswers) => {
   setStep("analyzing");
 
@@ -30,23 +32,30 @@ const analyzeTest = async (finalAnswers) => {
     
     // Save test result to database
     try {
-      await saveTestResult(
+      const saveResponse = await saveTestResult(
         'minat_bakat',
         questions,
         finalAnswers,
         response.data
       );
-      console.log('Test result saved successfully');
+      
+      if (saveResponse.success) {
+        console.log('✅ Test result saved successfully');
+        toast.success('Hasil tes berhasil disimpan!');
+      } else {
+        console.error('❌ Failed to save test result:', saveResponse.error);
+        toast.error('Gagal menyimpan hasil tes');
+      }
     } catch (saveError) {
-      console.error('Error saving test result:', saveError);
-      // Don't block user flow if save fails
+      console.error('❌ Error saving test result:', saveError);
+      toast.error('Gagal menyimpan hasil tes');
     }
     
     setResult(response.data);
     setStep("result");
   } catch (error) {
     console.error("Error analyzing results:", error);
-    alert("Gagal menganalisis hasil. Coba lagi ya!");
+    toast.error("Gagal menganalisis hasil. Coba lagi ya!");
     setStep("start");
   }
 };
