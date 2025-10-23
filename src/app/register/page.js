@@ -4,12 +4,16 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { UserPlus, Eye, EyeOff, User, Lock } from "lucide-react";
+import { UserPlus, Eye, EyeOff, User, Lock, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+    age: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -17,11 +21,22 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
 
+    // Validation
+    if (formData.age < 13 || formData.age > 100) {
+      toast.error("Umur harus antara 13-100 tahun");
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: formData.username,
+          password: formData.password,
+          age: parseInt(formData.age),
+        }),
       });
 
       const data = await res.json();
@@ -141,6 +156,32 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Age Input - BARU */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Umur
+              </label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  type="number"
+                  value={formData.age}
+                  onChange={(e) =>
+                    setFormData({ ...formData, age: e.target.value })
+                  }
+                  className="w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent transition"
+                  placeholder="Masukkan umur kamu"
+                  required
+                  min={13}
+                  max={100}
+                />
+              </div>
+              <p className="mt-2 text-xs text-slate-500">
+                💡 Umur membantu AI memberikan rekomendasi karir yang sesuai
+                dengan tahap hidupmu
+              </p>
             </div>
 
             {/* Submit Button */}

@@ -27,6 +27,9 @@ import {
   roadmapConsultation,
 } from "@/lib/api";
 
+// TAMBAHKAN IMPORT INI DI BAGIAN ATAS FILE (setelah import yang ada)
+import { saveRoadmap, updateRoadmapProgress } from "@/lib/api";
+
 // Toast Notification Component
 const Toast = ({ message, type = "success", onClose }) => {
   useEffect(() => {
@@ -218,6 +221,9 @@ export default function RoadmapPage() {
 
   const steps = ["Mulai", "Identifikasi", "Roadmap", "Progress", "Konsultasi"];
 
+  // TAMBAHKAN STATE BARU DI COMPONENT (setelah state yang ada)
+  const [currentRoadmapId, setCurrentRoadmapId] = useState(null);
+
   const showToast = (message, type = "success") => {
     setToast({ message, type });
   };
@@ -231,6 +237,8 @@ export default function RoadmapPage() {
     setCurrentStep(1);
   };
 
+  // -----------------------------
+  // GANTI FUNGSI handlePelajarWithGoal DENGAN KODE INI:
   const handlePelajarWithGoal = async () => {
     if (!goalInput.trim()) return;
 
@@ -245,6 +253,23 @@ export default function RoadmapPage() {
       });
 
       setRoadmap(response.data);
+
+      // Save roadmap to database
+      try {
+        const saveResponse = await saveRoadmap(
+          response.data.title,
+          goalInput,
+          "pelajar",
+          response.data,
+          response.data.estimatedTime || response.data.totalDuration
+        );
+        if (saveResponse.success) {
+          setCurrentRoadmapId(saveResponse.data.id);
+        }
+      } catch (saveError) {
+        console.error("Error saving roadmap:", saveError);
+      }
+
       setCurrentStep(2);
       showToast("Roadmap berhasil dibuat! 🎉");
     } catch (error) {
@@ -253,6 +278,7 @@ export default function RoadmapPage() {
       setIsLoading(false);
     }
   };
+  // =====================================================
 
   const startMiniTest = async () => {
     setIsLoading(true);
@@ -305,6 +331,7 @@ export default function RoadmapPage() {
     }
   };
 
+  // GANTI FUNGSI handleJobSelect DENGAN KODE INI:
   const handleJobSelect = async (job) => {
     setSelectedJob(job);
     setIsLoading(true);
@@ -318,6 +345,23 @@ export default function RoadmapPage() {
       });
 
       setRoadmap(response.data);
+
+      // Save roadmap to database
+      try {
+        const saveResponse = await saveRoadmap(
+          response.data.title,
+          job.title,
+          "pelajar",
+          response.data,
+          response.data.estimatedTime || response.data.totalDuration
+        );
+        if (saveResponse.success) {
+          setCurrentRoadmapId(saveResponse.data.id);
+        }
+      } catch (saveError) {
+        console.error("Error saving roadmap:", saveError);
+      }
+
       setCurrentStep(2);
       showToast(`Roadmap ${job.title} siap! 🚀`);
     } catch (error) {
@@ -327,6 +371,7 @@ export default function RoadmapPage() {
     }
   };
 
+  // GANTI FUNGSI handleProfessionalUpgrade DENGAN KODE INI:
   const handleProfessionalUpgrade = async () => {
     if (!professionInput.trim()) return;
 
@@ -341,6 +386,23 @@ export default function RoadmapPage() {
       });
 
       setRoadmap(response.data);
+
+      // Save roadmap to database
+      try {
+        const saveResponse = await saveRoadmap(
+          response.data.title,
+          `${professionInput} - Skill Enhancement`,
+          "profesional",
+          response.data,
+          response.data.estimatedTime || response.data.totalDuration
+        );
+        if (saveResponse.success) {
+          setCurrentRoadmapId(saveResponse.data.id);
+        }
+      } catch (saveError) {
+        console.error("Error saving roadmap:", saveError);
+      }
+
       setCurrentStep(2);
       showToast("Roadmap upgrade skill siap! 📈");
     } catch (error) {
@@ -350,6 +412,7 @@ export default function RoadmapPage() {
     }
   };
 
+  // GANTI FUNGSI handleProfessionalSwitch DENGAN KODE INI:
   const handleProfessionalSwitch = async () => {
     if (!switchTarget.trim()) return;
 
@@ -365,6 +428,23 @@ export default function RoadmapPage() {
       });
 
       setRoadmap(response.data);
+
+      // Save roadmap to database
+      try {
+        const saveResponse = await saveRoadmap(
+          response.data.title,
+          switchTarget,
+          "profesional",
+          response.data,
+          response.data.estimatedTime || response.data.totalDuration
+        );
+        if (saveResponse.success) {
+          setCurrentRoadmapId(saveResponse.data.id);
+        }
+      } catch (saveError) {
+        console.error("Error saving roadmap:", saveError);
+      }
+
       setCurrentStep(2);
       showToast("Roadmap career switch siap! 🔄");
     } catch (error) {
@@ -374,12 +454,34 @@ export default function RoadmapPage() {
     }
   };
 
-  const handlePhaseToggle = (phaseIndex) => {
-    setCompletedPhases((prev) =>
-      prev.includes(phaseIndex)
-        ? prev.filter((i) => i !== phaseIndex)
-        : [...prev, phaseIndex]
-    );
+  // GANTI FUNGSI handlePhaseToggle DENGAN KODE INI:
+  const handlePhaseToggle = async (phaseIndex) => {
+    const newCompletedPhases = completedPhases.includes(phaseIndex)
+      ? completedPhases.filter((i) => i !== phaseIndex)
+      : [...completedPhases, phaseIndex];
+
+    setCompletedPhases(newCompletedPhases);
+
+    // Auto-save progress to database if roadmap is saved
+    if (currentRoadmapId && roadmap) {
+      try {
+        const completedSkills = newCompletedPhases.flatMap(
+          (idx) => roadmap.phases[idx]?.skills || []
+        );
+        const progressPercentage = Math.round(
+          (newCompletedPhases.length / roadmap.phases.length) * 100
+        );
+
+        await updateRoadmapProgress(
+          currentRoadmapId,
+          newCompletedPhases,
+          completedSkills,
+          progressPercentage
+        );
+      } catch (error) {
+        console.error("Error updating progress:", error);
+      }
+    }
   };
 
   const proceedToProgress = () => {

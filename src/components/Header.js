@@ -16,6 +16,7 @@ import {
   LogIn,
   UserPlus,
 } from "lucide-react";
+import Image from "next/image";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -75,7 +76,14 @@ export default function Header() {
               <div className="relative">
                 {/* Logo Icon */}
                 <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg shadow-yellow-400/30">
-                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-slate-950" />
+                  {/* <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-slate-950" /> */}
+                  <Image
+                    src="/images/h-logo.png"
+                    alt="H-Mate Logo"
+                    width={32}
+                    height={40}
+                    className="absolute inset-0 m-auto bg-slate-900 rounded-lg"
+                  />
                 </div>
                 {/* Glow effect on hover */}
                 <motion.div
@@ -94,60 +102,70 @@ export default function Header() {
               {/* Logo Text */}
               <div className="flex flex-col">
                 <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
-                  KarirKu
+                  {/* H-Mate */}
+                  <Image
+                    src="/images/mate-aja.png"
+                    alt="H-Mate Tagline"
+                    width={80}
+                    height={20}
+                    className="inline-block -mt-1"
+                  />
                 </span>
-                <span className="text-[10px] sm:text-xs text-slate-400 -mt-1 hidden sm:block">
-                  AI Career Guide
+                <span className="text-[10px] sm:text-xs font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent hidden sm:block">
+                  Your Digital Mentor
                 </span>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-1">
-              {navigation.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
+            {false && (
+              <div className="hidden md:flex items-center gap-1">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href);
 
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 flex items-center gap-2 ${
-                      active
-                        ? "text-yellow-400"
-                        : "text-slate-300 hover:text-yellow-400 hover:bg-yellow-400/10"
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.name}
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`relative px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300 flex items-center gap-2 ${
+                        active
+                          ? "text-yellow-400"
+                          : "text-slate-300 hover:text-yellow-400 hover:bg-yellow-400/10"
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {item.name}
 
-                    {/* Active indicator with glow */}
-                    {active && (
-                      <>
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500"
-                          transition={{
-                            type: "spring",
-                            stiffness: 380,
-                            damping: 30,
-                          }}
-                        />
-                        <motion.div
-                          className="absolute inset-0 bg-yellow-400/5 rounded-lg"
-                          layoutId="activeTabBg"
-                          transition={{
-                            type: "spring",
-                            stiffness: 380,
-                            damping: 30,
-                          }}
-                        />
-                      </>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+                      {/* Active indicator with glow */}
+                      {active && (
+                        <>
+                          <motion.div
+                            layoutId="activeTab"
+                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-500"
+                            transition={{
+                              type: "spring",
+                              stiffness: 380,
+                              damping: 30,
+                            }}
+                          />
+                          <motion.div
+                            className="absolute inset-0 bg-yellow-400/5 rounded-lg"
+                            layoutId="activeTabBg"
+                            transition={{
+                              type: "spring",
+                              stiffness: 380,
+                              damping: 30,
+                            }}
+                          />
+                        </>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+            {/* false buat komentar kode yg ada {{  }} */}
 
             {/* Auth Buttons */}
             <div className="flex items-center gap-2 sm:gap-3">

@@ -4,20 +4,20 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Loader2, ArrowLeft, Bot, User, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { sendConsultation } from "@/lib/api";
+import {
+  sendConsultation,
+  saveConversation,
+  loadConversations,
+} from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
+import { toast } from "sonner";
 
 export default function KonsultasiPage() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(true);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -27,6 +27,45 @@ export default function KonsultasiPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load chat history on mount
+  useEffect(() => {
+    loadChatHistory();
+  }, []);
+
+  const loadChatHistory = async () => {
+    try {
+      const response = await loadConversations(50);
+      if (response.success && response.data.length > 0) {
+        const formattedMessages = response.data.map((conv) => ({
+          role: conv.role,
+          content: conv.message,
+        }));
+        setMessages(formattedMessages);
+      } else {
+        // No history, show initial greeting
+        setMessages([
+          {
+            role: "assistant",
+            content:
+              "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error loading chat history:", error);
+      // Show initial greeting on error
+      setMessages([
+        {
+          role: "assistant",
+          content:
+            "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
+        },
+      ]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,6 +79,9 @@ export default function KonsultasiPage() {
     setIsLoading(true);
 
     try {
+      // Save user message to DB
+      await saveConversation("user", userMessage);
+
       const history = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -47,11 +89,16 @@ export default function KonsultasiPage() {
 
       const response = await sendConsultation(userMessage, history);
 
+      const assistantMessage = response.data.response;
+
+      // Save assistant response to DB
+      await saveConversation("assistant", assistantMessage);
+
       setMessages([
         ...newMessages,
         {
           role: "assistant",
-          content: response.data.response,
+          content: assistantMessage,
         },
       ]);
     } catch (error) {
@@ -64,10 +111,22 @@ export default function KonsultasiPage() {
             "Maaf, saat ini sedang terjadi kesalahan. Mohon coba lagi sesaat ya!",
         },
       ]);
+      toast.error("Gagal menyimpan percakapan");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (loadingHistory) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mx-auto mb-4" />
+          <p className="text-slate-400">Memuat riwayat chat...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
@@ -173,8 +232,12 @@ export default function KonsultasiPage() {
                   {message.role === "user" ? (
                     <User className="w-5 h-5 text-yellow-400" />
                   ) : (
-                    // <Bot className="w-5 h-5 text-yellow-400" />
-                    <Image src="/images/h-logo.png" alt="H-Mate Logo" width={25} height={25} />
+                    <Image
+                      src="/images/h-logo.png"
+                      alt="H-Mate Logo"
+                      width={25}
+                      height={25}
+                    />
                   )}
                 </motion.div>
 

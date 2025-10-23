@@ -18,6 +18,41 @@ import {
 import Link from "next/link";
 import { generateQuestions, analyzeResults } from "@/lib/api";
 
+// TAMBAHKAN IMPORT INI DI BAGIAN ATAS FILE (setelah import yang ada)
+import { saveTestResult } from "@/lib/api";
+
+// GANTI FUNGSI analyzeTest DENGAN KODE INI:
+const analyzeTest = async (finalAnswers) => {
+  setStep("analyzing");
+
+  try {
+    const response = await analyzeResults(finalAnswers);
+    
+    // Save test result to database
+    try {
+      await saveTestResult(
+        'minat_bakat',
+        questions,
+        finalAnswers,
+        response.data
+      );
+      console.log('Test result saved successfully');
+    } catch (saveError) {
+      console.error('Error saving test result:', saveError);
+      // Don't block user flow if save fails
+    }
+    
+    setResult(response.data);
+    setStep("result");
+  } catch (error) {
+    console.error("Error analyzing results:", error);
+    alert("Gagal menganalisis hasil. Coba lagi ya!");
+    setStep("start");
+  }
+};
+
+// SISANYA TETAP SAMA, TIDAK DIUBAH
+
 export default function TesMinatPage() {
   const [step, setStep] = useState("start");
   const [questions, setQuestions] = useState([]);

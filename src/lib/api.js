@@ -110,3 +110,49 @@ export async function getNextSteps(roadmap, completedPhases, currentSkills) {
 export async function roadmapConsultation(message, context) {
   return apiCall("/api/roadmap/consultation", { message, context });
 }
+
+// TAMBAHKAN FUNGSI INI KE FILE src/lib/api.js YANG SUDAH ADA
+
+// ===== CONVERSATIONS =====
+export async function saveConversation(role, message) {
+  const response = await fetch('/api/conversations/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role, message }),
+  });
+  return response.json();
+}
+
+export async function loadConversations(limit = 50) {
+  const response = await fetch(`/api/conversations/load?limit=${limit}`);
+  return response.json();
+}
+
+// ===== TEST RESULTS =====
+export async function saveTestResult(testType, questions, answers, aiAnalysis) {
+  const response = await fetch('/api/test-results/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ testType, questions, answers, aiAnalysis }),
+  });
+  return response.json();
+}
+
+// ===== ROADMAPS =====
+export async function saveRoadmap(title, targetRole, currentStatus, roadmapData, estimatedTime) {
+  const response = await fetch('/api/roadmaps/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, targetRole, currentStatus, roadmapData, estimatedTime }),
+  });
+  return response.json();
+}
+
+export async function updateRoadmapProgress(roadmapId, completedPhases, completedSkills, progressPercentage) {
+  const response = await fetch('/api/roadmaps/progress/update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roadmapId, completedPhases, completedSkills, progressPercentage }),
+  });
+  return response.json();
+}

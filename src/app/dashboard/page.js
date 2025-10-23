@@ -10,8 +10,8 @@ import {
   Map,
   ClipboardList,
   TrendingUp,
-  Calendar,
-  Award,
+  Sparkles,
+  Target,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -82,22 +82,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const stats = [
-    {
-      icon: TrendingUp,
-      label: "Progress",
-      value: "0%",
-      color: "text-blue-400",
-    },
-    {
-      icon: Calendar,
-      label: "Hari Aktif",
-      value: "1",
-      color: "text-green-400",
-    },
-    { icon: Award, label: "Pencapaian", value: "0", color: "text-yellow-400" },
-  ];
-
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
       {/* Animated Background */}
@@ -151,31 +135,28 @@ export default function DashboardPage() {
           </motion.button>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Stats Card - ONLY PROGRESS */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+          className="mb-12"
         >
-          {stats.map((stat, index) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + index * 0.1 }}
-              whileHover={{ y: -5 }}
-              className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-slate-400 text-sm mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold text-white">{stat.value}</p>
-                </div>
-                <stat.icon className={`w-10 h-10 ${stat.color}`} />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -5 }}
+            className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm mb-1">Progress Belajar</p>
+                <p className="text-3xl font-bold text-white">0%</p>
+                <p className="text-xs text-slate-500 mt-1">Mulai roadmap untuk tracking progress</p>
               </div>
-            </motion.div>
-          ))}
+              <TrendingUp className="w-10 h-10 text-blue-400" />
+            </div>
+          </motion.div>
         </motion.div>
 
         {/* Quick Actions */}
@@ -229,7 +210,7 @@ export default function DashboardPage() {
                 {user?.username}
               </h3>
               <p className="text-slate-400">
-                Member sejak{" "}
+                {user?.age} tahun • Member sejak{" "}
                 {new Date(user?.createdAt || Date.now()).toLocaleDateString(
                   "id-ID",
                   { year: "numeric", month: "long", day: "numeric" }

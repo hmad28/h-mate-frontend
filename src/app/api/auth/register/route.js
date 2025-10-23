@@ -6,12 +6,12 @@ import { eq } from "drizzle-orm";
 
 export async function POST(request) {
   try {
-    const { username, password } = await request.json();
+    const { username, password, age } = await request.json();
 
     // Validation
-    if (!username || !password) {
+    if (!username || !password || !age) {
       return NextResponse.json(
-        { error: "Username dan password harus diisi" },
+        { error: "Username, password, dan umur harus diisi" },
         { status: 400 }
       );
     }
@@ -26,6 +26,13 @@ export async function POST(request) {
     if (password.length < 6) {
       return NextResponse.json(
         { error: "Password minimal 6 karakter" },
+        { status: 400 }
+      );
+    }
+
+    if (age < 13 || age > 100) {
+      return NextResponse.json(
+        { error: "Umur harus antara 13-100 tahun" },
         { status: 400 }
       );
     }
@@ -51,14 +58,16 @@ export async function POST(request) {
       .values({
         username,
         password: hashedPassword,
+        age: parseInt(age),
       })
-      .returning({ id: users.id, username: users.username });
+      .returning({ id: users.id, username: users.username, age: users.age });
 
     // Create session
     const session = await getSession();
     session.user = {
       id: newUser.id,
       username: newUser.username,
+      age: newUser.age,
     };
     await session.save();
 
