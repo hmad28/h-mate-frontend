@@ -16,13 +16,8 @@ import {
   Award,
 } from "lucide-react";
 import Link from "next/link";
-import { generateQuestions, analyzeResults } from "@/lib/api";
-
-// 1. TAMBAHKAN IMPORT INI DI BARIS 15 (setelah import { generateQuestions, analyzeResults } from "@/lib/api";)
-import { saveTestResult } from "@/lib/api";
-import { toast } from "sonner"
-
-// 2. GANTI FUNGSI analyzeTest (sekitar baris 80-95) DENGAN KODE INI:
+import { generateQuestions, analyzeResults, saveTestResult } from "@/lib/api";
+import { toast } from "sonner";
 
 const analyzeTest = async (finalAnswers) => {
   setStep("analyzing");
@@ -108,16 +103,49 @@ export default function TesMinatPage() {
     }
   };
 
+  // STEP 2: CARI FUNGSI analyzeTest (sekitar baris 75-90)
+  // GANTI SELURUH FUNGSI analyzeTest DENGAN KODE INI:
+
   const analyzeTest = async (finalAnswers) => {
     setStep("analyzing");
 
     try {
+      // Call backend to analyze
       const response = await analyzeResults(finalAnswers);
+
+      console.log("✅ Analysis response:", response);
+
+      // Save test result to database
+      try {
+        console.log("💾 Saving test result to database...");
+
+        const saveResponse = await saveTestResult(
+          "minat_bakat",
+          questions,
+          finalAnswers,
+          response.data
+        );
+
+        console.log("💾 Save response:", saveResponse);
+
+        if (saveResponse.success) {
+          console.log("✅ Test result saved successfully to DB");
+          toast.success("Hasil tes berhasil disimpan! 🎉");
+        } else {
+          console.error("❌ Failed to save test result:", saveResponse.error);
+          toast.error("Gagal menyimpan hasil tes");
+        }
+      } catch (saveError) {
+        console.error("❌ Error saving test result:", saveError);
+        toast.error("Terjadi kesalahan saat menyimpan hasil");
+      }
+
+      // Set result and move to result step
       setResult(response.data);
       setStep("result");
     } catch (error) {
-      console.error("Error analyzing results:", error);
-      alert("Gagal menganalisis hasil. Coba lagi ya!");
+      console.error("❌ Error analyzing results:", error);
+      toast.error("Gagal menganalisis hasil. Coba lagi ya!");
       setStep("start");
     }
   };

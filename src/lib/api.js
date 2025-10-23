@@ -113,6 +113,11 @@ export async function roadmapConsultation(message, context) {
 
 // TAMBAHKAN FUNGSI INI KE FILE src/lib/api.js YANG SUDAH ADA
 
+// ==========================================
+// TAMBAHKAN FUNGSI-FUNGSI INI KE FILE: src/lib/api.js
+// (di bagian paling bawah file, setelah fungsi-fungsi yang sudah ada)
+// ==========================================
+
 // ===== CONVERSATIONS =====
 export async function saveConversation(role, message) {
   const response = await fetch('/api/conversations/save', {
@@ -156,3 +161,7 @@ export async function updateRoadmapProgress(roadmapId, completedPhases, complete
   });
   return response.json();
 }
+
+// ==========================================
+// SETELAH MENAMBAHKAN, SAVE FILE
+// ==========================================
