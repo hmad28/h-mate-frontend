@@ -1,13 +1,10 @@
 // lib/api.js
-// Centralized API calls ke backend Express
+// Centralized API calls
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 /**
  * Generic fetch wrapper dengan error handling
- * @param {string} endpoint - API endpoint (misal: '/api/konsultasi')
- * @param {object} data - Data yang akan dikirim
- * @returns {Promise} Response dari API
  */
 async function apiCall(endpoint, data) {
   try {
@@ -32,34 +29,20 @@ async function apiCall(endpoint, data) {
   }
 }
 
-/**
- * Kirim pesan konsultasi karier
- * @param {string} message - Pesan dari user
- * @param {array} history - Riwayat chat (opsional)
- */
+// ===== BACKEND EXPRESS APIs (ke backend/server.js) =====
+
 export async function sendConsultation(message, history = []) {
   return apiCall("/api/konsultasi", { message, history });
 }
 
-/**
- * Generate pertanyaan tes minat bakat
- * @param {number} questionCount - Jumlah pertanyaan (default: 10)
- */
 export async function generateQuestions(questionCount = 10) {
   return apiCall("/api/generate-questions", { questionCount });
 }
 
-/**
- * Analisis hasil tes
- * @param {array} answers - Array jawaban user
- */
 export async function analyzeResults(answers) {
   return apiCall("/api/analyze-results", { answers });
 }
 
-/**
- * Health check backend
- */
 export async function checkHealth() {
   try {
     const response = await fetch(`${API_URL}/health`);
@@ -70,32 +53,18 @@ export async function checkHealth() {
   }
 }
 
-// ===== ROADMAP APIs =====
-
-/**
- * Generate mini test untuk career interest
- */
 export async function generateMiniTest(questionCount = 7) {
   return apiCall("/api/roadmap/mini-test", { questionCount });
 }
 
-/**
- * Analyze mini test results
- */
 export async function analyzeMiniTest(answers) {
   return apiCall("/api/roadmap/analyze-mini-test", { answers });
 }
 
-/**
- * Generate career roadmap
- */
 export async function generateRoadmap(data) {
   return apiCall("/api/roadmap/generate", data);
 }
 
-/**
- * Get next steps based on current progress
- */
 export async function getNextSteps(roadmap, completedPhases, currentSkills) {
   return apiCall("/api/roadmap/next-steps", {
     roadmap,
@@ -104,25 +73,16 @@ export async function getNextSteps(roadmap, completedPhases, currentSkills) {
   });
 }
 
-/**
- * Consultation chat untuk roadmap
- */
 export async function roadmapConsultation(message, context) {
   return apiCall("/api/roadmap/consultation", { message, context });
 }
 
-// TAMBAHKAN FUNGSI INI KE FILE src/lib/api.js YANG SUDAH ADA
+// ===== NEXT.JS API ROUTES (ke frontend/src/app/api) =====
 
-// ==========================================
-// TAMBAHKAN FUNGSI-FUNGSI INI KE FILE: src/lib/api.js
-// (di bagian paling bawah file, setelah fungsi-fungsi yang sudah ada)
-// ==========================================
-
-// ===== CONVERSATIONS =====
 export async function saveConversation(role, message) {
-  const response = await fetch('/api/conversations/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/conversations/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ role, message }),
   });
   return response.json();
@@ -133,35 +93,51 @@ export async function loadConversations(limit = 50) {
   return response.json();
 }
 
-// ===== TEST RESULTS =====
 export async function saveTestResult(testType, questions, answers, aiAnalysis) {
-  const response = await fetch('/api/test-results/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/test-results/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ testType, questions, answers, aiAnalysis }),
   });
   return response.json();
 }
 
-// ===== ROADMAPS =====
-export async function saveRoadmap(title, targetRole, currentStatus, roadmapData, estimatedTime) {
-  const response = await fetch('/api/roadmaps/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title, targetRole, currentStatus, roadmapData, estimatedTime }),
+export async function saveRoadmap(
+  title,
+  targetRole,
+  currentStatus,
+  roadmapData,
+  estimatedTime
+) {
+  const response = await fetch("/api/roadmaps/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      title,
+      targetRole,
+      currentStatus,
+      roadmapData,
+      estimatedTime,
+    }),
   });
   return response.json();
 }
 
-export async function updateRoadmapProgress(roadmapId, completedPhases, completedSkills, progressPercentage) {
-  const response = await fetch('/api/roadmaps/progress/update', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ roadmapId, completedPhases, completedSkills, progressPercentage }),
+export async function updateRoadmapProgress(
+  roadmapId,
+  completedPhases,
+  completedSkills,
+  progressPercentage
+) {
+  const response = await fetch("/api/roadmaps/progress/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      roadmapId,
+      completedPhases,
+      completedSkills,
+      progressPercentage,
+    }),
   });
   return response.json();
 }
-
-// ==========================================
-// SETELAH MENAMBAHKAN, SAVE FILE
-// ==========================================
