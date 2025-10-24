@@ -5,19 +5,28 @@ import { getCurrentUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 
 export async function POST(request) {
+  console.log("🔵 POST /api/test-results/save called");
+
   try {
     const user = await getCurrentUser();
 
+    console.log("👤 Current user:", user);
+
     if (!user) {
+      console.log("❌ User not authenticated");
       return NextResponse.json(
         { error: "Tidak terautentikasi" },
         { status: 401 }
       );
     }
 
-    const { testType, questions, answers, aiAnalysis } = await request.json();
+    const body = await request.json();
+    console.log("📦 Request body keys:", Object.keys(body));
+
+    const { testType, questions, answers, aiAnalysis } = body;
 
     if (!testType || !questions || !answers || !aiAnalysis) {
+      console.log("❌ Missing required fields");
       return NextResponse.json(
         { error: "Data tidak lengkap" },
         { status: 400 }
@@ -67,7 +76,7 @@ export async function POST(request) {
           personalityTraits: { type: personalityType },
           skills: strengths,
           lastAnalyzedAt: new Date(),
-          aiConfidenceScore: 85, // Default confidence from test
+          aiConfidenceScore: 85,
           updatedAt: new Date(),
         })
         .where(eq(userProfiles.userId, user.id));
@@ -86,12 +95,15 @@ export async function POST(request) {
       console.log("✅ Profile created");
     }
 
+    console.log("✅ All done, returning success");
+
     return NextResponse.json({
       success: true,
       data: newTestResult,
     });
   } catch (error) {
     console.error("❌ Save test result error:", error);
+    console.error("Error stack:", error.stack);
     return NextResponse.json(
       { error: "Gagal menyimpan hasil tes", details: error.message },
       { status: 500 }
