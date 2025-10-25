@@ -66,12 +66,28 @@ export default function TesMinatPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
+  // CARI FUNGSI handleStartTest di src/app/tes-minat/page.js
+  // GANTI DENGAN KODE INI:
+
   const handleStartTest = async () => {
     setStep("loading");
     setError(null);
 
     try {
-      const response = await generateQuestions(20);
+      // Get current user to send age
+      let userAge = null;
+      try {
+        const userRes = await fetch("/api/auth/me");
+        if (userRes.ok) {
+          const userData = await userRes.json();
+          userAge = userData.user?.age;
+        }
+      } catch (e) {
+        console.log("Could not fetch user age, using default");
+      }
+
+      // Generate questions with user age
+      const response = await generateQuestions(20, userAge);
       setQuestions(response.data.questions);
       setStep("test");
     } catch (error) {
@@ -80,6 +96,8 @@ export default function TesMinatPage() {
       setStep("error");
     }
   };
+
+  // SISANYA TIDAK DIUBAH
 
   const handleAnswer = () => {
     if (!selectedOption) return;

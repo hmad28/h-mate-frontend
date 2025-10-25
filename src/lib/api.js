@@ -35,8 +35,8 @@ export async function sendConsultation(message, history = []) {
   return apiCall("/api/konsultasi", { message, history });
 }
 
-export async function generateQuestions(questionCount = 10) {
-  return apiCall("/api/generate-questions", { questionCount });
+export async function generateQuestions(questionCount = 20, userAge = null) {
+  return apiCall("/api/generate-questions", { questionCount, userAge });
 }
 
 export async function analyzeResults(answers) {
@@ -53,7 +53,7 @@ export async function checkHealth() {
   }
 }
 
-export async function generateMiniTest(questionCount = 7) {
+export async function generateMiniTest(questionCount = 15) {
   return apiCall("/api/roadmap/mini-test", { questionCount });
 }
 
