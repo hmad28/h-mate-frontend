@@ -185,9 +185,9 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-12"
+            className="my-6"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">Roadmap Kamu</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Roadmap Kamu</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {profileData.roadmaps.slice(0, 4).map((item, idx) => (
                 <motion.div
