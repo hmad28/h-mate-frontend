@@ -126,7 +126,7 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-12"
+          className="flex items-center justify-between mb-8"
         >
           <div>
             <h1 className="text-4xl font-bold text-white mb-2">
@@ -142,10 +142,10 @@ export default function DashboardPage() {
             onClick={handleLogout}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-2 px-6 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-lg text-white transition backdrop-blur-sm"
+            className="flex items-center gap-2 px-2 py-1 md:px-6 md:py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-lg text-white transition backdrop-blur-sm"
           >
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
+            <LogOut className="w-3 h-3 md:w-5 md:h-5" />
+            <span className="text-xs md:text-base">Logout</span>
           </motion.button>
         </motion.div>
 
@@ -154,7 +154,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-12"
+          className="mb-6"
         >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -185,7 +185,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-12"
+            className="mb-6"
           >
             <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-xl border border-yellow-500/30 rounded-xl p-6 shadow-xl">
               <div className="flex items-start gap-4">
@@ -242,7 +242,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="mb-12"
+            className="mb-6"
           >
             <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
@@ -310,7 +310,7 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-2xl font-bold text-white mb-6">Akses Cepat</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">Akses Cepat</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {quickActions.map((action, index) => (
               <motion.div
@@ -345,9 +345,9 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="mt-12"
+            className="mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">
+            <h2 className="text-2xl font-bold text-white mb-4">
               Aktivitas Terakhir
             </h2>
             <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
@@ -394,7 +394,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="mt-12 bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-8 shadow-xl"
+          className="mt-8 bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-8 shadow-xl"
         >
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">

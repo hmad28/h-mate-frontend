@@ -4,20 +4,21 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Loader2, ArrowLeft, Bot, User, Sparkles } from "lucide-react";
 import Link from "next/link";
-import {
-  sendConsultation,
-  saveConversation,
-  loadConversations,
-} from "@/lib/api";
+import { sendConsultation } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
 import Image from "next/image";
 import { toast } from "sonner";
 
 export default function KonsultasiPage() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content:
+        "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
+    },
+  ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingHistory, setLoadingHistory] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -29,13 +30,9 @@ export default function KonsultasiPage() {
     scrollToBottom();
   }, [messages]);
 
-  // Load user info and chat history on mount
+  // Load user info on mount
   useEffect(() => {
-    const initPage = async () => {
-      await fetchCurrentUser();
-      await loadChatHistory();
-    };
-    initPage();
+    fetchCurrentUser();
   }, []);
 
   const fetchCurrentUser = async () => {
@@ -50,37 +47,30 @@ export default function KonsultasiPage() {
     }
   };
 
-  const loadChatHistory = async () => {
+  const analyzeAndUpdateProfile = async (currentMessage, messageHistory) => {
     try {
-      const response = await loadConversations(50);
-      if (response.success && response.data.length > 0) {
-        const formattedMessages = response.data.map((conv) => ({
-          role: conv.role,
-          content: conv.message,
-        }));
-        setMessages(formattedMessages);
-      } else {
-        // No history, show initial greeting
-        setMessages([
-          {
-            role: "assistant",
-            content:
-              "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
-          },
-        ]);
+      console.log("🔍 Analyzing conversation for profile update...");
+
+      const response = await fetch("/api/analyze-conversation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentMessage,
+          history: messageHistory,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.updated) {
+          console.log("✅ Profile updated based on conversation");
+          // Optional: Show subtle notification
+          // toast.success('Profile diupdate berdasarkan percakapan', { duration: 2000 });
+        }
       }
     } catch (error) {
-      console.error("Error loading chat history:", error);
-      // Show initial greeting on error
-      setMessages([
-        {
-          role: "assistant",
-          content:
-            "Halo! Aku H-Mate AI Assistant. Aku siap bantu kamu eksplorasi karier impianmu. Mau tanya apa hari ini? 😊",
-        },
-      ]);
-    } finally {
-      setLoadingHistory(false);
+      console.error("Error analyzing conversation:", error);
+      // Silent fail - don't interrupt user experience
     }
   };
 
@@ -96,16 +86,13 @@ export default function KonsultasiPage() {
     setIsLoading(true);
 
     try {
-      // Save user message to DB
-      await saveConversation("user", userMessage);
-
       // Prepare history with user context
       const history = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
       }));
 
-      // Add system context about user at the beginning (if user info is available)
+      // Add system context about user (if available)
       const contextualHistory = currentUser
         ? [
             {
@@ -120,9 +107,6 @@ export default function KonsultasiPage() {
 
       const assistantMessage = response.data.response;
 
-      // Save assistant response to DB
-      await saveConversation("assistant", assistantMessage);
-
       setMessages([
         ...newMessages,
         {
@@ -130,6 +114,9 @@ export default function KonsultasiPage() {
           content: assistantMessage,
         },
       ]);
+
+      // Background: Analyze conversation and update profile (async, non-blocking)
+      analyzeAndUpdateProfile(userMessage, newMessages);
     } catch (error) {
       console.error("Error:", error);
       setMessages([
@@ -140,22 +127,11 @@ export default function KonsultasiPage() {
             "Maaf, saat ini sedang terjadi kesalahan. Mohon coba lagi sesaat ya!",
         },
       ]);
-      toast.error("Gagal menyimpan percakapan");
+      toast.error("Terjadi kesalahan");
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (loadingHistory) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 text-yellow-400 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400">Memuat riwayat chat...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden">
