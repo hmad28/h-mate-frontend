@@ -150,7 +150,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats Card - REAL PROGRESS */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -177,7 +177,100 @@ export default function DashboardPage() {
               <TrendingUp className="w-10 h-10 text-blue-400" />
             </div>
           </motion.div>
-        </motion.div>
+        </motion.div> */}
+
+        {/* Saved Roadmaps - IF EXISTS */}
+        {profileData?.roadmaps && profileData.roadmaps.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mt-12"
+          >
+            <h2 className="text-2xl font-bold text-white mb-6">Roadmap Kamu</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {profileData.roadmaps.slice(0, 4).map((item, idx) => (
+                <motion.div
+                  key={item.roadmap.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 + idx * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl hover:border-purple-500/30 transition"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-white mb-1">
+                        {item.roadmap.title}
+                      </h3>
+                      <p className="text-sm text-slate-400">
+                        Target: {item.roadmap.targetRole}
+                      </p>
+                    </div>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        item.roadmap.currentStatus === "pelajar"
+                          ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
+                          : "bg-purple-500/20 border border-purple-500/30 text-purple-400"
+                      }`}
+                    >
+                      {item.roadmap.currentStatus === "pelajar"
+                        ? "Pelajar"
+                        : "Profesional"}
+                    </span>
+                  </div>
+
+                  {item.progress && (
+                    <div className="mb-3">
+                      <div className="flex justify-between text-xs text-slate-400 mb-1">
+                        <span>Progress</span>
+                        <span>{item.progress.progressPercentage}%</span>
+                      </div>
+                      <div className="w-full bg-slate-800/50 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
+                          style={{
+                            width: `${item.progress.progressPercentage}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>{item.roadmap.estimatedTime || "No estimate"}</span>
+                    <span>
+                      {new Date(item.roadmap.createdAt).toLocaleDateString(
+                        "id-ID",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </span>
+                  </div>
+
+                  <Link href="/roadmap">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full mt-4 px-4 py-2 bg-purple-500/20 border border-purple-500/30 text-purple-400 rounded-lg text-sm font-semibold hover:bg-purple-500/30 transition"
+                    >
+                      Lihat Detail
+                    </motion.button>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+
+            {profileData.roadmaps.length > 4 && (
+              <p className="text-center text-sm text-slate-500 mt-4">
+                +{profileData.roadmaps.length - 4} roadmap lainnya
+              </p>
+            )}
+          </motion.div>
+        )}
 
         {/* Career Summary Card - IF EXISTS */}
         {profileData?.profile && (
