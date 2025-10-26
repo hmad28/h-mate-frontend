@@ -25,7 +25,7 @@ export default function Header() {
   const pathname = usePathname();
 
   // Check if user is logged in (temporary, nanti ganti dengan actual auth check)
-  const isLoggedIn = false; // TODO: Replace with actual auth state
+  const isLoggedIn = true; // TODO: Replace with actual auth state
 
   const navigation = [
     { name: "Beranda", href: "/", icon: Home },
