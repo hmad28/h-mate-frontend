@@ -220,7 +220,7 @@ export default function HomePage() {
         {/* Quick Stats */}
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-3 gap-4 max-w-3xl mx-auto mb-12"
+          className="grid grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto mb-8 sm:mb-12 px-4"
         >
           {[
             {
@@ -230,21 +230,23 @@ export default function HomePage() {
             },
             {
               icon: Heart,
-              label: "Untuk semua pelajar Indonesia",
-              value: "Gratis & Terbuka",
+              label: "Terbuka untuk semua pelajar Indonesia",
+              value: "Gratis",
             },
             { icon: Shield, label: "Privasi Terlindungi", value: "100% Save" },
           ].map((stat, idx) => (
             <motion.div
               key={idx}
-              className="bg-slate-900/30 backdrop-blur-sm border border-slate-800/50 rounded-2xl p-4 text-center"
+              className="bg-slate-900/30 backdrop-blur-sm border border-slate-800/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center"
               whileHover={{ y: -5, borderColor: "rgba(234, 179, 8, 0.3)" }}
             >
-              <stat.icon className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white mb-1">
+              <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 mx-auto mb-1 sm:mb-2" />
+              <div className="text-lg sm:text-2xl font-bold text-white mb-0.5 sm:mb-1">
                 {stat.value}
               </div>
-              <div className="text-xs text-slate-400">{stat.label}</div>
+              <div className="text-[10px] sm:text-xs text-slate-400 leading-tight">
+                {stat.label}
+              </div>
             </motion.div>
           ))}
         </motion.div>

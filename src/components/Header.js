@@ -305,7 +305,7 @@ export default function Header() {
                         href="/dashboard"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-yellow-400 font-medium rounded-lg border-2 border-yellow-400/30 hover:bg-yellow-400/10 hover:border-yellow-400/50 transition-all">
+                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-yellow-400 font-medium rounded-lg border-2 border-yellow-400/30 hover:bg-yellow-400/10 hover:border-yellow-400/50 transition-all mb-2">
                           <LayoutDashboard className="w-5 h-5" />
                           Dashboard
                         </button>
