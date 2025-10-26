@@ -11,8 +11,6 @@ import {
   Download,
   MessageSquare,
   Send,
-  CheckCircle2,
-  Circle,
   X,
   Sparkles,
   Bot,
@@ -25,10 +23,10 @@ import {
   generateRoadmap,
   getNextSteps,
   roadmapConsultation,
+  saveRoadmap,
 } from "@/lib/api";
-
-// TAMBAHKAN IMPORT INI DI BAGIAN ATAS FILE (setelah import yang ada)
-import { saveRoadmap, updateRoadmapProgress } from "@/lib/api";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 // Toast Notification Component
 const Toast = ({ message, type = "success", onClose }) => {
@@ -54,7 +52,7 @@ const Toast = ({ message, type = "success", onClose }) => {
         }`}
       >
         {type === "success" ? (
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+          <Sparkles className="w-5 h-5 flex-shrink-0" />
         ) : type === "error" ? (
           <X className="w-5 h-5 flex-shrink-0" />
         ) : (
@@ -114,8 +112,8 @@ const StepIndicator = ({ steps, currentStep }) => {
   );
 };
 
-// Roadmap Timeline Component
-const RoadmapTimeline = ({ roadmap, completedPhases, onPhaseToggle }) => {
+// Roadmap Timeline Component (Read-Only)
+const RoadmapTimeline = ({ roadmap }) => {
   return (
     <div>
       <div className="text-center mb-8">
@@ -128,63 +126,45 @@ const RoadmapTimeline = ({ roadmap, completedPhases, onPhaseToggle }) => {
       </div>
 
       <div className="space-y-4 sm:space-y-6">
-        {roadmap.phases.map((phase, idx) => {
-          const isCompleted = completedPhases.includes(idx);
-          return (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              className={`relative pl-8 sm:pl-12 pb-6 sm:pb-8 border-l-4 transition-all ${
-                isCompleted ? "border-green-500" : "border-slate-700/50"
-              }`}
-            >
-              <button
-                onClick={() => onPhaseToggle(idx)}
-                className={`absolute -left-3 sm:-left-4 top-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all hover:scale-110 ${
-                  isCompleted
-                    ? "bg-green-500 text-white border-4 border-green-600"
-                    : "bg-slate-900 border-4 border-slate-700"
-                }`}
-              >
-                {isCompleted && (
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                )}
-              </button>
+        {roadmap.phases.map((phase, idx) => (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className="relative pl-8 sm:pl-12 pb-6 sm:pb-8 border-l-4 border-yellow-500/30"
+          >
+            <div className="absolute -left-3 sm:-left-4 top-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-500/20 border-4 border-yellow-500/50 flex items-center justify-center">
+              <span className="text-xs font-bold text-yellow-400">
+                {idx + 1}
+              </span>
+            </div>
 
-              <div
-                className={`p-4 sm:p-6 rounded-2xl border-2 backdrop-blur-sm transition-all ${
-                  isCompleted
-                    ? "bg-green-500/10 border-green-500/30"
-                    : "bg-slate-800/30 border-slate-700/50"
-                }`}
-              >
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                  <h3 className="text-lg sm:text-xl font-bold text-white">
-                    {phase.phase}
-                  </h3>
-                  <span className="text-sm font-medium text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-3 py-1 rounded-full w-fit">
-                    {phase.duration}
-                  </span>
-                </div>
-                <p className="text-sm sm:text-base text-slate-300 mb-3">
-                  {phase.description}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {phase.skills.map((skill, skillIdx) => (
-                    <span
-                      key={skillIdx}
-                      className="text-xs sm:text-sm bg-slate-700/30 text-slate-300 px-3 py-1 rounded-lg border border-slate-600/30"
-                    >
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+            <div className="p-4 sm:p-6 rounded-2xl border-2 bg-slate-800/30 border-slate-700/50 backdrop-blur-sm">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                <h3 className="text-lg sm:text-xl font-bold text-white">
+                  {phase.phase}
+                </h3>
+                <span className="text-sm font-medium text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-3 py-1 rounded-full w-fit">
+                  {phase.duration}
+                </span>
               </div>
-            </motion.div>
-          );
-        })}
+              <p className="text-sm sm:text-base text-slate-300 mb-3">
+                {phase.description}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {phase.skills.map((skill, skillIdx) => (
+                  <span
+                    key={skillIdx}
+                    className="text-xs sm:text-sm bg-slate-700/30 text-slate-300 px-3 py-1 rounded-lg border border-slate-600/30"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
@@ -207,7 +187,6 @@ export default function RoadmapPage() {
   const [selectedJob, setSelectedJob] = useState(null);
 
   const [roadmap, setRoadmap] = useState(null);
-  const [completedPhases, setCompletedPhases] = useState([]);
   const [nextStepsData, setNextStepsData] = useState(null);
 
   const [consultationMessages, setConsultationMessages] = useState([]);
@@ -218,12 +197,11 @@ export default function RoadmapPage() {
   const [toast, setToast] = useState(null);
 
   const messagesEndRef = useRef(null);
+  const roadmapRef = useRef(null);
 
-  const steps = ["Mulai", "Identifikasi", "Roadmap", "Progress", "Konsultasi"];
+  const steps = ["Mulai", "Identifikasi", "Roadmap", "Rekomendasi"];
 
-  // STEP 1: TAMBAHKAN STATE BARU (setelah state yang ada, sekitar baris 50)
   const [currentRoadmapId, setCurrentRoadmapId] = useState(null);
-  const [savedRoadmaps, setSavedRoadmaps] = useState([]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -233,31 +211,11 @@ export default function RoadmapPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [consultationMessages]);
 
-  // STEP 2: TAMBAHKAN useEffect untuk load roadmaps (setelah useEffect yang ada)
-  useEffect(() => {
-    loadSavedRoadmaps();
-  }, []);
-
-  const loadSavedRoadmaps = async () => {
-    try {
-      const response = await fetch("/api/roadmaps");
-      if (response.ok) {
-        const data = await response.json();
-        setSavedRoadmaps(data.data);
-        console.log("📚 Loaded roadmaps:", data.data.length);
-      }
-    } catch (error) {
-      console.error("Error loading roadmaps:", error);
-    }
-  };
-
   const handleUserTypeSelect = (type) => {
     setUserType(type);
     setCurrentStep(1);
   };
 
-  // -----------------------------
-  // STEP 3: GANTI handlePelajarWithGoal DENGAN KODE INI:
   const handlePelajarWithGoal = async () => {
     if (!goalInput.trim()) return;
 
@@ -273,7 +231,6 @@ export default function RoadmapPage() {
 
       setRoadmap(response.data);
 
-      // Save roadmap to database
       try {
         const saveResponse = await saveRoadmap(
           response.data.title,
@@ -285,9 +242,7 @@ export default function RoadmapPage() {
 
         if (saveResponse.success) {
           setCurrentRoadmapId(saveResponse.data.id);
-          console.log("✅ Roadmap saved with ID:", saveResponse.data.id);
           showToast("Roadmap berhasil disimpan! 🎉");
-          loadSavedRoadmaps(); // Reload list
         }
       } catch (saveError) {
         console.error("Error saving roadmap:", saveError);
@@ -301,7 +256,6 @@ export default function RoadmapPage() {
       setIsLoading(false);
     }
   };
-  // =====================================================
 
   const startMiniTest = async () => {
     setIsLoading(true);
@@ -368,7 +322,6 @@ export default function RoadmapPage() {
 
       setRoadmap(response.data);
 
-      // Save roadmap to database
       try {
         const saveResponse = await saveRoadmap(
           response.data.title,
@@ -380,9 +333,7 @@ export default function RoadmapPage() {
 
         if (saveResponse.success) {
           setCurrentRoadmapId(saveResponse.data.id);
-          console.log("✅ Roadmap saved with ID:", saveResponse.data.id);
           showToast(`Roadmap ${job.title} disimpan! 🚀`);
-          loadSavedRoadmaps();
         }
       } catch (saveError) {
         console.error("Error saving roadmap:", saveError);
@@ -396,7 +347,6 @@ export default function RoadmapPage() {
     }
   };
 
-  // STEP 5: GANTI handleProfessionalUpgrade DENGAN KODE INI:
   const handleProfessionalUpgrade = async () => {
     if (!professionInput.trim()) return;
 
@@ -412,7 +362,6 @@ export default function RoadmapPage() {
 
       setRoadmap(response.data);
 
-      // Save roadmap to database
       try {
         const saveResponse = await saveRoadmap(
           response.data.title,
@@ -424,9 +373,7 @@ export default function RoadmapPage() {
 
         if (saveResponse.success) {
           setCurrentRoadmapId(saveResponse.data.id);
-          console.log("✅ Roadmap saved");
           showToast("Roadmap upgrade skill disimpan! 📈");
-          loadSavedRoadmaps();
         }
       } catch (saveError) {
         console.error("Error saving roadmap:", saveError);
@@ -440,7 +387,6 @@ export default function RoadmapPage() {
     }
   };
 
-  // STEP 6: GANTI handleProfessionalSwitch DENGAN KODE INI:
   const handleProfessionalSwitch = async () => {
     if (!switchTarget.trim()) return;
 
@@ -457,7 +403,6 @@ export default function RoadmapPage() {
 
       setRoadmap(response.data);
 
-      // Save roadmap to database
       try {
         const saveResponse = await saveRoadmap(
           response.data.title,
@@ -469,9 +414,7 @@ export default function RoadmapPage() {
 
         if (saveResponse.success) {
           setCurrentRoadmapId(saveResponse.data.id);
-          console.log("✅ Roadmap saved");
           showToast("Roadmap career switch disimpan! 🔄");
-          loadSavedRoadmaps();
         }
       } catch (saveError) {
         console.error("Error saving roadmap:", saveError);
@@ -485,59 +428,17 @@ export default function RoadmapPage() {
     }
   };
 
-  // GANTI FUNGSI handlePhaseToggle DENGAN KODE INI:
-  const handlePhaseToggle = async (phaseIndex) => {
-    const newCompletedPhases = completedPhases.includes(phaseIndex)
-      ? completedPhases.filter((i) => i !== phaseIndex)
-      : [...completedPhases, phaseIndex];
-
-    setCompletedPhases(newCompletedPhases);
-
-    // Auto-save progress to database if roadmap is saved
-    if (currentRoadmapId && roadmap) {
-      try {
-        const completedSkills = newCompletedPhases.flatMap(
-          (idx) => roadmap.phases[idx]?.skills || []
-        );
-        const progressPercentage = Math.round(
-          (newCompletedPhases.length / roadmap.phases.length) * 100
-        );
-
-        await updateRoadmapProgress(
-          currentRoadmapId,
-          newCompletedPhases,
-          completedSkills,
-          progressPercentage
-        );
-      } catch (error) {
-        console.error("Error updating progress:", error);
-      }
-    }
-  };
-
-  const proceedToProgress = () => {
-    setCurrentStep(3);
-  };
-
-  const handleGetNextSteps = async () => {
+  const proceedToNextSteps = async () => {
     setIsLoading(true);
-    setLoadingMessage("Menganalisis progress...");
+    setLoadingMessage("Menganalisis roadmap...");
 
     try {
-      const completedSkills = completedPhases.flatMap(
-        (idx) => roadmap.phases[idx].skills
-      );
-
-      const response = await getNextSteps(
-        roadmap,
-        completedPhases,
-        completedSkills
-      );
+      const response = await getNextSteps(roadmap, [], []);
       setNextStepsData(response.data);
-      setCurrentStep(4);
-      showToast("Analisis progress selesai! 📊");
+      setCurrentStep(3);
+      showToast("Rekomendasi siap! 📊");
     } catch (error) {
-      showToast("Gagal menganalisis progress. Coba lagi!", "error");
+      showToast("Gagal membuat rekomendasi. Coba lagi!", "error");
     } finally {
       setIsLoading(false);
     }
@@ -560,7 +461,6 @@ export default function RoadmapPage() {
       const context = {
         userType,
         roadmap: roadmap?.title,
-        completedPhases: completedPhases.length,
       };
 
       const response = await roadmapConsultation(userMsg, context);
@@ -583,196 +483,126 @@ export default function RoadmapPage() {
     }
   };
 
-  const handleExportPDF = () => {
-    const printWindow = window.open("", "_blank");
+  const handleExportPDF = async () => {
+    if (!roadmap) return;
 
-    const content = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Roadmap Karier - ${roadmap?.title || "H-Mate AI"}</title>
-          <meta charset="UTF-8">
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { 
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-              padding: 40px; 
-              max-width: 800px; 
-              margin: 0 auto;
-              line-height: 1.6;
-              color: #333;
-            }
-            h1 { 
-              color: #eab308; 
-              border-bottom: 4px solid #eab308; 
-              padding-bottom: 15px; 
-              margin-bottom: 30px;
-              font-size: 32px;
-            }
-            h2 { 
-              color: #1e293b; 
-              margin-top: 40px; 
-              margin-bottom: 20px;
-              font-size: 24px;
-            }
-            h3 {
-              color: #374151;
-              font-size: 18px;
-              margin-top: 15px;
-              margin-bottom: 10px;
-            }
-            .info-section {
-              background: #f8fafc;
-              padding: 20px;
-              border-radius: 10px;
-              margin-bottom: 30px;
-              border-left: 4px solid #eab308;
-            }
-            .info-section p {
-              margin: 8px 0;
-              font-size: 14px;
-            }
-            .info-section strong {
-              color: #eab308;
-            }
-            .phase { 
-              margin: 25px 0; 
-              padding: 20px; 
-              border-left: 5px solid #eab308; 
-              background: #fafafa;
-              page-break-inside: avoid;
-            }
-            .phase h3 {
-              color: #eab308;
-              margin-top: 0;
-            }
-            .skills { 
-              display: flex; 
-              flex-wrap: wrap; 
-              gap: 10px; 
-              margin-top: 15px; 
-            }
-            .skill { 
-              background: #fef3c7; 
-              padding: 6px 14px; 
-              border-radius: 20px; 
-              font-size: 13px;
-              color: #854d0e;
-              font-weight: 500;
-            }
-            .next-steps {
-              background: #fef3c7;
-              padding: 20px;
-              border-radius: 10px;
-              margin-top: 20px;
-            }
-            .next-steps ul {
-              margin-left: 20px;
-              margin-top: 10px;
-            }
-            .next-steps li {
-              margin: 8px 0;
-              font-size: 14px;
-            }
-            .footer { 
-              margin-top: 60px; 
-              text-align: center; 
-              color: #64748b; 
-              font-size: 12px;
-              padding-top: 30px;
-              border-top: 2px solid #e2e8f0;
-            }
-            @media print {
-              body { padding: 20px; }
-              .phase { page-break-inside: avoid; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>🎯 Roadmap Karier: ${roadmap?.title || ""}</h1>
-          
-          <div class="info-section">
-            <p><strong>Status:</strong> ${
-              userType === "pelajar" ? "Pelajar" : "Profesional"
-            }</p>
-            <p><strong>Total Durasi:</strong> ${
-              roadmap?.estimatedTime || roadmap?.totalDuration || ""
-            }</p>
-            <p><strong>Tanggal Generate:</strong> ${new Date().toLocaleDateString(
-              "id-ID",
-              {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }
-            )}</p>
-          </div>
-          
-          <h2>📚 Tahapan Pembelajaran</h2>
-          ${
-            roadmap?.phases
-              .map(
-                (phase, idx) => `
-            <div class="phase">
-              <h3>${phase.phase} (${phase.duration})</h3>
-              <p style="margin: 10px 0; color: #475569;">${
-                phase.description
-              }</p>
-              <div class="skills">
-                ${phase.skills
-                  .map((skill) => `<span class="skill">${skill}</span>`)
-                  .join("")}
-              </div>
-            </div>
-          `
-              )
-              .join("") || ""
+    showToast("Mempersiapkan PDF...", "info");
+    setIsLoading(true);
+
+    try {
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPos = margin;
+
+      // Helper function to add text with wrapping
+      const addText = (text, fontSize = 12, isBold = false) => {
+        pdf.setFontSize(fontSize);
+        pdf.setFont("helvetica", isBold ? "bold" : "normal");
+        const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
+
+        lines.forEach((line) => {
+          if (yPos > pageHeight - margin) {
+            pdf.addPage();
+            yPos = margin;
           }
-          
-          ${
-            nextStepsData
-              ? `
-            <h2>🚀 Langkah Selanjutnya</h2>
-            <div class="next-steps">
-              <p><strong>Progress Saat Ini:</strong> ${
-                nextStepsData.progressPercentage
-              }%</p>
-              <p><strong>Fase Saat Ini:</strong> ${
-                nextStepsData.currentPhase
-              }</p>
-              <p style="margin-top: 15px; margin-bottom: 5px;"><strong>To-Do List:</strong></p>
-              <ul>
-                ${nextStepsData.nextSteps
-                  .map(
-                    (step) =>
-                      `<li><strong>${step.step}</strong> (${step.estimatedTime})</li>`
-                  )
-                  .join("")}
-              </ul>
-            </div>
-          `
-              : ""
-          }
-          
-          <div class="footer">
-            <p><strong>Generated by H-Mate AI</strong></p>
-            <p>Platform AI untuk Bimbingan Karier • Indonesia Emas 2045 🇮🇩</p>
-          </div>
-        </body>
-      </html>
-    `;
+          pdf.text(line, margin, yPos);
+          yPos += fontSize * 0.5;
+        });
+        yPos += 3;
+      };
 
-    printWindow.document.write(content);
-    printWindow.document.close();
-    printWindow.focus();
+      // Title
+      pdf.setFillColor(234, 179, 8);
+      pdf.rect(0, 0, pageWidth, 25, "F");
+      pdf.setTextColor(15, 23, 42);
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("🎯 Roadmap Karier", margin, 15);
 
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+      yPos = 35;
+      pdf.setTextColor(0, 0, 0);
 
-    showToast("PDF siap diunduh! Silakan print/save as PDF 📄");
+      // Info Section
+      addText(`Judul: ${roadmap.title}`, 14, true);
+      addText(
+        `Status: ${userType === "pelajar" ? "Pelajar" : "Profesional"}`,
+        11
+      );
+      addText(
+        `Durasi Total: ${roadmap.estimatedTime || roadmap.totalDuration}`,
+        11
+      );
+      addText(`Tanggal: ${new Date().toLocaleDateString("id-ID")}`, 11);
+      yPos += 5;
+
+      // Phases
+      addText("📚 Tahapan Pembelajaran", 16, true);
+      yPos += 2;
+
+      roadmap.phases.forEach((phase, idx) => {
+        if (yPos > pageHeight - 60) {
+          pdf.addPage();
+          yPos = margin;
+        }
+
+        addText(`${idx + 1}. ${phase.phase} (${phase.duration})`, 13, true);
+        addText(phase.description, 11);
+        addText(`Skills: ${phase.skills.join(", ")}`, 10);
+        yPos += 3;
+      });
+
+      // Next Steps
+      if (nextStepsData) {
+        if (yPos > pageHeight - 80) {
+          pdf.addPage();
+          yPos = margin;
+        }
+
+        addText("🚀 Rekomendasi", 16, true);
+        yPos += 2;
+
+        if (nextStepsData.nextSteps) {
+          nextStepsData.nextSteps.forEach((step) => {
+            addText(`• ${step.step} (${step.estimatedTime})`, 11);
+          });
+          yPos += 3;
+        }
+
+        if (nextStepsData.recommendedCertifications?.length > 0) {
+          addText("🏆 Sertifikasi Rekomendasi", 14, true);
+          nextStepsData.recommendedCertifications.forEach((cert) => {
+            addText(`• ${cert.name}: ${cert.reason}`, 10);
+          });
+          yPos += 3;
+        }
+
+        if (nextStepsData.motivationalMessage) {
+          addText(`💪 ${nextStepsData.motivationalMessage}`, 11);
+        }
+      }
+
+      // Footer
+      const finalPage = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= finalPage; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text("Generated by H-Mate AI", pageWidth / 2, pageHeight - 10, {
+          align: "center",
+        });
+      }
+
+      // Save PDF
+      pdf.save(`Roadmap-${roadmap.title.replace(/\s+/g, "-")}.pdf`);
+      showToast("PDF berhasil diunduh! 📄", "success");
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      showToast("Gagal mengunduh PDF. Coba lagi!", "error");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -1256,7 +1086,7 @@ export default function RoadmapPage() {
               </motion.div>
             )}
 
-          {/* STEP 2: Roadmap Display */}
+          {/* STEP 2: Roadmap Display (Read-Only) */}
           {currentStep === 2 && roadmap && (
             <motion.div
               key="step-2"
@@ -1265,261 +1095,152 @@ export default function RoadmapPage() {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
-                <RoadmapTimeline
-                  roadmap={roadmap}
-                  completedPhases={completedPhases}
-                  onPhaseToggle={handlePhaseToggle}
-                />
+              <div
+                className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8"
+                ref={roadmapRef}
+              >
+                <RoadmapTimeline roadmap={roadmap} />
 
                 <div className="mt-8 text-center">
                   <motion.button
-                    onClick={proceedToProgress}
+                    onClick={proceedToNextSteps}
+                    disabled={isLoading}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="px-6 sm:px-8 py-3 sm:py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold hover:bg-yellow-500/30 transition-all text-sm sm:text-base"
+                    className="px-6 sm:px-8 py-3 sm:py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold hover:bg-yellow-500/30 transition-all text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Lanjut: Cek Progress Saya
+                    {isLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        {loadingMessage}
+                      </span>
+                    ) : (
+                      "Lihat Rekomendasi & Konsultasi"
+                    )}
                   </motion.button>
                 </div>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 3: Progress Check */}
-          {currentStep === 3 && roadmap && (
+          {/* STEP 3: Recommendations & Consultation */}
+          {currentStep === 3 && (
             <motion.div
               key="step-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="max-w-2xl mx-auto"
-            >
-              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 text-center">
-                  Bagian mana yang sudah kamu pelajari?
-                </h2>
-                <p className="text-sm sm:text-base text-slate-400 text-center mb-6">
-                  Klik phase yang sudah kamu selesaikan
-                </p>
-
-                {/* Phase Selection */}
-                <div className="space-y-3">
-                  {roadmap.phases.map((phase, idx) => {
-                    const isCompleted = completedPhases.includes(idx);
-                    return (
-                      <motion.button
-                        key={idx}
-                        onClick={() => handlePhaseToggle(idx)}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className={`w-full flex items-start gap-3 p-4 rounded-2xl border-2 transition-all text-left ${
-                          isCompleted
-                            ? "border-green-500/50 bg-green-500/10"
-                            : "border-slate-700/50 bg-slate-800/30 hover:border-slate-600"
-                        }`}
-                      >
-                        {isCompleted ? (
-                          <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-400 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <Circle className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 flex-shrink-0 mt-0.5" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-white text-sm sm:text-base mb-1">
-                            {phase.phase}
-                          </p>
-                          <p className="text-xs sm:text-sm text-slate-500">
-                            {phase.duration}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {phase.skills.slice(0, 3).map((skill, skillIdx) => (
-                              <span
-                                key={skillIdx}
-                                className="text-xs bg-slate-700/30 text-slate-400 px-2 py-1 rounded border border-slate-600/30"
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                            {phase.skills.length > 3 && (
-                              <span className="text-xs text-slate-500 px-2 py-1">
-                                +{phase.skills.length - 3} lainnya
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </motion.button>
-                    );
-                  })}
-                </div>
-
-                {completedPhases.length > 0 && (
-                  <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-2xl">
-                    <p className="text-sm text-green-400 font-medium">
-                      ✓ {completedPhases.length} phase sudah selesai
-                    </p>
-                  </div>
-                )}
-
-                <motion.button
-                  onClick={handleGetNextSteps}
-                  disabled={isLoading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full mt-6 px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-semibold hover:bg-yellow-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                >
-                  {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      {loadingMessage}
-                    </span>
-                  ) : (
-                    "Analisis & Berikan Next Steps"
-                  )}
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* STEP 4: Next Steps & Consultation - PART 1 */}
-          {currentStep === 4 && nextStepsData && (
-            <motion.div
-              key="step-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
               className="max-w-4xl mx-auto space-y-4 sm:space-y-6"
             >
-              {/* Next Steps */}
-              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4">
-                  🎯 Langkah Selanjutnya
-                </h2>
+              {/* Recommendations Section */}
+              {nextStepsData && (
+                <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <Sparkles className="w-6 h-6 text-yellow-400" />
+                    Rekomendasi Untukmu
+                  </h2>
 
-                {/* Progress Bar */}
-                <div className="mb-6">
-                  <div className="flex justify-between text-xs sm:text-sm text-slate-400 mb-2">
-                    <span>Progress Kamu</span>
-                    <span className="font-semibold text-yellow-400">
-                      {nextStepsData.progressPercentage}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-800/50 rounded-full h-3">
-                    <motion.div
-                      className="bg-gradient-to-r from-green-400 to-yellow-400 h-3 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{
-                        width: `${nextStepsData.progressPercentage}%`,
-                      }}
-                      transition={{ duration: 1 }}
-                    />
-                  </div>
-                </div>
-
-                <p className="text-sm sm:text-base text-slate-400 mb-6">
-                  Saat ini kamu di:{" "}
-                  <span className="font-semibold text-yellow-400">
-                    {nextStepsData.currentPhase}
-                  </span>
-                </p>
-
-                {/* Next Steps List */}
-                <div className="mb-6">
-                  <h3 className="font-semibold text-white mb-3 text-sm sm:text-base">
-                    Yang Perlu Dilakukan:
-                  </h3>
-                  <div className="space-y-3">
-                    {nextStepsData.nextSteps.map((step, idx) => (
-                      <div
-                        key={idx}
-                        className={`p-4 rounded-2xl border ${
-                          step.priority === "high"
-                            ? "border-red-500/30 bg-red-500/10"
-                            : step.priority === "medium"
-                            ? "border-yellow-500/30 bg-yellow-500/10"
-                            : "border-slate-700/50 bg-slate-800/30"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="text-xl sm:text-2xl flex-shrink-0">
-                            {step.priority === "high"
-                              ? "🔥"
-                              : step.priority === "medium"
-                              ? "⭐"
-                              : "💡"}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-white text-sm sm:text-base">
-                              {step.step}
-                            </p>
-                            <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                              Estimasi: {step.estimatedTime}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recommended Certifications */}
-                {nextStepsData.recommendedCertifications &&
-                  nextStepsData.recommendedCertifications.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="font-semibold text-white mb-3 flex items-center gap-2 text-sm sm:text-base">
-                        🏆 Sertifikasi Rekomendasi
-                      </h3>
-                      <div className="space-y-3">
-                        {nextStepsData.recommendedCertifications.map(
-                          (cert, idx) => (
+                  {/* Next Steps */}
+                  {nextStepsData.nextSteps &&
+                    nextStepsData.nextSteps.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="font-semibold text-white mb-4 text-sm sm:text-base">
+                          🎯 Langkah yang Disarankan:
+                        </h3>
+                        <div className="space-y-3">
+                          {nextStepsData.nextSteps.map((step, idx) => (
                             <div
                               key={idx}
-                              className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl"
+                              className={`p-4 rounded-2xl border ${
+                                step.priority === "high"
+                                  ? "border-red-500/30 bg-red-500/10"
+                                  : step.priority === "medium"
+                                  ? "border-yellow-500/30 bg-yellow-500/10"
+                                  : "border-slate-700/50 bg-slate-800/30"
+                              }`}
                             >
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                                <p className="font-medium text-white text-sm sm:text-base">
-                                  {cert.name}
-                                </p>
-                                <span
-                                  className={`text-xs px-2 py-1 rounded w-fit ${
-                                    cert.urgency === "high"
-                                      ? "bg-red-500/20 border border-red-500/30 text-red-400"
-                                      : "bg-yellow-500/20 border border-yellow-500/30 text-yellow-400"
-                                  }`}
-                                >
-                                  {cert.urgency === "high"
-                                    ? "Prioritas"
-                                    : "Recommended"}
+                              <div className="flex items-start gap-3">
+                                <span className="text-xl sm:text-2xl flex-shrink-0">
+                                  {step.priority === "high"
+                                    ? "🔥"
+                                    : step.priority === "medium"
+                                    ? "⭐"
+                                    : "💡"}
                                 </span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-white text-sm sm:text-base">
+                                    {step.step}
+                                  </p>
+                                  <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                                    Estimasi: {step.estimatedTime}
+                                  </p>
+                                </div>
                               </div>
-                              <p className="text-xs sm:text-sm text-slate-400">
-                                {cert.reason}
-                              </p>
                             </div>
-                          )
-                        )}
+                          ))}
+                        </div>
                       </div>
+                    )}
+
+                  {/* Certifications */}
+                  {nextStepsData.recommendedCertifications &&
+                    nextStepsData.recommendedCertifications.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="font-semibold text-white mb-4 flex items-center gap-2 text-sm sm:text-base">
+                          🏆 Sertifikasi Rekomendasi
+                        </h3>
+                        <div className="space-y-3">
+                          {nextStepsData.recommendedCertifications.map(
+                            (cert, idx) => (
+                              <div
+                                key={idx}
+                                className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl"
+                              >
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                                  <p className="font-medium text-white text-sm sm:text-base">
+                                    {cert.name}
+                                  </p>
+                                  <span
+                                    className={`text-xs px-2 py-1 rounded w-fit ${
+                                      cert.urgency === "high"
+                                        ? "bg-red-500/20 border border-red-500/30 text-red-400"
+                                        : "bg-yellow-500/20 border border-yellow-500/30 text-yellow-400"
+                                    }`}
+                                  >
+                                    {cert.urgency === "high"
+                                      ? "Prioritas"
+                                      : "Recommended"}
+                                  </span>
+                                </div>
+                                <p className="text-xs sm:text-sm text-slate-400">
+                                  {cert.reason}
+                                </p>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Motivational Message */}
+                  {nextStepsData.motivationalMessage && (
+                    <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border border-yellow-500/30 rounded-2xl">
+                      <p className="text-sm sm:text-base text-slate-300 italic">
+                        💪 {nextStepsData.motivationalMessage}
+                      </p>
                     </div>
                   )}
-
-                {/* Motivational Message */}
-                {nextStepsData.motivationalMessage && (
-                  <div className="p-4 sm:p-6 bg-gradient-to-r from-yellow-500/10 to-yellow-500/5 border border-yellow-500/30 rounded-2xl">
-                    <p className="text-sm sm:text-base text-slate-300 italic">
-                      💪 {nextStepsData.motivationalMessage}
-                    </p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* Consultation Section */}
               <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-3 sm:mb-4 flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
-                  Konsultasi
+                  Konsultasi AI
                 </h2>
                 <p className="text-sm sm:text-base text-slate-400 mb-6">
-                  Ada pertanyaan tentang roadmap atau langkah selanjutnya? Tanya
-                  di sini!
+                  Punya pertanyaan tentang roadmap atau karier? Tanya di sini!
                 </p>
 
                 {/* Chat Messages */}
@@ -1629,17 +1350,17 @@ export default function RoadmapPage() {
                   Simpan Roadmap Kamu
                 </h3>
                 <p className="text-sm sm:text-base text-slate-400 mb-4 sm:mb-6">
-                  Unduh semua informasi roadmap, rekomendasi, dan konsultasi
-                  dalam satu file PDF
+                  Unduh roadmap dan rekomendasi dalam format PDF
                 </p>
                 <motion.button
                   onClick={handleExportPDF}
+                  disabled={isLoading}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-green-500/20 border border-green-500/30 text-green-400 rounded-2xl font-bold hover:bg-green-500/30 transition-all text-sm sm:text-base"
+                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-green-500/20 border border-green-500/30 text-green-400 rounded-2xl font-bold hover:bg-green-500/30 transition-all text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-                  Download PDF
+                  {isLoading ? "Memproses..." : "Download PDF"}
                 </motion.button>
               </div>
             </motion.div>

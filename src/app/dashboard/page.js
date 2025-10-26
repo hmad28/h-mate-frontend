@@ -282,154 +282,154 @@ export default function DashboardPage() {
         {profileData?.latestTests &&
           profileData.latestTests.length > 0 &&
           (() => {
-          const latestTest = profileData.latestTests[0];
-          const careers = latestTest.aiAnalysis?.recommended_careers || [];
+            const latestTest = profileData.latestTests[0];
+            const careers = latestTest.aiAnalysis?.recommended_careers || [];
 
-          if (careers.length === 0) return null;
+            if (careers.length === 0) return null;
 
-          return (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mb-6"
-            >
-              <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-xl border border-yellow-500/30 rounded-xl p-6 shadow-xl">
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Target className="w-6 h-6 text-yellow-400" />
-                  </div>
-                  <div className="flex-1">
-                    <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                      Rekomendasi Karir Untukmu
-                      <Sparkles className="w-5 h-5 text-yellow-400" />
-                    </h2>
-                    <p className="text-slate-400 text-sm">
-                      Dari tes minat bakat -{" "}
-                      {new Date(latestTest.createdAt).toLocaleDateString(
-                        "id-ID",
-                        {
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        }
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {careers.slice(0, 5).map((career, idx) => (
-                    <motion.button
-                      key={idx}
-                      onClick={async () => {
-                        try {
-                          toast.loading(
-                            `Membuat roadmap untuk ${career.title}...`
-                          );
-
-                          // Generate roadmap
-                          const roadmapResponse = await fetch(
-                            `${
-                              process.env.NEXT_PUBLIC_API_URL ||
-                              "http://localhost:3000"
-                            }/api/roadmap/generate`,
-                            {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                targetRole: career.title,
-                                currentStatus:
-                                  user?.age <= 23 ? "pelajar" : "profesional",
-                                hasGoal: true,
-                              }),
-                            }
-                          );
-
-                          if (!roadmapResponse.ok) {
-                            throw new Error("Gagal generate roadmap");
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mb-6"
+              >
+                <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-xl border border-yellow-500/30 rounded-xl p-6 shadow-xl">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Target className="w-6 h-6 text-yellow-400" />
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                        Rekomendasi Karir Untukmu
+                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                      </h2>
+                      <p className="text-slate-400 text-sm">
+                        Dari tes minat bakat -{" "}
+                        {new Date(latestTest.createdAt).toLocaleDateString(
+                          "id-ID",
+                          {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
                           }
+                        )}
+                      </p>
+                    </div>
+                  </div>
 
-                          const roadmapData = await roadmapResponse.json();
+                  <div className="space-y-3">
+                    {careers.slice(0, 5).map((career, idx) => (
+                      <motion.button
+                        key={idx}
+                        onClick={async () => {
+                          try {
+                            toast.loading(
+                              `Membuat roadmap untuk ${career.title}...`
+                            );
 
-                          // Save roadmap
-                          const saveResponse = await fetch(
-                            "/api/roadmaps/save",
-                            {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                title: roadmapData.data.title,
-                                targetRole: career.title,
-                                currentStatus:
-                                  user?.age <= 23 ? "pelajar" : "profesional",
-                                roadmapData: roadmapData.data,
-                                estimatedTime:
-                                  roadmapData.data.estimatedTime ||
-                                  roadmapData.data.totalDuration,
-                              }),
+                            // Generate roadmap
+                            const roadmapResponse = await fetch(
+                              `${
+                                process.env.NEXT_PUBLIC_API_URL ||
+                                "http://localhost:3000"
+                              }/api/roadmap/generate`,
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  targetRole: career.title,
+                                  currentStatus:
+                                    user?.age <= 23 ? "pelajar" : "profesional",
+                                  hasGoal: true,
+                                }),
+                              }
+                            );
+
+                            if (!roadmapResponse.ok) {
+                              throw new Error("Gagal generate roadmap");
                             }
-                          );
 
-                          if (!saveResponse.ok) {
-                            throw new Error("Gagal save roadmap");
+                            const roadmapData = await roadmapResponse.json();
+
+                            // Save roadmap
+                            const saveResponse = await fetch(
+                              "/api/roadmaps/save",
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  title: roadmapData.data.title,
+                                  targetRole: career.title,
+                                  currentStatus:
+                                    user?.age <= 23 ? "pelajar" : "profesional",
+                                  roadmapData: roadmapData.data,
+                                  estimatedTime:
+                                    roadmapData.data.estimatedTime ||
+                                    roadmapData.data.totalDuration,
+                                }),
+                              }
+                            );
+
+                            if (!saveResponse.ok) {
+                              throw new Error("Gagal save roadmap");
+                            }
+
+                            const savedRoadmap = await saveResponse.json();
+
+                            toast.dismiss();
+                            toast.success("Roadmap berhasil dibuat! 🎉");
+
+                            // Redirect to roadmap detail
+                            router.push(`/roadmap/${savedRoadmap.data.id}`);
+                          } catch (error) {
+                            toast.dismiss();
+                            toast.error("Gagal membuat roadmap. Coba lagi!");
+                            console.error("Error:", error);
                           }
-
-                          const savedRoadmap = await saveResponse.json();
-
-                          toast.dismiss();
-                          toast.success("Roadmap berhasil dibuat! 🎉");
-
-                          // Redirect to roadmap detail
-                          router.push(`/roadmap/${savedRoadmap.data.id}`);
-                        } catch (error) {
-                          toast.dismiss();
-                          toast.error("Gagal membuat roadmap. Coba lagi!");
-                          console.error("Error:", error);
-                        }
-                      }}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * idx }}
-                      whileHover={{ scale: 1.02, x: 5 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full text-left bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 hover:border-yellow-500/50 hover:bg-slate-800/50 transition cursor-pointer group"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 flex-1">
-                          <span className="text-base font-semibold text-white group-hover:text-yellow-400 transition">
-                            {career.title}
-                          </span>
-                          <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">
-                            {career.match_percentage}% Match
-                          </span>
+                        }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * idx }}
+                        whileHover={{ scale: 1.02, x: 5 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full text-left bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 hover:border-yellow-500/50 hover:bg-slate-800/50 transition cursor-pointer group"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 flex-1">
+                            <span className="text-base font-semibold text-white group-hover:text-yellow-400 transition">
+                              {career.title}
+                            </span>
+                            <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">
+                              {career.match_percentage}% Match
+                            </span>
+                          </div>
+                          <motion.div
+                            className="text-slate-600 group-hover:text-yellow-400 transition"
+                            whileHover={{ x: 5 }}
+                          >
+                            →
+                          </motion.div>
                         </div>
-                        <motion.div
-                          className="text-slate-600 group-hover:text-yellow-400 transition"
-                          whileHover={{ x: 5 }}
-                        >
-                          →
-                        </motion.div>
-                      </div>
-                      <p className="text-xs text-slate-400 group-hover:text-slate-300 transition">
-                        {career.reason}
-                      </p>
-                      <p className="text-xs text-yellow-400/70 mt-2 opacity-0 group-hover:opacity-100 transition">
-                        Klik untuk generate roadmap →
-                      </p>
-                    </motion.button>
-                  ))}
-                </div>
+                        <p className="text-xs text-slate-400 group-hover:text-slate-300 transition">
+                          {career.reason}
+                        </p>
+                        <p className="text-xs text-yellow-400/70 mt-2 opacity-0 group-hover:opacity-100 transition">
+                          Klik untuk generate roadmap →
+                        </p>
+                      </motion.button>
+                    ))}
+                  </div>
 
-                {profileData.profile?.aiConfidenceScore && (
-                  <p className="text-xs text-slate-500 mt-4 text-center">
-                    💡 AI Confidence: {profileData.profile.aiConfidenceScore}%
-                  </p>
-                )}
-              </div>
-            </motion.div>
-          );
-        })()}
+                  {profileData.profile?.aiConfidenceScore && (
+                    <p className="text-xs text-slate-500 mt-4 text-center">
+                      💡 AI Confidence: {profileData.profile.aiConfidenceScore}%
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })()}
 
         {/* Quick Actions */}
         <motion.div
@@ -466,55 +466,86 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Recent Activity - IF EXISTS */}
-        {profileData?.latestTests && profileData.latestTests.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8"
-          >
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Aktivitas Terakhir
-            </h2>
-            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
-              <div className="space-y-4">
-                {profileData.latestTests.map((test, idx) => (
-                  <div
-                    key={test.id}
-                    className="flex items-center justify-between p-4 bg-slate-800/30 border border-slate-700/50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-green-500/20 border border-green-500/30 rounded-lg flex items-center justify-center">
-                        <ClipboardList className="w-5 h-5 text-green-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {test.testType === "minat_bakat"
-                            ? "Tes Minat Bakat"
-                            : "Mini Test"}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {new Date(test.createdAt).toLocaleDateString(
-                            "id-ID",
-                            {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            }
+        {/* Recent Activity - UPDATED VERSION */}
+        {profileData?.recentActivities &&
+          profileData.recentActivities.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8"
+            >
+              <h2 className="text-2xl font-bold text-white mb-4">
+                Aktivitas Terakhir
+              </h2>
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
+                <div className="space-y-4">
+                  {profileData.recentActivities.map((activity) => {
+                    // Determine icon and colors based on activity type
+                    const isTest = activity.type === "test";
+                    const isRoadmap = activity.type === "roadmap";
+
+                    const Icon = isTest ? ClipboardList : Map;
+                    const bgColor = isTest
+                      ? "bg-green-500/20 border-green-500/30"
+                      : "bg-purple-500/20 border-purple-500/30";
+                    const iconColor = isTest
+                      ? "text-green-400"
+                      : "text-purple-400";
+                    const badgeColor = isTest
+                      ? "bg-green-500/20 border-green-500/30 text-green-400"
+                      : "bg-purple-500/20 border-purple-500/30 text-purple-400";
+
+                    return (
+                      <div
+                        key={`${activity.type}-${activity.id}`}
+                        className="flex items-center justify-between p-4 bg-slate-800/30 border border-slate-700/50 rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-10 h-10 ${bgColor} border rounded-lg flex items-center justify-center`}
+                          >
+                            <Icon className={`w-5 h-5 ${iconColor}`} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {isTest
+                                ? activity.testType === "minat_bakat"
+                                  ? "Tes Minat Bakat"
+                                  : "Mini Test"
+                                : activity.title || "Roadmap Karir"}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {new Date(activity.createdAt).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  day: "numeric",
+                                  month: "long",
+                                  year: "numeric",
+                                }
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {isRoadmap && activity.progress !== undefined && (
+                            <span className="text-xs text-slate-400 mr-2">
+                              {activity.progress}%
+                            </span>
                           )}
-                        </p>
+                          <span
+                            className={`text-xs ${badgeColor} border px-3 py-1 rounded-full`}
+                          >
+                            {isTest ? "Selesai" : "Aktif"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-full">
-                      Selesai
-                    </span>
-                  </div>
-                ))}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
         {/* User Profile Card */}
         <motion.div

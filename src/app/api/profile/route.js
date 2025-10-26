@@ -33,7 +33,7 @@ export async function GET() {
       .from(testResults)
       .where(eq(testResults.userId, user.id))
       .orderBy(desc(testResults.createdAt))
-      .limit(3);
+      .limit(10);
 
     // Get active roadmaps with progress
     const userRoadmaps = await db
@@ -45,7 +45,30 @@ export async function GET() {
       .leftJoin(roadmapProgress, eq(roadmaps.id, roadmapProgress.roadmapId))
       .where(eq(roadmaps.userId, user.id))
       .orderBy(desc(roadmaps.createdAt))
-      .limit(5);
+      .limit(10);
+
+    // Combine tests and roadmaps into recent activities
+    const testActivities = latestTests.map((test) => ({
+      id: test.id,
+      type: "test",
+      testType: test.testType,
+      createdAt: test.createdAt,
+      status: "completed",
+    }));
+
+    const roadmapActivities = userRoadmaps.map((item) => ({
+      id: item.roadmap.id,
+      type: "roadmap",
+      title: item.roadmap.careerPath,
+      createdAt: item.roadmap.createdAt,
+      status: "active",
+      progress: item.progress?.progressPercentage || 0,
+    }));
+
+    // Merge and sort by date (most recent first)
+    const recentActivities = [...testActivities, ...roadmapActivities]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5); // Take only 5 most recent
 
     // Calculate overall progress
     let overallProgress = 0;
@@ -62,6 +85,7 @@ export async function GET() {
         profile: profile || null,
         latestTests,
         roadmaps: userRoadmaps,
+        recentActivities, // NEW: Combined activities
         overallProgress,
         stats: {
           totalTests: latestTests.length,
