@@ -15,6 +15,8 @@ import {
   Map,
   LogIn,
   UserPlus,
+  LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -33,6 +35,12 @@ export default function Header() {
   ];
 
   const isActive = (href) => pathname === href;
+
+  const handleLogout = () => {
+    // TODO: Implement actual logout logic
+    console.log("Logout clicked");
+    // Example: signOut(), clearToken(), redirect to home, etc.
+  };
 
   return (
     <>
@@ -76,7 +84,6 @@ export default function Header() {
               <div className="relative">
                 {/* Logo Icon */}
                 <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg shadow-yellow-400/30">
-                  {/* <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-slate-950" /> */}
                   <Image
                     src="/images/h-logo.png"
                     alt="H-Mate Logo"
@@ -102,7 +109,6 @@ export default function Header() {
               {/* Logo Text */}
               <div className="flex flex-col">
                 <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
-                  {/* H-Mate */}
                   <Image
                     src="/images/Mate-aja.png"
                     alt="H-Mate Tagline"
@@ -165,27 +171,38 @@ export default function Header() {
                 })}
               </div>
             )}
-            {/* false buat komentar kode yg ada {{  }} */}
 
             {/* Auth Buttons */}
             <div className="flex items-center gap-2 sm:gap-3">
               {isLoggedIn ? (
-                // Logged In State
-                <Link href="/dashboard">
+                // Logged In State - Dashboard & Logout
+                <>
+                  <Link href="/dashboard" className="hidden sm:block">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="flex items-center gap-2 px-4 py-2 text-yellow-400 font-medium rounded-lg hover:bg-yellow-400/10 transition-all border border-yellow-400/20 hover:border-yellow-400/40"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      Dashboard
+                    </motion.button>
+                  </Link>
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="relative flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-950 rounded-lg font-medium shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 transition-all overflow-hidden group"
+                    onClick={handleLogout}
+                    className="relative flex items-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg font-medium shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all overflow-hidden group"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <User className="w-4 h-4 relative z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <LogOut className="w-4 h-4 relative z-10" />
                     <span className="hidden sm:inline relative z-10">
-                      Dashboard
+                      Logout
                     </span>
                   </motion.button>
-                </Link>
+                </>
               ) : (
-                // Logged Out State
+                // Logged Out State - Login & Register
                 <>
                   <Link href="/login" className="hidden sm:block">
                     <motion.button
@@ -268,30 +285,58 @@ export default function Header() {
                 })}
 
                 {/* Mobile Auth Buttons */}
-                {!isLoggedIn && (
-                  <div className="pt-4 border-t border-yellow-400/20 space-y-2">
-                    <Link
-                      href="/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-yellow-400 font-medium rounded-lg border-2 border-yellow-400/30 hover:bg-yellow-400/10 hover:border-yellow-400/50 transition-all">
-                        <LogIn className="w-5 h-5" />
-                        Masuk
-                      </button>
-                    </Link>
+                <div className="pt-4 border-t border-yellow-400/20 space-y-2">
+                  {isLoggedIn ? (
+                    // Logged In - Dashboard & Logout
+                    <>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-yellow-400 font-medium rounded-lg border-2 border-yellow-400/30 hover:bg-yellow-400/10 hover:border-yellow-400/50 transition-all">
+                          <LayoutDashboard className="w-5 h-5" />
+                          Dashboard
+                        </button>
+                      </Link>
 
-                    <Link
-                      href="/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <button className="relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-950 font-medium rounded-lg shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 transition-all overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <UserPlus className="w-5 h-5 relative z-10" />
-                        <span className="relative z-10">Daftar Sekarang</span>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-lg shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        <LogOut className="w-5 h-5 relative z-10" />
+                        <span className="relative z-10">Logout</span>
                       </button>
-                    </Link>
-                  </div>
-                )}
+                    </>
+                  ) : (
+                    // Logged Out - Login & Register
+                    <>
+                      <Link
+                        href="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 text-yellow-400 font-medium rounded-lg border-2 border-yellow-400/30 hover:bg-yellow-400/10 hover:border-yellow-400/50 transition-all">
+                          <LogIn className="w-5 h-5" />
+                          Masuk
+                        </button>
+                      </Link>
+
+                      <Link
+                        href="/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        <button className="relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-slate-950 font-medium rounded-lg shadow-lg shadow-yellow-400/30 hover:shadow-yellow-400/50 transition-all overflow-hidden group">
+                          <div className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          <UserPlus className="w-5 h-5 relative z-10" />
+                          <span className="relative z-10">Daftar Sekarang</span>
+                        </button>
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
