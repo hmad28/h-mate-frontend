@@ -193,7 +193,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.6 }}
             className="my-6"
           >
-            <h2 className="text-2xl font-bold text-white mb-6">Roadmap Kamu</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Roadmap Kamu</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {profileData.roadmaps.slice(0, 4).map((item, idx) => (
                 <motion.div
@@ -278,87 +278,33 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Career Summary Card - IF EXISTS */}
-        {profileData?.profile && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-6"
-          >
-            <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-xl border border-yellow-500/30 rounded-xl p-6 shadow-xl">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Target className="w-6 h-6 text-yellow-400" />
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                    Career Match Kamu
-                    <Sparkles className="w-5 h-5 text-yellow-400" />
-                  </h2>
-                  <p className="text-slate-300 text-sm mb-4">
-                    {profileData.profile.personalityTraits?.type ||
-                      "Personality type kamu"}
-                  </p>
+        {/* Career Recommendations Card - IF EXISTS */}
+        {profileData?.latestTests &&
+          profileData.latestTests.length > 0 &&
+          (() => {
+          const latestTest = profileData.latestTests[0];
+          const careers = latestTest.aiAnalysis?.recommended_careers || [];
 
-                  {profileData.profile.careerMatches &&
-                    profileData.profile.careerMatches.length > 0 && (
-                      <div className="space-y-2">
-                        <p className="text-xs text-slate-400 mb-2">
-                          Top Career Matches:
-                        </p>
-                        {profileData.profile.careerMatches
-                          .slice(0, 3)
-                          .map((career, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-3"
-                            >
-                              <span className="text-sm text-white font-medium">
-                                {career.title}
-                              </span>
-                              <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">
-                                {career.match_percentage}% Match
-                              </span>
-                            </div>
-                          ))}
-                      </div>
-                    )}
+          if (careers.length === 0) return null;
 
-                  <p className="text-xs text-slate-500 mt-4">
-                    💡 AI Confidence:{" "}
-                    {profileData.profile.aiConfidenceScore || 0}%
-                  </p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Latest Test Result Card - IF EXISTS */}
-        {profileData?.latestTests && profileData.latestTests.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="mb-6"
-          >
-            <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
-              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <ClipboardList className="w-5 h-5 text-green-400" />
-                Hasil Rekomendasi Karir Terakhir
-              </h2>
-
-              {(() => {
-                const latestTest = profileData.latestTests[0];
-                const careers =
-                  latestTest.aiAnalysis?.recommended_careers || [];
-
-                if (careers.length === 0) return null;
-
-                return (
-                  <div className="space-y-3">
-                    <p className="text-sm text-slate-400 mb-3">
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mb-6"
+            >
+              <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 backdrop-blur-xl border border-yellow-500/30 rounded-xl p-6 shadow-xl">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Target className="w-6 h-6 text-yellow-400" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                      Rekomendasi Karir Untukmu
+                      <Sparkles className="w-5 h-5 text-yellow-400" />
+                    </h2>
+                    <p className="text-slate-400 text-sm">
                       Dari tes minat bakat -{" "}
                       {new Date(latestTest.createdAt).toLocaleDateString(
                         "id-ID",
@@ -369,39 +315,121 @@ export default function DashboardPage() {
                         }
                       )}
                     </p>
-
-                    {careers.slice(0, 5).map((career, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 hover:border-green-500/30 transition"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-base font-semibold text-white">
-                              {career.title}
-                            </span>
-                            <span className="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-2 py-1 rounded-full">
-                              {career.match_percentage}% Match
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-400">
-                            {career.reason}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-
-                    {careers.length > 5 && (
-                      <p className="text-xs text-slate-500 text-center mt-2">
-                        +{careers.length - 5} karir lainnya
-                      </p>
-                    )}
                   </div>
-                );
-              })()}
-            </div>
-          </motion.div>
-        )}
+                </div>
+
+                <div className="space-y-3">
+                  {careers.slice(0, 5).map((career, idx) => (
+                    <motion.button
+                      key={idx}
+                      onClick={async () => {
+                        try {
+                          toast.loading(
+                            `Membuat roadmap untuk ${career.title}...`
+                          );
+
+                          // Generate roadmap
+                          const roadmapResponse = await fetch(
+                            `${
+                              process.env.NEXT_PUBLIC_API_URL ||
+                              "http://localhost:3000"
+                            }/api/roadmap/generate`,
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                targetRole: career.title,
+                                currentStatus:
+                                  user?.age <= 23 ? "pelajar" : "profesional",
+                                hasGoal: true,
+                              }),
+                            }
+                          );
+
+                          if (!roadmapResponse.ok) {
+                            throw new Error("Gagal generate roadmap");
+                          }
+
+                          const roadmapData = await roadmapResponse.json();
+
+                          // Save roadmap
+                          const saveResponse = await fetch(
+                            "/api/roadmaps/save",
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                title: roadmapData.data.title,
+                                targetRole: career.title,
+                                currentStatus:
+                                  user?.age <= 23 ? "pelajar" : "profesional",
+                                roadmapData: roadmapData.data,
+                                estimatedTime:
+                                  roadmapData.data.estimatedTime ||
+                                  roadmapData.data.totalDuration,
+                              }),
+                            }
+                          );
+
+                          if (!saveResponse.ok) {
+                            throw new Error("Gagal save roadmap");
+                          }
+
+                          const savedRoadmap = await saveResponse.json();
+
+                          toast.dismiss();
+                          toast.success("Roadmap berhasil dibuat! 🎉");
+
+                          // Redirect to roadmap detail
+                          router.push(`/roadmap/${savedRoadmap.data.id}`);
+                        } catch (error) {
+                          toast.dismiss();
+                          toast.error("Gagal membuat roadmap. Coba lagi!");
+                          console.error("Error:", error);
+                        }
+                      }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * idx }}
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full text-left bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 hover:border-yellow-500/50 hover:bg-slate-800/50 transition cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-base font-semibold text-white group-hover:text-yellow-400 transition">
+                            {career.title}
+                          </span>
+                          <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">
+                            {career.match_percentage}% Match
+                          </span>
+                        </div>
+                        <motion.div
+                          className="text-slate-600 group-hover:text-yellow-400 transition"
+                          whileHover={{ x: 5 }}
+                        >
+                          →
+                        </motion.div>
+                      </div>
+                      <p className="text-xs text-slate-400 group-hover:text-slate-300 transition">
+                        {career.reason}
+                      </p>
+                      <p className="text-xs text-yellow-400/70 mt-2 opacity-0 group-hover:opacity-100 transition">
+                        Klik untuk generate roadmap →
+                      </p>
+                    </motion.button>
+                  ))}
+                </div>
+
+                {profileData.profile?.aiConfidenceScore && (
+                  <p className="text-xs text-slate-500 mt-4 text-center">
+                    💡 AI Confidence: {profileData.profile.aiConfidenceScore}%
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          );
+        })()}
 
         {/* Quick Actions */}
         <motion.div
