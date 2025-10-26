@@ -112,60 +112,145 @@ const StepIndicator = ({ steps, currentStep }) => {
   );
 };
 
-// Roadmap Timeline Component (Read-Only)
+// Roadmap Timeline Component (Read-Only, Updated Design)
 const RoadmapTimeline = ({ roadmap }) => {
   return (
     <div>
-      <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-          {roadmap.title}
-        </h2>
-        <p className="text-sm sm:text-base text-slate-400">
-          Estimasi: {roadmap.estimatedTime || roadmap.totalDuration}
-        </p>
+      {/* Header Info */}
+      <div className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-6 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              {roadmap.title}
+            </h2>
+            {roadmap.overview && (
+              <p className="text-sm text-slate-400">{roadmap.overview}</p>
+            )}
+          </div>
+          <span className="px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-full text-sm font-semibold w-fit">
+            {roadmap.estimatedTime || roadmap.totalDuration}
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-4 sm:space-y-6">
+      {/* Timeline */}
+      <h3 className="text-xl font-bold text-white mb-6">
+        Tahapan Pembelajaran
+      </h3>
+
+      <div className="space-y-6">
         {roadmap.phases.map((phase, idx) => (
           <motion.div
             key={idx}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className="relative pl-8 sm:pl-12 pb-6 sm:pb-8 border-l-4 border-yellow-500/30"
+            className="relative pl-12 pb-8 border-l-4 border-slate-700/50"
           >
-            <div className="absolute -left-3 sm:-left-4 top-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-yellow-500/20 border-4 border-yellow-500/50 flex items-center justify-center">
-              <span className="text-xs font-bold text-yellow-400">
-                {idx + 1}
-              </span>
+            <div className="absolute -left-4 top-0 w-8 h-8 rounded-full bg-slate-900 border-4 border-slate-700 text-slate-400 flex items-center justify-center">
+              <span className="text-sm font-bold">{idx + 1}</span>
             </div>
 
-            <div className="p-4 sm:p-6 rounded-2xl border-2 bg-slate-800/30 border-slate-700/50 backdrop-blur-sm">
+            <div className="p-6 rounded-2xl border-2 bg-slate-800/30 border-slate-700/50 backdrop-blur-sm">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
-                <h3 className="text-lg sm:text-xl font-bold text-white">
-                  {phase.phase}
-                </h3>
+                <h4 className="text-lg font-bold text-white">{phase.phase}</h4>
                 <span className="text-sm font-medium text-yellow-400 bg-yellow-500/20 border border-yellow-500/30 px-3 py-1 rounded-full w-fit">
                   {phase.duration}
                 </span>
               </div>
-              <p className="text-sm sm:text-base text-slate-300 mb-3">
-                {phase.description}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {phase.skills.map((skill, skillIdx) => (
-                  <span
-                    key={skillIdx}
-                    className="text-xs sm:text-sm bg-slate-700/30 text-slate-300 px-3 py-1 rounded-lg border border-slate-600/30"
-                  >
-                    {skill}
-                  </span>
-                ))}
+
+              <p className="text-slate-300 text-sm mb-4">{phase.description}</p>
+
+              {/* Skills */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-slate-400 mb-2">
+                  Skills:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {phase.skills.map((skill, skillIdx) => (
+                    <span
+                      key={skillIdx}
+                      className="text-xs bg-slate-700/30 text-slate-300 px-3 py-1 rounded-lg border border-slate-600/30"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
+
+              {/* Learning Resources */}
+              {phase.learningResources &&
+                phase.learningResources.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-slate-400 mb-2">
+                      Resources:
+                    </p>
+                    <div className="space-y-2">
+                      {phase.learningResources
+                        .slice(0, 3)
+                        .map((resource, resIdx) => (
+                          <div
+                            key={resIdx}
+                            className="text-xs text-slate-400 flex items-center gap-2"
+                          >
+                            <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full flex-shrink-0" />
+                            <span>{resource.name || resource}</span>
+                            {resource.type && (
+                              <span className="text-slate-600">
+                                ({resource.type})
+                              </span>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+              {/* Milestones */}
+              {phase.milestones && phase.milestones.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-400 mb-2">
+                    Milestones:
+                  </p>
+                  <ul className="space-y-1">
+                    {phase.milestones.map((milestone, mIdx) => (
+                      <li
+                        key={mIdx}
+                        className="text-xs text-slate-400 flex items-start gap-2"
+                      >
+                        <span className="text-green-400 mt-0.5 flex-shrink-0">
+                          ✓
+                        </span>
+                        <span>{milestone}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           </motion.div>
         ))}
       </div>
+
+      {/* Career Tips */}
+      {roadmap.careerTips && roadmap.careerTips.length > 0 && (
+        <div className="mt-8 bg-gradient-to-br from-yellow-500/10 to-yellow-500/5 border border-yellow-500/30 rounded-xl p-6">
+          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <span>💡</span> Tips Karir
+          </h3>
+          <ul className="space-y-2">
+            {roadmap.careerTips.map((tip, idx) => (
+              <li
+                key={idx}
+                className="text-sm text-slate-300 flex items-start gap-2"
+              >
+                <span className="text-yellow-400 mt-1 flex-shrink-0">•</span>
+                <span>{tip}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
