@@ -31,6 +31,11 @@ export default function LoginPage() {
         return;
       }
 
+      // Broadcast login event to all components
+      window.dispatchEvent(
+        new CustomEvent("authChange", { detail: { action: "login" } })
+      );
+
       toast.success("Login berhasil! 🎉");
       router.push("/dashboard");
       router.refresh();

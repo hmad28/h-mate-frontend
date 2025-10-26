@@ -56,6 +56,12 @@ export default function DashboardPage() {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
+
+      // Broadcast logout event ke semua component
+      window.dispatchEvent(
+        new CustomEvent("authChange", { detail: { action: "logout" } })
+      );
+
       toast.success("Logout berhasil! 👋");
       router.push("/login");
       router.refresh();

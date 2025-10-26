@@ -39,6 +39,11 @@ export default function RegisterPage() {
         }),
       });
 
+      // Broadcast login event to all components (after successful registration)
+      window.dispatchEvent(
+        new CustomEvent("authChange", { detail: { action: "login" } })
+      );
+      
       const data = await res.json();
 
       if (!res.ok) {
