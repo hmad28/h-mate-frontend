@@ -581,30 +581,64 @@ export default function RoadmapPage() {
       const margin = 15;
       let yPos = margin;
 
+      // Helper to check if we need a new page
+      const checkPageBreak = (requiredSpace) => {
+        if (yPos + requiredSpace > pageHeight - margin) {
+          pdf.addPage();
+          yPos = margin;
+          return true;
+        }
+        return false;
+      };
+
+      // AGGRESSIVE text cleaner - convert to pure ASCII
+      const cleanText = (text) => {
+        return (
+          String(text)
+            // Convert common UTF-8 chars to ASCII
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            // Remove emojis and symbols
+            .replace(/[\u{1F000}-\u{1F9FF}]/gu, "")
+            .replace(/[\u{2600}-\u{26FF}]/gu, "")
+            .replace(/[\u{2700}-\u{27BF}]/gu, "")
+            // Convert quotes
+            .replace(/[""]/g, '"')
+            .replace(/['']/g, "'")
+            // Convert dashes
+            .replace(/[—–]/g, "-")
+            .replace(/…/g, "...")
+            // Convert bullets
+            .replace(/[•●]/g, "-")
+            // Remove any remaining non-printable ASCII
+            .replace(/[^\x20-\x7E\n]/g, "")
+            .trim()
+        );
+      };
+
       // Helper function to add text with wrapping
       const addText = (text, fontSize = 12, isBold = false) => {
         pdf.setFontSize(fontSize);
         pdf.setFont("helvetica", isBold ? "bold" : "normal");
-        const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
+
+        const cleaned = cleanText(text);
+        const lines = pdf.splitTextToSize(cleaned, pageWidth - margin * 2);
 
         lines.forEach((line) => {
-          if (yPos > pageHeight - margin) {
-            pdf.addPage();
-            yPos = margin;
-          }
+          checkPageBreak(fontSize * 0.6);
           pdf.text(line, margin, yPos);
           yPos += fontSize * 0.5;
         });
-        yPos += 3;
+        yPos += 2;
       };
 
-      // Title
+      // Title Header
       pdf.setFillColor(234, 179, 8);
       pdf.rect(0, 0, pageWidth, 25, "F");
       pdf.setTextColor(15, 23, 42);
       pdf.setFontSize(20);
       pdf.setFont("helvetica", "bold");
-      pdf.text("🎯 Roadmap Karier", margin, 15);
+      pdf.text("ROADMAP KARIER", margin, 15);
 
       yPos = 35;
       pdf.setTextColor(0, 0, 0);
@@ -615,57 +649,91 @@ export default function RoadmapPage() {
         `Status: ${userType === "pelajar" ? "Pelajar" : "Profesional"}`,
         11
       );
-      addText(
-        `Durasi Total: ${roadmap.estimatedTime || roadmap.totalDuration}`,
-        11
-      );
+      addText(`Durasi: ${roadmap.estimatedTime || roadmap.totalDuration}`, 11);
       addText(`Tanggal: ${new Date().toLocaleDateString("id-ID")}`, 11);
       yPos += 5;
 
       // Phases
-      addText("📚 Tahapan Pembelajaran", 16, true);
+      addText("=== TAHAPAN PEMBELAJARAN ===", 16, true);
       yPos += 2;
 
       roadmap.phases.forEach((phase, idx) => {
-        if (yPos > pageHeight - 60) {
-          pdf.addPage();
-          yPos = margin;
+        checkPageBreak(40);
+
+        addText(
+          `FASE ${idx + 1}: ${phase.phase} (${phase.duration})`,
+          13,
+          true
+        );
+        addText(phase.description, 11);
+
+        // Skills
+        if (phase.skills && phase.skills.length > 0) {
+          const skillsText = phase.skills.join(", ");
+          addText(`Skills: ${skillsText}`, 10);
         }
 
-        addText(`${idx + 1}. ${phase.phase} (${phase.duration})`, 13, true);
-        addText(phase.description, 11);
-        addText(`Skills: ${phase.skills.join(", ")}`, 10);
+        // Resources
+        if (phase.learningResources && phase.learningResources.length > 0) {
+          addText("Resources:", 10, true);
+          const resources = phase.learningResources.slice(0, 3);
+          resources.forEach((res) => {
+            const resName = typeof res === "string" ? res : res.name || "";
+            if (resName) {
+              addText(`  - ${resName}`, 9);
+            }
+          });
+        }
+
+        // Milestones
+        if (phase.milestones && phase.milestones.length > 0) {
+          addText("Milestones:", 10, true);
+          phase.milestones.forEach((milestone) => {
+            addText(`  - ${milestone}`, 9);
+          });
+        }
+
         yPos += 3;
       });
 
       // Next Steps
       if (nextStepsData) {
-        if (yPos > pageHeight - 80) {
-          pdf.addPage();
-          yPos = margin;
-        }
+        checkPageBreak(60);
 
-        addText("🚀 Rekomendasi", 16, true);
+        addText("=== REKOMENDASI ===", 16, true);
         yPos += 2;
 
-        if (nextStepsData.nextSteps) {
-          nextStepsData.nextSteps.forEach((step) => {
-            addText(`• ${step.step} (${step.estimatedTime})`, 11);
+        if (nextStepsData.nextSteps && nextStepsData.nextSteps.length > 0) {
+          addText("Langkah yang Disarankan:", 13, true);
+          nextStepsData.nextSteps.forEach((step, idx) => {
+            addText(`${idx + 1}. ${step.step} (${step.estimatedTime})`, 11);
           });
           yPos += 3;
         }
 
         if (nextStepsData.recommendedCertifications?.length > 0) {
-          addText("🏆 Sertifikasi Rekomendasi", 14, true);
+          checkPageBreak(40);
+          addText("Sertifikasi Rekomendasi:", 14, true);
           nextStepsData.recommendedCertifications.forEach((cert) => {
-            addText(`• ${cert.name}: ${cert.reason}`, 10);
+            addText(`- ${cert.name}`, 11, true);
+            addText(`  ${cert.reason}`, 10);
           });
           yPos += 3;
         }
 
         if (nextStepsData.motivationalMessage) {
-          addText(`💪 ${nextStepsData.motivationalMessage}`, 11);
+          checkPageBreak(20);
+          addText(`MOTIVASI: ${nextStepsData.motivationalMessage}`, 11);
         }
+      }
+
+      // Career Tips
+      if (roadmap.careerTips && roadmap.careerTips.length > 0) {
+        checkPageBreak(40);
+        addText("=== TIPS KARIR ===", 14, true);
+        roadmap.careerTips.forEach((tip, idx) => {
+          addText(`${idx + 1}. ${tip}`, 10);
+        });
       }
 
       // Footer
@@ -679,9 +747,14 @@ export default function RoadmapPage() {
         });
       }
 
-      // Save PDF
-      pdf.save(`Roadmap-${roadmap.title.replace(/\s+/g, "-")}.pdf`);
-      showToast("PDF berhasil diunduh! 📄", "success");
+      // Save PDF with clean filename
+      const fileName = cleanText(roadmap.title)
+        .replace(/[^\w\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .substring(0, 50);
+
+      pdf.save(`Roadmap-${fileName || "Career"}.pdf`);
+      showToast("PDF berhasil diunduh!", "success");
     } catch (error) {
       console.error("PDF Export Error:", error);
       showToast("Gagal mengunduh PDF. Coba lagi!", "error");
