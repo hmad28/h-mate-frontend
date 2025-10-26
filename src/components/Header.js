@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Sparkles,
-  User,
   Menu,
   X,
   Home,
@@ -17,15 +15,16 @@ import {
   UserPlus,
   LogOut,
   LayoutDashboard,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-
-  // Check if user is logged in (temporary, nanti ganti dengan actual auth check)
-  const isLoggedIn = true; // TODO: Replace with actual auth state
+  const { user, loading, isLoggedIn, logout } = useAuth();
 
   const navigation = [
     { name: "Beranda", href: "/", icon: Home },
@@ -36,10 +35,14 @@ export default function Header() {
 
   const isActive = (href) => pathname === href;
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout logic
-    console.log("Logout clicked");
-    // Example: signOut(), clearToken(), redirect to home, etc.
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success("Logout berhasil! 👋");
+      setIsMobileMenuOpen(false);
+    } catch (error) {
+      toast.error("Gagal logout");
+    }
   };
 
   return (
@@ -174,7 +177,12 @@ export default function Header() {
 
             {/* Auth Buttons */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {isLoggedIn ? (
+              {loading ? (
+                // Loading State
+                <div className="flex items-center gap-2 px-4 py-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-yellow-400" />
+                </div>
+              ) : isLoggedIn ? (
                 // Logged In State - Dashboard & Logout
                 <>
                   <Link href="/dashboard" className="hidden sm:block">
@@ -286,7 +294,11 @@ export default function Header() {
 
                 {/* Mobile Auth Buttons */}
                 <div className="pt-4 border-t border-yellow-400/20 space-y-2">
-                  {isLoggedIn ? (
+                  {loading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-6 h-6 animate-spin text-yellow-400" />
+                    </div>
+                  ) : isLoggedIn ? (
                     // Logged In - Dashboard & Logout
                     <>
                       <Link
@@ -300,10 +312,7 @@ export default function Header() {
                       </Link>
 
                       <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsMobileMenuOpen(false);
-                        }}
+                        onClick={handleLogout}
                         className="relative w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white font-medium rounded-lg shadow-lg shadow-red-500/30 hover:shadow-red-500/50 transition-all overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
