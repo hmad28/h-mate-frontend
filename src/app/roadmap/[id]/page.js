@@ -148,7 +148,7 @@ export default function RoadmapDetailPage() {
             </div>
 
             {/* Progress Bar */}
-            {progress && (
+            {/* {progress && (
               <div className="mt-4">
                 <div className="flex justify-between text-sm text-slate-400 mb-2">
                   <span>Progress Kamu</span>
@@ -165,7 +165,7 @@ export default function RoadmapDetailPage() {
                   />
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Phases Timeline */}

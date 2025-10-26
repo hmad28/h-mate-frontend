@@ -80,11 +80,11 @@ export default function DashboardPage() {
 
   const quickActions = [
     {
-      icon: MessageSquare,
-      title: "Konsultasi AI",
-      description: "Konsultasi karir dengan AI",
-      href: "/konsultasi",
-      color: "from-blue-500 to-cyan-500",
+      icon: ClipboardList,
+      title: "Tes Minat",
+      description: "Ikuti tes minat & bakat",
+      href: "/tes-minat",
+      color: "from-green-500 to-emerald-500",
     },
     {
       icon: Map,
@@ -94,11 +94,11 @@ export default function DashboardPage() {
       color: "from-purple-500 to-pink-500",
     },
     {
-      icon: ClipboardList,
-      title: "Tes Minat",
-      description: "Ikuti tes minat & bakat",
-      href: "/tes-minat",
-      color: "from-green-500 to-emerald-500",
+      icon: MessageSquare,
+      title: "Konsultasi AI",
+      description: "Konsultasi karir dengan AI",
+      href: "/konsultasi",
+      color: "from-blue-500 to-cyan-500",
     },
   ];
 
@@ -226,7 +226,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  {item.progress && (
+                  {/* {item.progress && (
                     <div className="mb-3">
                       <div className="flex justify-between text-xs text-slate-400 mb-1">
                         <span>Progress</span>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                         />
                       </div>
                     </div>
-                  )}
+                  )} */}
 
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{item.roadmap.estimatedTime || "No estimate"}</span>
@@ -270,11 +270,11 @@ export default function DashboardPage() {
               ))}
             </div>
 
-            {profileData.roadmaps.length > 4 && (
+            {/* {profileData.roadmaps.length > 4 && (
               <p className="text-center text-sm text-slate-500 mt-4">
                 +{profileData.roadmaps.length - 4} roadmap lainnya
               </p>
-            )}
+            )} */}
           </motion.div>
         )}
 
@@ -527,7 +527,7 @@ export default function DashboardPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        {/* <div className="flex items-center gap-2">
                           {isRoadmap && activity.progress !== undefined && (
                             <span className="text-xs text-slate-400 mr-2">
                               {activity.progress}%
@@ -538,7 +538,7 @@ export default function DashboardPage() {
                           >
                             {isTest ? "Selesai" : "Aktif"}
                           </span>
-                        </div>
+                        </div> */}
                       </div>
                     );
                   })}
