@@ -14,7 +14,7 @@ export default function Footer() {
         <div className="absolute bottom-0 right-1/4 w-64 h-32 bg-yellow-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative container mx-auto px-4 py-10">
+      <div className="relative container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Main Content - Stacked Vertically */}
           <motion.div
@@ -63,7 +63,7 @@ export default function Footer() {
             </div>
 
             {/* Divider Line */}
-            <div className="flex items-center justify-center gap-4 py-2">
+            <div className="flex items-center justify-center gap-4">
               <div className="h-px w-20 bg-gradient-to-r from-transparent to-slate-700" />
               <Sparkles className="w-3 h-3 text-yellow-400/60" />
               <div className="h-px w-20 bg-gradient-to-l from-transparent to-slate-700" />
