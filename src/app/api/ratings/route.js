@@ -3,15 +3,44 @@ import { db } from "@/lib/db";
 import { summaryRatings } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 
+// Helper function to validate UUID
+function isValidUUID(uuid) {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
 export async function POST(req) {
   try {
     const body = await req.json();
     const { summaryId, userId, isAccurate, feedbackReason, rating } = body;
 
+    console.log("📥 Received payload:", {
+      summaryId,
+      userId,
+      isAccurate,
+      rating,
+    });
+
     // Validation
     if (!summaryId || !userId) {
       return NextResponse.json(
         { error: "summaryId dan userId wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    // ✅ VALIDATE UUID FORMAT
+    if (!isValidUUID(summaryId)) {
+      return NextResponse.json(
+        { error: "summaryId harus berformat UUID yang valid" },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidUUID(userId)) {
+      return NextResponse.json(
+        { error: "userId harus berformat UUID yang valid" },
         { status: 400 }
       );
     }
@@ -68,6 +97,8 @@ export async function POST(req) {
       })
       .returning();
 
+    console.log("✅ Rating saved successfully:", newRating.id);
+
     return NextResponse.json(
       {
         success: true,
@@ -77,15 +108,14 @@ export async function POST(req) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error saving rating:", error);
+    console.error("❌ Error saving rating:", error);
     return NextResponse.json(
-      { error: "Gagal menyimpan rating" },
+      { error: "Gagal menyimpan rating", details: error.message },
       { status: 500 }
     );
   }
 }
 
-// Optional: GET endpoint untuk mengambil rating user tertentu
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
@@ -95,6 +125,14 @@ export async function GET(req) {
     if (!summaryId || !userId) {
       return NextResponse.json(
         { error: "summaryId dan userId diperlukan" },
+        { status: 400 }
+      );
+    }
+
+    // Validate UUID format
+    if (!isValidUUID(summaryId) || !isValidUUID(userId)) {
+      return NextResponse.json(
+        { error: "summaryId dan userId harus berformat UUID yang valid" },
         { status: 400 }
       );
     }

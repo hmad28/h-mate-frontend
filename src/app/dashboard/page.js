@@ -139,6 +139,16 @@ export default function DashboardPage() {
     },
   ];
 
+  {
+    /* AI Rating Section - Only show if AI Summary exists */
+  }
+  console.log("🔍 Debug Rating Section:", {
+    aiSummary,
+    aiSummaryId: aiSummary?.id,
+    userId: user?.id,
+    hasValidIds: !!(aiSummary?.id && user?.id),
+  });
+
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
       {/* Animated Background */}
@@ -835,12 +845,16 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* AI Rating Section - Only show if AI Summary exists */}
-        {aiSummary && user && (
+        {/* AI Rating Section - Only show if valid data exists */}
+        {aiSummary?.id && user?.id ? (
           <AiRatingSection
-            summaryId={aiSummary.id || "test-summary-id"}
-            userId={user.id || "test-user-id"}
+            summaryId={aiSummary.id}
+            userId={user.id}
           />
+        ) : (
+          <div className="mt-8 text-slate-500 text-sm">
+            Debug: aiSummary.id={aiSummary?.id || 'missing'}, user.id={user?.id || 'missing'}
+          </div>
         )}
       </div>
     </div>
