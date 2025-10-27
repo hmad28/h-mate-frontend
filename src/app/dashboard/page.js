@@ -9,9 +9,14 @@ import {
   MessageSquare,
   Map,
   ClipboardList,
-  TrendingUp,
   Sparkles,
   Target,
+  TrendingUp,
+  Zap,
+  Award,
+  RefreshCw,
+  Brain,
+  Rocket,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -20,11 +25,14 @@ export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [profileData, setProfileData] = useState(null);
+  const [aiSummary, setAiSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   useEffect(() => {
     fetchUser();
     fetchProfile();
+    fetchAiSummary();
   }, []);
 
   const fetchUser = async () => {
@@ -53,15 +61,43 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchAiSummary = async () => {
+    try {
+      const res = await fetch("/api/profile/ai-summary");
+      if (res.ok) {
+        const data = await res.json();
+        setAiSummary(data.data);
+      }
+    } catch (error) {
+      console.log("No AI summary yet");
+    }
+  };
+
+  const generateAiSummary = async () => {
+    setSummaryLoading(true);
+    try {
+      const res = await fetch("/api/profile/ai-summary", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setAiSummary(data.data);
+        toast.success("AI Summary berhasil di-generate! ✨");
+      } else {
+        toast.error("Gagal generate AI summary");
+      }
+    } catch (error) {
+      console.error("Error generating AI summary:", error);
+      toast.error("Terjadi kesalahan");
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-
-      // Broadcast logout event ke semua component
       window.dispatchEvent(
         new CustomEvent("authChange", { detail: { action: "logout" } })
       );
-
       toast.success("Logout berhasil! 👋");
       router.push("/login");
       router.refresh();
@@ -155,42 +191,310 @@ export default function DashboardPage() {
           </motion.button>
         </motion.div>
 
-        {/* Stats Card - REAL PROGRESS */}
-        {/* <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-6"
-        >
+        {/* AI SUMMARY CARD - FEATURED */}
+        {aiSummary ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -5 }}
-            className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl"
+            className="mb-8"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Progress Belajar</p>
-                <p className="text-3xl font-bold text-white">
-                  {profileData?.stats?.overallProgress || 0}%
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  {profileData?.stats?.totalRoadmaps > 0
-                    ? `${profileData.stats.totalRoadmaps} roadmap aktif`
-                    : "Mulai roadmap untuk tracking progress"}
-                </p>
+            <div className="relative bg-gradient-to-br from-yellow-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 overflow-hidden shadow-2xl">
+              {/* Animated Glow */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-purple-500/20 to-blue-500/20 opacity-50 blur-3xl"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, 0],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+
+              {/* Content */}
+              <div className="relative z-10">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg"
+                      animate={{ rotate: [0, 360] }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      <Brain className="w-7 h-7 text-white" />
+                    </motion.div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                        AI Career Insights
+                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                      </h2>
+                      <p className="text-xs text-slate-400">
+                        Diperbarui{" "}
+                        {new Date(
+                          aiSummary.summaryGeneratedAt || Date.now()
+                        ).toLocaleDateString("id-ID")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <motion.button
+                    onClick={generateAiSummary}
+                    disabled={summaryLoading}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${
+                        summaryLoading ? "animate-spin" : ""
+                      }`}
+                    />
+                    <span className="text-sm hidden sm:inline">Refresh</span>
+                  </motion.button>
+                </div>
+
+                {/* Overall Summary */}
+                <div className="mb-6 p-5 bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl">
+                  <p className="text-slate-200 text-base sm:text-lg leading-relaxed">
+                    {aiSummary.overallSummary}
+                  </p>
+                </div>
+
+                {/* Grid Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  {/* Personality */}
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="bg-slate-900/40 backdrop-blur-sm border border-purple-500/30 rounded-xl p-5"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <User className="w-5 h-5 text-purple-400" />
+                      <h3 className="font-semibold text-white text-sm">
+                        Personality
+                      </h3>
+                    </div>
+                    <p className="text-purple-400 font-bold text-base sm:text-lg mb-2">
+                      {aiSummary.personality.type}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {aiSummary.personality.traits
+                        .slice(0, 3)
+                        .map((trait, idx) => (
+                          <span
+                            key={idx}
+                            className="text-xs bg-purple-500/20 border border-purple-500/30 text-purple-300 px-2 py-1 rounded-full"
+                          >
+                            {trait}
+                          </span>
+                        ))}
+                    </div>
+                  </motion.div>
+
+                  {/* Career Alignment */}
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="bg-slate-900/40 backdrop-blur-sm border border-green-500/30 rounded-xl p-5"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="w-5 h-5 text-green-400" />
+                      <h3 className="font-semibold text-white text-sm">
+                        Career Fit
+                      </h3>
+                    </div>
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-green-400 font-bold text-2xl sm:text-3xl">
+                        {aiSummary.careerAlignment.score}
+                      </span>
+                      <span className="text-slate-400 text-sm">/100</span>
+                    </div>
+                    <p className="text-green-400 text-sm font-medium">
+                      {aiSummary.careerAlignment.status}
+                    </p>
+                  </motion.div>
+
+                  {/* Activity Level */}
+                  <motion.div
+                    whileHover={{ y: -5 }}
+                    className="bg-slate-900/40 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="w-5 h-5 text-blue-400" />
+                      <h3 className="font-semibold text-white text-sm">
+                        Journey
+                      </h3>
+                    </div>
+                    <p className="text-blue-400 font-bold text-base sm:text-lg mb-2">
+                      {aiSummary.activityLevel}
+                    </p>
+                    <p className="text-slate-400 text-sm">
+                      Stage:{" "}
+                      <span className="text-blue-300">
+                        {aiSummary.journeyStage}
+                      </span>
+                    </p>
+                  </motion.div>
+                </div>
+
+                {/* Strengths & Areas to Improve */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Award className="w-5 h-5 text-yellow-400" />
+                      <h3 className="font-semibold text-white text-sm">
+                        Kekuatan Kamu
+                      </h3>
+                    </div>
+                    <ul className="space-y-2">
+                      {aiSummary.strengths.map((strength, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-sm text-slate-300"
+                        >
+                          <span className="text-yellow-400 mt-0.5">✓</span>
+                          <span>{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Zap className="w-5 h-5 text-orange-400" />
+                      <h3 className="font-semibold text-white text-sm">
+                        Area Pengembangan
+                      </h3>
+                    </div>
+                    <ul className="space-y-2">
+                      {aiSummary.areasToImprove.map((area, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-sm text-slate-300"
+                        >
+                          <span className="text-orange-400 mt-0.5">→</span>
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Top Career Matches */}
+                {aiSummary.topCareerMatches &&
+                  aiSummary.topCareerMatches.length > 0 && (
+                    <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5 mb-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Target className="w-5 h-5 text-yellow-400" />
+                        <h3 className="font-semibold text-white text-sm">
+                          Top Career Matches
+                        </h3>
+                      </div>
+                      <div className="space-y-3">
+                        {aiSummary.topCareerMatches.map((career, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-3 bg-slate-800/30 border border-slate-700/30 rounded-lg"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white text-sm">
+                                {career.title}
+                              </p>
+                              <p className="text-xs text-slate-400 mt-1 line-clamp-1">
+                                {career.reason}
+                              </p>
+                            </div>
+                            <span className="text-yellow-400 font-bold text-lg ml-4 flex-shrink-0">
+                              {career.score}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                {/* Next Steps */}
+                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-5 mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Rocket className="w-5 h-5 text-yellow-400" />
+                    <h3 className="font-semibold text-white text-sm">
+                      Langkah Selanjutnya
+                    </h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {aiSummary.nextSteps.map((step, idx) => (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-3 text-sm text-slate-200"
+                      >
+                        <span className="flex-shrink-0 w-6 h-6 bg-yellow-500/20 border border-yellow-500/30 rounded-full flex items-center justify-center text-yellow-400 text-xs font-bold">
+                          {idx + 1}
+                        </span>
+                        <span className="pt-0.5">{step}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Motivation Message */}
+                <div className="text-center p-5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl">
+                  <p className="text-slate-200 italic text-base sm:text-lg leading-relaxed">
+                    💪 {aiSummary.motivation}
+                  </p>
+                </div>
               </div>
-              <TrendingUp className="w-10 h-10 text-blue-400" />
             </div>
           </motion.div>
-        </motion.div> */}
+        ) : (
+          // Generate AI Summary CTA
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 text-center">
+              <Brain className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Dapatkan AI Career Insights
+              </h3>
+              <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-sm sm:text-base">
+                Biarkan AI menganalisis perjalanan kariermu dan memberikan
+                insight personal berdasarkan aktivitas, tes, dan roadmap yang
+                kamu buat
+              </p>
+              <motion.button
+                onClick={generateAiSummary}
+                disabled={summaryLoading}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-950 rounded-xl font-bold shadow-lg hover:shadow-yellow-400/50 transition disabled:opacity-50"
+              >
+                {summaryLoading ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span>Generating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Generate AI Insights</span>
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Saved Roadmaps - IF EXISTS */}
         {profileData?.roadmaps && profileData.roadmaps.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.1 }}
             className="my-6"
           >
             <h2 className="text-2xl font-bold text-white mb-4">Roadmap Kamu</h2>
@@ -200,7 +504,7 @@ export default function DashboardPage() {
                   key={item.roadmap.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + idx * 0.1 }}
+                  transition={{ delay: 0.1 + idx * 0.1 }}
                   whileHover={{ y: -5 }}
                   className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl hover:border-purple-500/30 transition"
                 >
@@ -214,7 +518,7 @@ export default function DashboardPage() {
                       </p>
                     </div>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      className={`px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${
                         item.roadmap.currentStatus === "pelajar"
                           ? "bg-blue-500/20 border border-blue-500/30 text-blue-400"
                           : "bg-purple-500/20 border border-purple-500/30 text-purple-400"
@@ -225,23 +529,6 @@ export default function DashboardPage() {
                         : "Profesional"}
                     </span>
                   </div>
-
-                  {/* {item.progress && (
-                    <div className="mb-3">
-                      <div className="flex justify-between text-xs text-slate-400 mb-1">
-                        <span>Progress</span>
-                        <span>{item.progress.progressPercentage}%</span>
-                      </div>
-                      <div className="w-full bg-slate-800/50 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all"
-                          style={{
-                            width: `${item.progress.progressPercentage}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )} */}
 
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{item.roadmap.estimatedTime || "No estimate"}</span>
@@ -269,12 +556,6 @@ export default function DashboardPage() {
                 </motion.div>
               ))}
             </div>
-
-            {/* {profileData.roadmaps.length > 4 && (
-              <p className="text-center text-sm text-slate-500 mt-4">
-                +{profileData.roadmaps.length - 4} roadmap lainnya
-              </p>
-            )} */}
           </motion.div>
         )}
 
@@ -328,7 +609,6 @@ export default function DashboardPage() {
                               `Membuat roadmap untuk ${career.title}...`
                             );
 
-                            // Generate roadmap
                             const roadmapResponse = await fetch(
                               `${
                                 process.env.NEXT_PUBLIC_API_URL ||
@@ -352,7 +632,6 @@ export default function DashboardPage() {
 
                             const roadmapData = await roadmapResponse.json();
 
-                            // Save roadmap
                             const saveResponse = await fetch(
                               "/api/roadmaps/save",
                               {
@@ -379,8 +658,6 @@ export default function DashboardPage() {
 
                             toast.dismiss();
                             toast.success("Roadmap berhasil dibuat! 🎉");
-
-                            // Redirect to roadmap detail
                             router.push(`/roadmap/${savedRoadmap.data.id}`);
                           } catch (error) {
                             toast.dismiss();
@@ -396,22 +673,22 @@ export default function DashboardPage() {
                         className="w-full text-left bg-slate-800/30 border border-slate-700/50 rounded-lg p-4 hover:border-yellow-500/50 hover:bg-slate-800/50 transition cursor-pointer group"
                       >
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-1">
-                            <span className="text-base font-semibold text-white group-hover:text-yellow-400 transition">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="text-base font-semibold text-white group-hover:text-yellow-400 transition truncate">
                               {career.title}
                             </span>
-                            <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full">
+                            <span className="text-xs bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-2 py-1 rounded-full flex-shrink-0">
                               {career.match_percentage}% Match
                             </span>
                           </div>
                           <motion.div
-                            className="text-slate-600 group-hover:text-yellow-400 transition"
+                            className="text-slate-600 group-hover:text-yellow-400 transition flex-shrink-0 ml-2"
                             whileHover={{ x: 5 }}
                           >
                             →
                           </motion.div>
                         </div>
-                        <p className="text-xs text-slate-400 group-hover:text-slate-300 transition">
+                        <p className="text-xs text-slate-400 group-hover:text-slate-300 transition line-clamp-2">
                           {career.reason}
                         </p>
                         <p className="text-xs text-yellow-400/70 mt-2 opacity-0 group-hover:opacity-100 transition">
@@ -466,13 +743,13 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Recent Activity - UPDATED VERSION */}
+        {/* Recent Activity - IF EXISTS */}
         {profileData?.recentActivities &&
           profileData.recentActivities.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
+              transition={{ delay: 0.4 }}
               className="mt-8"
             >
               <h2 className="text-2xl font-bold text-white mb-4">
@@ -481,7 +758,6 @@ export default function DashboardPage() {
               <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-6 shadow-xl">
                 <div className="space-y-4">
                   {profileData.recentActivities.map((activity) => {
-                    // Determine icon and colors based on activity type
                     const isTest = activity.type === "test";
                     const isRoadmap = activity.type === "roadmap";
 
@@ -492,9 +768,6 @@ export default function DashboardPage() {
                     const iconColor = isTest
                       ? "text-green-400"
                       : "text-purple-400";
-                    const badgeColor = isTest
-                      ? "bg-green-500/20 border-green-500/30 text-green-400"
-                      : "bg-purple-500/20 border-purple-500/30 text-purple-400";
 
                     return (
                       <div
@@ -527,18 +800,6 @@ export default function DashboardPage() {
                             </p>
                           </div>
                         </div>
-                        {/* <div className="flex items-center gap-2">
-                          {isRoadmap && activity.progress !== undefined && (
-                            <span className="text-xs text-slate-400 mr-2">
-                              {activity.progress}%
-                            </span>
-                          )}
-                          <span
-                            className={`text-xs ${badgeColor} border px-3 py-1 rounded-full`}
-                          >
-                            {isTest ? "Selesai" : "Aktif"}
-                          </span>
-                        </div> */}
                       </div>
                     );
                   })}
@@ -551,7 +812,7 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.5 }}
           className="mt-8 bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-8 shadow-xl"
         >
           <div className="flex items-center gap-4">

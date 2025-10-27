@@ -15,6 +15,13 @@
       "when": 1761187682010,
       "tag": "0001_perpetual_champions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761523912755,
+      "tag": "0002_familiar_big_bertha",
+      "breakpoints": true
     }
   ]
 }

@@ -50,6 +50,8 @@ export const userProfiles = pgTable("user_profiles", {
   lastAnalyzedAt: timestamp("last_analyzed_at"),
   aiConfidenceScore: integer("ai_confidence_score").default(0), // 0-100
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  aiSummary: jsonb("ai_summary"), // Full AI-generated summary
+  summaryGeneratedAt: timestamp("summary_generated_at"), // Waktu terakhir di-generate
 });
 
 // ===== TEST RESULTS TABLE =====

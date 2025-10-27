@@ -39,14 +39,7 @@ export default function Footer() {
                 >
                   Hammad
                 </a>
-              </motion.div>
-
-              {/* Indonesia Tag */}
-              <motion.div
-                className="flex items-center justify-center gap-2 text-slate-400 text-sm"
-                whileHover={{ scale: 1.05 }}
-              >
-                <span>untuk Indonesia Emas 2045</span>
+                <span>• untuk Indonesia Emas 2045</span>
                 <motion.span
                   animate={{
                     rotate: [0, 10, -10, 0],
@@ -61,6 +54,12 @@ export default function Footer() {
                   🇮🇩
                 </motion.span>
               </motion.div>
+
+              {/* Indonesia Tag */}
+              <motion.div
+                className="flex items-center justify-center gap-2 text-slate-400 text-sm"
+                whileHover={{ scale: 1.05 }}
+              ></motion.div>
             </div>
 
             {/* Divider Line */}
