@@ -11,60 +11,60 @@ export default function AiRatingSection({ summaryId, userId }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
-    const handleSubmit = async () => {
-        if (isAccurate === null) {
-        toast.error("Pilih apakah analisis AI akurat atau tidak");
-        return;
-        }
+  const handleSubmit = async () => {
+    // Validasi
+    if (isAccurate === null) {
+      toast.error("Pilih apakah analisis AI akurat atau tidak");
+      return;
+    }
 
-        if (!feedbackText.trim()) {
-        toast.error("Tulis alasan feedback kamu");
-        return;
-        }
+    if (!feedbackText.trim()) {
+      toast.error("Tulis alasan feedback kamu");
+      return;
+    }
 
-        setIsSubmitting(true);
+    if (feedbackText.trim().length < 10) {
+      toast.error("Feedback minimal 10 karakter");
+      return;
+    }
 
-        try {
-        const response = await fetch("/api/ratings", {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-            summaryId,
-            userId,
-            isAccurate,
-            feedbackReason: feedbackText,
-            rating: isAccurate ? 5 : 2, // Default rating based on accuracy
-            }),
-        });
+    setIsSubmitting(true);
 
-        if (!response.ok) {
-            throw new Error("Failed to submit rating");
-        }
-
-        toast.success("Terima kasih atas feedback kamu! 🙏");
-        setHasSubmitted(true);
-        } catch (error) {
-        console.error("Error submitting rating:", error);
-        toast.error("Gagal mengirim feedback. Coba lagi!");
-        } finally {
-        setIsSubmitting(false);
-        }
-
-        const payload = {
-            summaryId,
-            userId,
-            isAccurate,
-            feedbackReason: feedbackText,
-            rating: isAccurate ? 5 : 2,
-        };
-        
-        console.log("Payload yang dikirim:", payload); // 👈 ADD THIS
-
-        setIsSubmitting(true);
-        // ...
+    const payload = {
+      summaryId,
+      userId,
+      isAccurate,
+      feedbackReason: feedbackText.trim(),
+      rating: isAccurate ? 5 : 2,
     };
+
+    console.log("📤 Payload yang dikirim:", payload);
+
+    try {
+      const response = await fetch("/api/ratings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      console.log("📥 Response dari server:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit rating");
+      }
+
+      toast.success("Terima kasih atas feedback kamu! 🙏");
+      setHasSubmitted(true);
+    } catch (error) {
+      console.error("❌ Error submitting rating:", error);
+      toast.error(error.message || "Gagal mengirim feedback. Coba lagi!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (hasSubmitted) {
     return (
