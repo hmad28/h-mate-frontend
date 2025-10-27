@@ -836,8 +836,11 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* AI Rating Section - Only show if AI Summary exists */}
-        {aiSummary && (
-          <AiRatingSection summaryId={aiSummary.id} userId={user?.id} />
+        {aiSummary && user && (
+          <AiRatingSection
+            summaryId={aiSummary.id || "test-summary-id"}
+            userId={user.id || "test-user-id"}
+          />
         )}
       </div>
     </div>
