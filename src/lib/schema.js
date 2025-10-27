@@ -85,7 +85,7 @@ export const summaryRatings = pgTable("summary_ratings", {
   id: uuid("id").defaultRandom().primaryKey(),
   summaryId: uuid("summary_id")
     .notNull()
-    .references(() => careerSummaries.id, { onDelete: "cascade" }),
+    .references(() => userProfiles.id, { onDelete: "cascade" }), // ✅ GANTI KE userProfiles
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

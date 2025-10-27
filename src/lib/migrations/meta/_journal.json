@@ -22,6 +22,13 @@
       "when": 1761523912755,
       "tag": "0002_familiar_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761577667753,
+      "tag": "0003_omniscient_ben_parker",
+      "breakpoints": true
     }
   ]
 }
