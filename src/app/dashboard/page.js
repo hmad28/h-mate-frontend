@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import AiRatingSection from "@/components/AiRatingSection"; // sesuaikan path
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -833,6 +834,11 @@ export default function DashboardPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* AI Rating Section - Only show if AI Summary exists */}
+        {aiSummary && (
+          <AiRatingSection summaryId={aiSummary.id} userId={user?.id} />
+        )}
       </div>
     </div>
   );
