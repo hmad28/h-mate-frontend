@@ -196,7 +196,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-6"
           >
             <div className="relative bg-gradient-to-br from-yellow-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 overflow-hidden shadow-2xl">
               {/* Animated Glow */}
@@ -454,7 +454,7 @@ export default function DashboardPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
+            className="mb-6"
           >
             <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 text-center">
               <Brain className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
