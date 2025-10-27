@@ -192,14 +192,14 @@ export default function DashboardPage() {
           </motion.button>
         </motion.div>
 
-        {/* AI SUMMARY CARD - FEATURED */}
+        {/* AI SUMMARY CARD - COMPACT & ELEGANT */}
         {aiSummary ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <div className="relative bg-gradient-to-br from-yellow-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 overflow-hidden shadow-2xl">
+            <div className="relative bg-gradient-to-br from-yellow-500/10 via-purple-500/10 to-blue-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl overflow-hidden shadow-2xl">
               {/* Animated Glow */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-purple-500/20 to-blue-500/20 opacity-50 blur-3xl"
@@ -216,30 +216,25 @@ export default function DashboardPage() {
 
               {/* Content */}
               <div className="relative z-10">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <motion.div
-                      className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg"
-                      animate={{ rotate: [0, 360] }}
-                      transition={{
-                        duration: 20,
-                        repeat: Infinity,
-                        ease: "linear",
-                      }}
-                    >
-                      <Brain className="w-7 h-7 text-white" />
-                    </motion.div>
+                {/* Header with Profile */}
+                <div className="flex items-center justify-between p-6 sm:p-8 border-b border-slate-700/50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                      <User className="w-7 h-7 text-white" />
+                    </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                        AI Career Insights
-                        <Sparkles className="w-5 h-5 text-yellow-400" />
+                      <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                        {user?.username}
+                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
                       </h2>
-                      <p className="text-xs text-slate-400">
-                        Diperbarui{" "}
+                      <p className="text-xs sm:text-sm text-slate-400">
+                        {user?.age} tahun • Member sejak{" "}
                         {new Date(
-                          aiSummary.summaryGeneratedAt || Date.now()
-                        ).toLocaleDateString("id-ID")}
+                          user?.createdAt || Date.now()
+                        ).toLocaleDateString("id-ID", {
+                          month: "long",
+                          year: "numeric",
+                        })}
                       </p>
                     </div>
                   </div>
@@ -249,203 +244,176 @@ export default function DashboardPage() {
                     disabled={summaryLoading}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 rounded-lg text-slate-300 hover:text-white transition disabled:opacity-50"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 ${
+                      className={`w-3 h-3 sm:w-4 sm:h-4 ${
                         summaryLoading ? "animate-spin" : ""
                       }`}
                     />
-                    <span className="text-sm hidden sm:inline">Refresh</span>
+                    <span className="text-xs sm:text-sm hidden sm:inline">
+                      Refresh
+                    </span>
                   </motion.button>
                 </div>
 
-                {/* Overall Summary */}
-                <div className="mb-6 p-5 bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl">
-                  <p className="text-slate-200 text-base sm:text-lg leading-relaxed">
-                    {aiSummary.overallSummary}
-                  </p>
-                </div>
-
-                {/* Grid Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                  {/* Personality */}
-                  <motion.div
-                    whileHover={{ y: -5 }}
-                    className="bg-slate-900/40 backdrop-blur-sm border border-purple-500/30 rounded-xl p-5"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <User className="w-5 h-5 text-purple-400" />
-                      <h3 className="font-semibold text-white text-sm">
-                        Personality
-                      </h3>
-                    </div>
-                    <p className="text-purple-400 font-bold text-base sm:text-lg mb-2">
-                      {aiSummary.personality.type}
+                <div className="p-6 sm:p-8">
+                  {/* Overall Summary */}
+                  <div className="mb-6 p-4 sm:p-5 bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl">
+                    <p className="text-slate-200 text-sm sm:text-base leading-relaxed">
+                      {aiSummary.overallSummary}
                     </p>
-                    <div className="flex flex-wrap gap-2">
-                      {aiSummary.personality.traits
-                        .slice(0, 3)
-                        .map((trait, idx) => (
-                          <span
-                            key={idx}
-                            className="text-xs bg-purple-500/20 border border-purple-500/30 text-purple-300 px-2 py-1 rounded-full"
-                          >
-                            {trait}
-                          </span>
-                        ))}
-                    </div>
-                  </motion.div>
-
-                  {/* Career Alignment */}
-                  <motion.div
-                    whileHover={{ y: -5 }}
-                    className="bg-slate-900/40 backdrop-blur-sm border border-green-500/30 rounded-xl p-5"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Target className="w-5 h-5 text-green-400" />
-                      <h3 className="font-semibold text-white text-sm">
-                        Career Fit
-                      </h3>
-                    </div>
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-green-400 font-bold text-2xl sm:text-3xl">
-                        {aiSummary.careerAlignment.score}
-                      </span>
-                      <span className="text-slate-400 text-sm">/100</span>
-                    </div>
-                    <p className="text-green-400 text-sm font-medium">
-                      {aiSummary.careerAlignment.status}
-                    </p>
-                  </motion.div>
-
-                  {/* Activity Level */}
-                  <motion.div
-                    whileHover={{ y: -5 }}
-                    className="bg-slate-900/40 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <TrendingUp className="w-5 h-5 text-blue-400" />
-                      <h3 className="font-semibold text-white text-sm">
-                        Journey
-                      </h3>
-                    </div>
-                    <p className="text-blue-400 font-bold text-base sm:text-lg mb-2">
-                      {aiSummary.activityLevel}
-                    </p>
-                    <p className="text-slate-400 text-sm">
-                      Stage:{" "}
-                      <span className="text-blue-300">
-                        {aiSummary.journeyStage}
-                      </span>
-                    </p>
-                  </motion.div>
-                </div>
-
-                {/* Strengths & Areas to Improve */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Award className="w-5 h-5 text-yellow-400" />
-                      <h3 className="font-semibold text-white text-sm">
-                        Kekuatan Kamu
-                      </h3>
-                    </div>
-                    <ul className="space-y-2">
-                      {aiSummary.strengths.map((strength, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm text-slate-300"
-                        >
-                          <span className="text-yellow-400 mt-0.5">✓</span>
-                          <span>{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
 
-                  <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Zap className="w-5 h-5 text-orange-400" />
-                      <h3 className="font-semibold text-white text-sm">
-                        Area Pengembangan
-                      </h3>
-                    </div>
-                    <ul className="space-y-2">
-                      {aiSummary.areasToImprove.map((area, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-start gap-2 text-sm text-slate-300"
-                        >
-                          <span className="text-orange-400 mt-0.5">→</span>
-                          <span>{area}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Top Career Matches */}
-                {aiSummary.topCareerMatches &&
-                  aiSummary.topCareerMatches.length > 0 && (
-                    <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5 mb-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <Target className="w-5 h-5 text-yellow-400" />
-                        <h3 className="font-semibold text-white text-sm">
-                          Top Career Matches
+                  {/* Grid Stats */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                    {/* Personality */}
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      className="bg-slate-900/40 backdrop-blur-sm border border-purple-500/30 rounded-xl p-4"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="w-4 h-4 text-purple-400" />
+                        <h3 className="font-semibold text-white text-xs sm:text-sm">
+                          Personality
                         </h3>
                       </div>
-                      <div className="space-y-3">
-                        {aiSummary.topCareerMatches.map((career, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-3 bg-slate-800/30 border border-slate-700/30 rounded-lg"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white text-sm">
-                                {career.title}
-                              </p>
-                              <p className="text-xs text-slate-400 mt-1 line-clamp-1">
-                                {career.reason}
-                              </p>
-                            </div>
-                            <span className="text-yellow-400 font-bold text-lg ml-4 flex-shrink-0">
-                              {career.score}%
+                      <p className="text-purple-400 font-bold text-sm sm:text-base mb-2">
+                        {aiSummary.personality.type}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {aiSummary.personality.traits
+                          .slice(0, 2)
+                          .map((trait, idx) => (
+                            <span
+                              key={idx}
+                              className="text-xs bg-purple-500/20 border border-purple-500/30 text-purple-300 px-2 py-0.5 rounded-full"
+                            >
+                              {trait}
                             </span>
-                          </div>
-                        ))}
+                          ))}
                       </div>
-                    </div>
-                  )}
+                    </motion.div>
 
-                {/* Next Steps */}
-                <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-5 mb-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Rocket className="w-5 h-5 text-yellow-400" />
-                    <h3 className="font-semibold text-white text-sm">
-                      Langkah Selanjutnya
-                    </h3>
-                  </div>
-                  <ul className="space-y-2">
-                    {aiSummary.nextSteps.map((step, idx) => (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-3 text-sm text-slate-200"
-                      >
-                        <span className="flex-shrink-0 w-6 h-6 bg-yellow-500/20 border border-yellow-500/30 rounded-full flex items-center justify-center text-yellow-400 text-xs font-bold">
-                          {idx + 1}
+                    {/* Career Alignment */}
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      className="bg-slate-900/40 backdrop-blur-sm border border-green-500/30 rounded-xl p-4"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <Target className="w-4 h-4 text-green-400" />
+                        <h3 className="font-semibold text-white text-xs sm:text-sm">
+                          Career Fit
+                        </h3>
+                      </div>
+                      <div className="flex items-baseline gap-2 mb-1">
+                        <span className="text-green-400 font-bold text-xl sm:text-2xl">
+                          {aiSummary.careerAlignment.score}
                         </span>
-                        <span className="pt-0.5">{step}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                        <span className="text-slate-400 text-xs">/100</span>
+                      </div>
+                      <p className="text-green-400 text-xs sm:text-sm font-medium">
+                        {aiSummary.careerAlignment.status}
+                      </p>
+                    </motion.div>
 
-                {/* Motivation Message */}
-                <div className="text-center p-5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl">
-                  <p className="text-slate-200 italic text-base sm:text-lg leading-relaxed">
-                    💪 {aiSummary.motivation}
-                  </p>
+                    {/* Activity Level */}
+                    <motion.div
+                      whileHover={{ y: -3 }}
+                      className="bg-slate-900/40 backdrop-blur-sm border border-blue-500/30 rounded-xl p-4"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-blue-400" />
+                        <h3 className="font-semibold text-white text-xs sm:text-sm">
+                          Activity
+                        </h3>
+                      </div>
+                      <p className="text-blue-400 font-bold text-sm sm:text-base">
+                        {aiSummary.activityLevel}
+                      </p>
+                    </motion.div>
+                  </div>
+
+                  {/* Strengths & Areas to Improve - Compact */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                    <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Award className="w-4 h-4 text-yellow-400" />
+                        <h3 className="font-semibold text-white text-xs sm:text-sm">
+                          Kekuatan
+                        </h3>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {aiSummary.strengths
+                          .slice(0, 3)
+                          .map((strength, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-start gap-2 text-xs sm:text-sm text-slate-300"
+                            >
+                              <span className="text-yellow-400 mt-0.5 flex-shrink-0">
+                                ✓
+                              </span>
+                              <span className="line-clamp-1">{strength}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-slate-900/40 backdrop-blur-sm border border-slate-700/50 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Zap className="w-4 h-4 text-orange-400" />
+                        <h3 className="font-semibold text-white text-xs sm:text-sm">
+                          Pengembangan
+                        </h3>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {aiSummary.areasToImprove
+                          .slice(0, 3)
+                          .map((area, idx) => (
+                            <li
+                              key={idx}
+                              className="flex items-start gap-2 text-xs sm:text-sm text-slate-300"
+                            >
+                              <span className="text-orange-400 mt-0.5 flex-shrink-0">
+                                →
+                              </span>
+                              <span className="line-clamp-1">{area}</span>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Next Steps - Compact */}
+                  <div className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-xl p-4 mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Rocket className="w-4 h-4 text-yellow-400" />
+                      <h3 className="font-semibold text-white text-xs sm:text-sm">
+                        Langkah Selanjutnya
+                      </h3>
+                    </div>
+                    <ul className="space-y-2">
+                      {aiSummary.nextSteps.slice(0, 3).map((step, idx) => (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-2 text-xs sm:text-sm text-slate-200"
+                        >
+                          <span className="flex-shrink-0 w-5 h-5 bg-yellow-500/20 border border-yellow-500/30 rounded-full flex items-center justify-center text-yellow-400 text-xs font-bold">
+                            {idx + 1}
+                          </span>
+                          <span className="pt-0.5 line-clamp-2">{step}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Motivation Message */}
+                  <div className="text-center p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl">
+                    <p className="text-slate-200 italic text-xs sm:text-sm leading-relaxed">
+                      💪 {aiSummary.motivation}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -457,12 +425,12 @@ export default function DashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 text-center">
-              <Brain className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">
+            <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-6 sm:p-8 text-center">
+              <Brain className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-400 mx-auto mb-4" />
+              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
                 Dapatkan AI Career Insights
               </h3>
-              <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-sm sm:text-base">
+              <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-xs sm:text-sm">
                 Biarkan AI menganalisis perjalanan kariermu dan memberikan
                 insight personal berdasarkan aktivitas, tes, dan roadmap yang
                 kamu buat
@@ -472,16 +440,16 @@ export default function DashboardPage() {
                 disabled={summaryLoading}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-950 rounded-xl font-bold shadow-lg hover:shadow-yellow-400/50 transition disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-950 rounded-xl font-bold shadow-lg hover:shadow-yellow-400/50 transition disabled:opacity-50 text-sm sm:text-base"
               >
                 {summaryLoading ? (
                   <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                     <span>Generating...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5" />
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>Generate AI Insights</span>
                   </>
                 )}
