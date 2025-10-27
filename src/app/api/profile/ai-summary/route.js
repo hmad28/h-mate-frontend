@@ -111,7 +111,7 @@ INSTRUKSI ANALISIS:
 
 OUTPUT HARUS JSON MURNI (tanpa markdown, tanpa backticks):
 {
-  "overallSummary": "Ringkasan komprehensif 3-4 kalimat tentang user: siapa mereka, apa yang sudah dilakukan, arah karier, dan potensi yang terlihat",
+  "overallSummary": "Ringkasan komprehensif 3-4 kalimat tentang user: siapa mereka, apa yang sudah dilakukan, kepribadian user, arah karier, dan potensi yang terlihat",
   "personality": {
     "type": "Tipe kepribadian yang terlihat dari semua data (contoh: Creative Problem Solver, Analytical Strategist, People-Oriented Builder)",
     "traits": ["trait1 yang konsisten terlihat", "trait2", "trait3", "trait4", "trait5"]
@@ -141,6 +141,8 @@ OUTPUT HARUS JSON MURNI (tanpa markdown, tanpa backticks):
 }
 
 PENTING:
+- untuk overallSummary, personality, strengths, areasToImprove, motivation, dan nextSteps, berikan detail yang SPESIFIK berdasarkan data user, gunakan bahasa yang tidak terlalu kaku
+- gunakan huruf besar pada username pengguna untuk personalisasi jika menyebut nama mereka
 - Analisis harus SPESIFIK berdasarkan data user, BUKAN generic
 - Sebutkan detail konkret (nama karir, roadmap, hasil tes) dalam analisis
 - Berikan insight yang actionable dan memotivasi
