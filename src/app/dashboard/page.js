@@ -139,16 +139,6 @@ export default function DashboardPage() {
     },
   ];
 
-  {
-    /* AI Rating Section - Only show if AI Summary exists */
-  }
-  console.log("🔍 Debug Rating Section:", {
-    aiSummary,
-    aiSummaryId: aiSummary?.id,
-    userId: user?.id,
-    hasValidIds: !!(aiSummary?.id && user?.id),
-  });
-
   return (
     <div className="min-h-screen bg-slate-950 relative overflow-hidden">
       {/* Animated Background */}

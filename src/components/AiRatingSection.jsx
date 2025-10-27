@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ThumbsUp, ThumbsDown, Send, CheckCircle } from "lucide-react";
+import { ThumbsUp, ThumbsDown, Send, CheckCircle, Edit3 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AiRatingSection({ summaryId, userId }) {
@@ -10,6 +10,35 @@ export default function AiRatingSection({ summaryId, userId }) {
   const [feedbackText, setFeedbackText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 🔍 Check if user already rated on mount
+  useEffect(() => {
+    const checkExistingRating = async () => {
+      try {
+        const response = await fetch(
+          `/api/ratings?summaryId=${summaryId}&userId=${userId}`
+        );
+        const data = await response.json();
+
+        if (data.hasRated && data.data) {
+          // Pre-fill existing rating
+          setIsAccurate(data.data.isAccurate);
+          setFeedbackText(data.data.feedbackReason || "");
+          setHasSubmitted(true);
+        }
+      } catch (error) {
+        console.error("❌ Error checking rating:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (summaryId && userId) {
+      checkExistingRating();
+    }
+  }, [summaryId, userId]);
 
   const handleSubmit = async () => {
     // Validasi
@@ -56,8 +85,14 @@ export default function AiRatingSection({ summaryId, userId }) {
         throw new Error(data.error || "Failed to submit rating");
       }
 
-      toast.success("Terima kasih atas feedback kamu! 🙏");
+      // Show different message for update vs new
+      const message = data.isUpdate
+        ? "Feedback berhasil diperbarui! 🎉"
+        : "Terima kasih atas feedback kamu! 🙏";
+
+      toast.success(message);
       setHasSubmitted(true);
+      setIsEditing(false);
     } catch (error) {
       console.error("❌ Error submitting rating:", error);
       toast.error(error.message || "Gagal mengirim feedback. Coba lagi!");
@@ -66,30 +101,81 @@ export default function AiRatingSection({ summaryId, userId }) {
     }
   };
 
-  if (hasSubmitted) {
+  const handleEdit = () => {
+    setIsEditing(true);
+    setHasSubmitted(false);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="mt-8 bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-8">
+        <div className="flex items-center justify-center gap-3">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="w-6 h-6 border-2 border-yellow-400 border-t-transparent rounded-full"
+          />
+          <span className="text-slate-400">Memuat rating...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Success state (after submit, before edit)
+  if (hasSubmitted && !isEditing) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="mt-8 bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-xl border border-green-500/30 rounded-xl p-8 text-center"
+        className="mt-8 bg-gradient-to-br from-green-500/10 to-emerald-500/10 backdrop-blur-xl border border-green-500/30 rounded-xl p-8"
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 15 }}
-        >
-          <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-        </motion.div>
-        <h3 className="text-2xl font-bold text-white mb-2">
-          Feedback Terkirim! ✨
-        </h3>
-        <p className="text-slate-300 text-sm">
-          Terima kasih sudah membantu kami meningkatkan akurasi AI
-        </p>
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          >
+            <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
+          </motion.div>
+          <h3 className="text-2xl font-bold text-white mb-2">
+            Feedback Terkirim! ✨
+          </h3>
+          <p className="text-slate-300 text-sm mb-4">
+            Terima kasih sudah membantu kami meningkatkan akurasi AI
+          </p>
+
+          {/* Show current rating */}
+          <div className="bg-slate-800/50 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              {isAccurate ? (
+                <ThumbsUp className="w-5 h-5 text-green-400" />
+              ) : (
+                <ThumbsDown className="w-5 h-5 text-red-400" />
+              )}
+              <span className="text-slate-300 font-semibold">
+                {isAccurate ? "Akurat" : "Tidak Akurat"}
+              </span>
+            </div>
+            <p className="text-slate-400 text-sm italic">"{feedbackText}"</p>
+          </div>
+
+          {/* Edit button */}
+          <motion.button
+            onClick={handleEdit}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg transition-colors"
+          >
+            <Edit3 className="w-4 h-4" />
+            <span>Edit Feedback</span>
+          </motion.button>
+        </div>
       </motion.div>
     );
   }
 
+  // Form state (new submission or editing)
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -100,10 +186,12 @@ export default function AiRatingSection({ summaryId, userId }) {
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-2xl font-bold text-white mb-2">
-          Bantu Kami Lebih Baik 🚀
+          {isEditing ? "Edit Feedback Kamu 📝" : "Bantu Kami Lebih Baik 🚀"}
         </h3>
         <p className="text-slate-400 text-sm">
-          Apakah analisis AI ini akurat untukmu? Feedback kamu sangat membantu!
+          {isEditing
+            ? "Perbarui rating dan feedback kamu"
+            : "Apakah analisis AI ini akurat untukmu? Feedback kamu sangat membantu!"}
         </p>
       </div>
 
@@ -244,15 +332,30 @@ export default function AiRatingSection({ summaryId, userId }) {
                 transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 className="w-5 h-5 border-2 border-slate-950 border-t-transparent rounded-full"
               />
-              <span>Mengirim...</span>
+              <span>{isEditing ? "Memperbarui..." : "Mengirim..."}</span>
             </>
           ) : (
             <>
               <Send className="w-5 h-5" />
-              <span>Kirim Feedback</span>
+              <span>{isEditing ? "Perbarui Feedback" : "Kirim Feedback"}</span>
             </>
           )}
         </motion.button>
+
+        {/* Cancel edit button */}
+        {isEditing && (
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => {
+              setIsEditing(false);
+              setHasSubmitted(true);
+            }}
+            className="w-full mt-3 py-3 text-slate-400 hover:text-slate-300 transition"
+          >
+            Batal
+          </motion.button>
+        )}
       </motion.div>
     </motion.div>
   );

@@ -66,7 +66,7 @@ export async function POST(req) {
       );
     }
 
-    // Check if user already rated this summary
+    // 🔄 Check if user already rated this summary
     const existingRating = await db
       .select()
       .from(summaryRatings)
@@ -78,34 +78,50 @@ export async function POST(req) {
       )
       .limit(1);
 
+    let result;
+    let isUpdate = false;
+
     if (existingRating.length > 0) {
-      return NextResponse.json(
-        { error: "Kamu sudah memberikan rating untuk summary ini" },
-        { status: 409 }
-      );
+      // ✏️ UPDATE existing rating
+      [result] = await db
+        .update(summaryRatings)
+        .set({
+          rating,
+          isAccurate,
+          feedbackReason: feedbackReason.trim(),
+          createdAt: new Date(), // Update timestamp
+        })
+        .where(eq(summaryRatings.id, existingRating[0].id))
+        .returning();
+
+      isUpdate = true;
+      console.log("✅ Rating updated successfully:", result.id);
+    } else {
+      // ➕ INSERT new rating
+      [result] = await db
+        .insert(summaryRatings)
+        .values({
+          summaryId,
+          userId,
+          rating,
+          isAccurate,
+          feedbackReason: feedbackReason.trim(),
+        })
+        .returning();
+
+      console.log("✅ Rating saved successfully:", result.id);
     }
-
-    // Insert rating
-    const [newRating] = await db
-      .insert(summaryRatings)
-      .values({
-        summaryId,
-        userId,
-        rating,
-        isAccurate,
-        feedbackReason: feedbackReason.trim(),
-      })
-      .returning();
-
-    console.log("✅ Rating saved successfully:", newRating.id);
 
     return NextResponse.json(
       {
         success: true,
-        message: "Rating berhasil disimpan",
-        data: newRating,
+        message: isUpdate
+          ? "Rating berhasil diperbarui"
+          : "Rating berhasil disimpan",
+        data: result,
+        isUpdate,
       },
-      { status: 201 }
+      { status: isUpdate ? 200 : 201 }
     );
   } catch (error) {
     console.error("❌ Error saving rating:", error);
