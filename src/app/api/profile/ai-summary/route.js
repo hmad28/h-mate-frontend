@@ -158,9 +158,12 @@ Total pesan: ${recentConversations.length}
 Sample percakapan terakhir (untuk context):
 ${recentConversations
   .slice(0, 10)
-  .map(
-    (msg, i) => `${i + 1}. [${msg.role}]: ${msg.content.substring(0, 150)}...`
-  )
+  .map((msg, i) => {
+    const content = msg.content || "";
+    return `${i + 1}. [${msg.role}]: ${content.substring(0, 150)}${
+      content.length > 150 ? "..." : ""
+    }`;
+  })
   .join("\n")}
 `
     : "Belum pernah konsultasi"
