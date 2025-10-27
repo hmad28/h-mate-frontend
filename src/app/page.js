@@ -389,12 +389,11 @@ export default function HomePage() {
         <motion.div variants={itemVariants} className="text-center mt-12">
           <p className="text-slate-500 text-sm">
             Atau{" "}
-            <a
-              href="/tes-minat"
+            <span
               className="text-yellow-400 hover:text-yellow-300 underline font-semibold"
             >
               mulai tanpa akun
-            </a>{" "}
+            </span>{" "}
             untuk mencoba layanan kami
           </p>
         </motion.div>

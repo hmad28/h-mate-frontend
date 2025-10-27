@@ -71,12 +71,12 @@ export default function Footer() {
 
             {/* Powered by & Copyright */}
             <div className="space-y-2">
-              <motion.p
+              {/* <motion.p
                 className="text-slate-500 text-sm font-medium"
                 whileHover={{ scale: 1.02, color: "rgb(148 163 184)" }}
               >
                 Powered by <span className="text-yellow-400/80">Gemini AI</span>
-              </motion.p>
+              </motion.p> */}
 
               <p className="text-slate-600 text-xs">
                 © {currentYear} H-Mate. All rights reserved.
