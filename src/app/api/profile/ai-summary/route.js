@@ -49,9 +49,7 @@ export async function POST() {
 - Lama bergabung: ${Math.floor((Date.now() - new Date(user.createdAt)) / (1000 * 60 * 60 * 24))} hari
 
 === AKTIVITAS & ENGAGEMENT ===
-- Total tes yang diikuti: ${latestTests.length}
-- Total roadmap yang dibuat: ${userRoadmaps.length}
-- Total percakapan konsultasi: ${recentConversations.length}
+
 - Tingkat aktivitas: ${latestTests.length + userRoadmaps.length + recentConversations.length > 10 ? 'Sangat Aktif' : latestTests.length + userRoadmaps.length > 5 ? 'Aktif' : 'Perlu Lebih Aktif'}
 
 === HASIL TES MINAT BAKAT ===
