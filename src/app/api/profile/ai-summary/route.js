@@ -141,6 +141,7 @@ OUTPUT HARUS JSON MURNI (tanpa markdown, tanpa backticks):
 }
 
 PENTING:
+- overallSummary harus dimulai dengan menyebut nama user lalu: kamu adalah...
 - untuk overallSummary, personality, strengths, areasToImprove, motivation, dan nextSteps, berikan detail yang SPESIFIK berdasarkan data user, gunakan bahasa yang tidak terlalu kaku: kamu adalah..., kamu suka..., kamu punya kekuatan..., untuk langkah selanjutnya, kamu bisa...
 - gunakan huruf besar pada awal huruf setiap kata untuk username pengguna untuk personalisasi jika menyebut nama mereka
 - Analisis harus SPESIFIK berdasarkan data user, BUKAN generic
