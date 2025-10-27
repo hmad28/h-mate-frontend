@@ -835,16 +835,12 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* AI Rating Section - Only show if valid data exists */}
-        {aiSummary?.id && user?.id ? (
+        {/* AI Rating Section */}
+        {aiSummary && user && profileData?.profile?.id && (
           <AiRatingSection
-            summaryId={aiSummary.id}
             userId={user.id}
+            profileId={profileData.profile.id}
           />
-        ) : (
-          <div className="mt-8 text-slate-500 text-sm">
-            Debug: aiSummary.id={aiSummary?.id || 'missing'}, user.id={user?.id || 'missing'}
-          </div>
         )}
       </div>
     </div>

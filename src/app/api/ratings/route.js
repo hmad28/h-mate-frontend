@@ -1,3 +1,5 @@
+// frontend/src/app/api/ratings/route.js
+
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { summaryRatings } from "@/lib/schema";
@@ -135,53 +137,46 @@ export async function POST(req) {
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const summaryId = searchParams.get("summaryId");
     const userId = searchParams.get("userId");
 
-    if (!summaryId || !userId) {
-      return NextResponse.json(
-        { error: "summaryId dan userId diperlukan" },
-        { status: 400 }
-      );
+    if (!userId) {
+      return NextResponse.json({ error: "userId diperlukan" }, { status: 400 });
     }
 
-    // Validate UUID format
-    if (!isValidUUID(summaryId) || !isValidUUID(userId)) {
-      return NextResponse.json(
-        { error: "summaryId dan userId harus berformat UUID yang valid" },
-        { status: 400 }
-      );
-    }
-
-    const existingRating = await db
-      .select()
-      .from(summaryRatings)
-      .where(
-        and(
-          eq(summaryRatings.summaryId, summaryId),
-          eq(summaryRatings.userId, userId)
-        )
-      )
+    // ✅ PASTIKAN SELECT ID
+    const [summary] = await db
+      .select({
+        id: careerSummaries.id, // ⭐ INI PENTING!
+        userId: careerSummaries.userId,
+        personality: careerSummaries.personality,
+        careerPaths: careerSummaries.careerPaths,
+        strengths: careerSummaries.strengths,
+        weaknesses: careerSummaries.weaknesses,
+        recommendations: careerSummaries.recommendations,
+        createdAt: careerSummaries.createdAt,
+      })
+      .from(careerSummaries)
+      .where(eq(careerSummaries.userId, userId))
+      .orderBy(careerSummaries.createdAt)
       .limit(1);
 
-    if (existingRating.length === 0) {
+    if (!summary) {
       return NextResponse.json(
-        { data: null, hasRated: false },
-        { status: 200 }
+        { error: "Summary tidak ditemukan" },
+        { status: 404 }
       );
     }
 
-    return NextResponse.json(
-      {
-        data: existingRating[0],
-        hasRated: true,
-      },
-      { status: 200 }
-    );
+    console.log("✅ Summary fetched with ID:", summary.id);
+
+    return NextResponse.json({
+      success: true,
+      data: summary,
+    });
   } catch (error) {
-    console.error("Error fetching rating:", error);
+    console.error("❌ Error fetching summary:", error);
     return NextResponse.json(
-      { error: "Gagal mengambil rating" },
+      { error: "Gagal mengambil summary", details: error.message },
       { status: 500 }
     );
   }
