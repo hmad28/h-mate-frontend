@@ -183,41 +183,43 @@ INSTRUKSI ANALISIS:
 
 OUTPUT HARUS JSON MURNI (tanpa markdown, tanpa backticks):
 {
-  "overallSummary": "Ringkasan komprehensif 3-4 kalimat tentang user: siapa mereka, apa yang sudah dilakukan, arah karier, dan potensi yang terlihat",
+  "overallSummary": "Ringkasan santai 3-4 kalimat dengan tone ngobrol: 'Jadi gini nih, kamu tuh... [ceritain siapa dia, udah ngapain aja, potensinya gimana]'",
   "personality": {
-    "type": "Tipe kepribadian yang terlihat dari semua data (contoh: Creative Problem Solver, Analytical Strategist, People-Oriented Builder)",
-    "traits": ["trait1 yang konsisten terlihat", "trait2", "trait3", "trait4", "trait5"]
+    "type": "Tipe kepribadian yang keliatan (contoh: Si Kreatif yang Suka Ngulik, Pemikir Strategis, Orang yang Suka Bantu Orang)",
+    "traits": ["sifat 1 yang keliatan jelas", "sifat 2", "sifat 3", "sifat 4", "sifat 5"]
   },
   "careerAlignment": {
     "score": 75,
-    "status": "Sangat Cocok/Cukup Cocok/Perlu Eksplorasi/Masih Mencari Arah",
-    "message": "Pesan singkat tentang seberapa aligned aktivitas user dengan career path yang dipilih"
+    "status": "Udah Pas Banget/Cukup Oke/Masih Cari-cari/Lagi Eksplorasi",
+    "message": "Pesan singkat & santai: 'So far sih kamu udah...'"
   },
-  "strengths": ["kekuatan konkret dari data", "strength2", "strength3", "strength4"],
-  "areasToImprove": ["area yang perlu dikembangkan", "area2", "area3"],
-  "topCareerMatches": [
-    {"title": "Career 1 paling cocok dari SEMUA data", "score": 92, "reason": "Alasan spesifik kenapa cocok"},
-    {"title": "Career 2", "score": 88, "reason": "Alasan"},
-    {"title": "Career 3", "score": 85, "reason": "Alasan"}
-  ],
-  "motivation": "Pesan motivational yang PERSONAL berdasarkan journey user sejauh ini (3-4 kalimat, harus inspiring dan relatable)",
+  "strengths": ["kekuatan 1 dengan bahasa santai", "kekuatan 2", "kekuatan 3", "kekuatan 4"],
+  "areasToImprove": ["area yang bisa dikembangin lagi", "area 2", "area 3"],
+  "motivation": "Pesan motivasi yang kayak ngobrol sama temen (3-4 kalimat). Contoh: 'Gue liat sih kamu tuh udah on the right track banget! Yang kamu lakuin sejauh ini keren kok...'",
   "nextSteps": [
-    "Langkah konkret 1 berdasarkan data (misal: 'Fokus menyelesaikan roadmap Frontend Developer yang sudah kamu mulai')",
-    "Langkah 2",
+    "Langkah 1 dengan bahasa casual (misal: 'Yuk selesaiin dulu roadmap Frontend-mu yang udah dimulai')",
+    "Langkah 2 santai",
     "Langkah 3",
     "Langkah 4",
     "Langkah 5"
   ],
-  "activityLevel": "Sangat Aktif (10+ aktivitas)/Aktif (5-10 aktivitas)/Perlu Lebih Aktif (<5 aktivitas)",
-  "journeyStage": "Eksplorasi (baru mulai)/Fokus (sudah ada arah)/Eksekusi (aktif mengerjakan roadmap)"
+  "activityLevel": "Rajin Banget (10+ aktivitas)/Lumayan Aktif (5-10)/Yuk Lebih Aktif Lagi (<5)"
 }
+
+TONE & STYLE:
+- Pakai bahasa casual kayak ngobrol berdua
+- Boleh pakai "kamu", "aku", "sih", "kok", "banget", "yuk"
+- Jangan terlalu formal atau kaku
+- Jangan pakai emoji berlebihan
+- Tetap supportive dan positif tapi natural
+- Spesifik sebutkan data konkret (nama karir, roadmap) tapi dengan bahasa santai
 
 PENTING:
 - Analisis harus SPESIFIK berdasarkan data user, BUKAN generic
-- Sebutkan detail konkret (nama karir, roadmap, hasil tes) dalam analisis
-- Berikan insight yang actionable dan memotivasi
-- Jika user sangat aktif, apresiasi dan dorong mereka terus
-- Jika user baru/kurang aktif, motivasi mereka untuk mulai eksplorasi
+- Sebutkan detail konkret dengan bahasa natural
+- Berikan insight yang actionable tapi ngga menggurui
+- Kalau user aktif: "Mantep sih progress-mu!"
+- Kalau user baru/kurang aktif: "Yuk mulai eksplorasi, masih banyak waktu kok!"
 - Response HARUS pure JSON, tidak boleh ada text lain sama sekali`;
 
     // Call Express backend Gemini API
