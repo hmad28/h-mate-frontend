@@ -100,7 +100,7 @@ export default function TesMinatPage() {
             })...`
           );
 
-          response = await generateQuestions(30, userAge);
+          response = await generateQuestions(25, userAge);
 
           // Validasi response
           if (
@@ -385,7 +385,7 @@ export default function TesMinatPage() {
                 </h2>
 
                 <p className="text-slate-300 mb-8 leading-relaxed">
-                  Tes ini akan memberikan 30 pertanyaan interaktif yang
+                  Tes ini akan memberikan 25 pertanyaan interaktif yang
                   di-generate oleh H-Mate AI. Jawab dengan jujur sesuai
                   kepribadian dan minatmu. Hasil tes akan memberikan rekomendasi
                   karier yang cocok untukmu! 🎯
