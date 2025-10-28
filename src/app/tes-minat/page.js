@@ -544,7 +544,7 @@ export default function TesMinatPage() {
                             setStep("generating-roadmap");
 
                             const roadmapResponse = await fetch(
-                              `/api/roadmap/generate`,
+                              `/api/roadmaps/generate`,
                               {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
