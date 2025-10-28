@@ -215,7 +215,9 @@ export default function AiRatingSection({ summaryId, userId, profileId }) {
                 {isAccurate ? "Akurat" : "Tidak Akurat"}
               </span>
             </div>
-            <p className="text-slate-400 text-sm italic">"{feedbackText}"</p>
+            <p className="text-slate-400 text-sm italic">
+              &quot;{feedbackText}&quot;
+            </p>
           </div>
 
           <motion.button
