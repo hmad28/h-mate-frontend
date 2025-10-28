@@ -355,6 +355,62 @@ export default function TesMinatPage() {
       <div className="container mx-auto px-4 py-8 relative z-10">
         <AnimatePresence mode="wait">
           {/* START SCREEN */}
+          {step === "start" && (
+            <motion.div
+              key="start"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.5 }}
+              className="max-w-2xl mx-auto text-center"
+            >
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8 md:p-12">
+                <motion.div
+                  className="w-20 h-20 bg-yellow-500/20 border border-yellow-500/30 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                  animate={{
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.05, 1],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                >
+                  <Target className="w-10 h-10 text-yellow-400" />
+                </motion.div>
+
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                  Siap Temukan Karier Impianmu?
+                </h2>
+
+                <p className="text-slate-300 mb-8 leading-relaxed">
+                  Tes ini akan memberikan 30 pertanyaan interaktif yang
+                  di-generate oleh H-Mate AI. Jawab dengan jujur sesuai
+                  kepribadian dan minatmu. Hasil tes akan memberikan rekomendasi
+                  karier yang cocok untukmu! 🎯
+                </p>
+
+                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mb-8">
+                  <p className="text-sm text-yellow-400">
+                    ⏱️ Estimasi waktu: 15-20 menit
+                    <br />
+                    📊 Hasil personalized dari H-Mate AI
+                  </p>
+                </div>
+
+                <motion.button
+                  onClick={handleStartTest}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold text-lg hover:bg-yellow-500/30 transition-all"
+                >
+                  Mulai Tes Sekarang
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+
           {step === "error" && (
             <motion.div
               key="error"
