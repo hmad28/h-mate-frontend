@@ -23,6 +23,23 @@ export default function AiRatingSection({ summaryId, userId, profileId }) {
 
   // Fetch summary ID jika tidak diberikan via props (untuk homepage)
   useEffect(() => {
+    async function checkExistingRating(id) {
+      try {
+        const response = await fetch(
+          `/api/ratings?summaryId=${id}&userId=${userId}&checkRating=true`
+        );
+        const data = await response.json();
+
+        if (data.hasRated && data.data) {
+          setIsAccurate(data.data.isAccurate);
+          setFeedbackText(data.data.feedbackReason || "");
+          setHasSubmitted(true);
+        }
+      } catch (error) {
+        console.error("Error checking rating:", error);
+      }
+    }
+
     async function fetchSummaryAndRating() {
       // Kalau summaryId sudah ada dari props (dashboard), skip fetch
       if (summaryId) {
@@ -56,24 +73,6 @@ export default function AiRatingSection({ summaryId, userId, profileId }) {
 
     fetchSummaryAndRating();
   }, [summaryId, userId]);
-
-  // Check if user already rated
-  async function checkExistingRating(id) {
-    try {
-      const response = await fetch(
-        `/api/ratings?summaryId=${id}&userId=${userId}&checkRating=true`
-      );
-      const data = await response.json();
-
-      if (data.hasRated && data.data) {
-        setIsAccurate(data.data.isAccurate);
-        setFeedbackText(data.data.feedbackReason || "");
-        setHasSubmitted(true);
-      }
-    } catch (error) {
-      console.error("Error checking rating:", error);
-    }
-  }
 
   async function handleSubmit() {
     if (isAccurate === null) {
