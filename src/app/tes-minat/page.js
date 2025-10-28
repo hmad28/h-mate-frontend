@@ -725,7 +725,14 @@ export default function TesMinatPage() {
                   </div>
 
                   {/* Logs */}
-                  <div className="p-4 font-mono text-sm max-h-50 overflow-y-auto">
+                  <div
+                    ref={(el) => {
+                      if (el) {
+                        el.scrollTop = el.scrollHeight;
+                      }
+                    }}
+                    className="p-4 font-mono text-sm max-h-60 overflow-y-auto scroll-smooth"
+                  >
                     {aiLogs.map((log, index) => (
                       <motion.div
                         key={index}
