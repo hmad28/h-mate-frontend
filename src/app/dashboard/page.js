@@ -38,6 +38,14 @@ export default function DashboardPage() {
     fetchAiSummary();
   }, []);
 
+  // Check if user has any activity
+  const hasNoActivity =
+    !profileData ||
+    ((!profileData.latestTests || profileData.latestTests.length === 0) &&
+      (!profileData.roadmaps || profileData.roadmaps.length === 0) &&
+      (!profileData.recentActivities || profileData.recentActivities.length === 0)
+    );
+
   const fetchUser = async () => {
     try {
       const res = await fetch("/api/auth/me");
@@ -499,42 +507,78 @@ export default function DashboardPage() {
             </div>
           </motion.div>
         ) : (
-          // Generate AI Summary CTA
+          // Generate AI Summary CTA or No Activity Warning
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6"
           >
-            <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-6 sm:p-8 text-center">
-              <Brain className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
-                Dapatkan AI Career Insights
-              </h3>
-              <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-xs sm:text-sm">
-                Biarkan AI menganalisis perjalanan kariermu dan memberikan
-                insight personal berdasarkan aktivitas, tes, dan roadmap yang
-                kamu buat
-              </p>
-              <motion.button
-                onClick={generateAiSummary}
-                disabled={summaryLoading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-950 rounded-xl font-bold shadow-lg hover:shadow-yellow-400/50 transition disabled:opacity-50 text-sm sm:text-base"
-              >
-                {summaryLoading ? (
-                  <>
-                    <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                    <span>Generating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Generate AI Insights</span>
-                  </>
-                )}
-              </motion.button>
-            </div>
+            {hasNoActivity ? (
+              // No Activity - Encourage to take tests
+              <div className="bg-gradient-to-br from-orange-500/10 to-red-500/10 backdrop-blur-xl border border-orange-500/30 rounded-3xl p-6 sm:p-8 text-center">
+                <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 text-orange-400 mx-auto mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                  Belum Ada Aktivitas
+                </h3>
+                <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-xs sm:text-sm">
+                  Untuk mendapatkan AI Career Insights yang akurat, kamu perlu
+                  melakukan tes kepribadian dan minat terlebih dahulu. Yuk mulai
+                  perjalanan kariermu!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <motion.button
+                    onClick={() => (window.location.href = "/tes-kepribadian")}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-bold shadow-lg hover:shadow-purple-400/50 transition text-sm sm:text-base"
+                  >
+                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Tes Kepribadian</span>
+                  </motion.button>
+                  <motion.button
+                    onClick={() => (window.location.href = "/tes-minat")}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl font-bold shadow-lg hover:shadow-green-400/50 transition text-sm sm:text-base"
+                  >
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Tes Minat</span>
+                  </motion.button>
+                </div>
+              </div>
+            ) : (
+              // Has Activity - Show Generate Button
+              <div className="bg-gradient-to-br from-yellow-500/10 to-purple-500/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-6 sm:p-8 text-center">
+                <Brain className="w-12 h-12 sm:w-16 sm:h-16 text-yellow-400 mx-auto mb-4" />
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                  Dapatkan AI Career Insights
+                </h3>
+                <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-xs sm:text-sm">
+                  Biarkan AI menganalisis perjalanan kariermu dan memberikan
+                  insight personal berdasarkan aktivitas, tes, dan roadmap yang
+                  kamu buat
+                </p>
+                <motion.button
+                  onClick={generateAiSummary}
+                  disabled={summaryLoading}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-slate-950 rounded-xl font-bold shadow-lg hover:shadow-yellow-400/50 transition disabled:opacity-50 text-sm sm:text-base"
+                >
+                  {summaryLoading ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span>Generate AI Insights</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            )}
           </motion.div>
         )}
 

@@ -15,6 +15,9 @@ import {
   Rocket,
   Award,
   AlertCircle,
+  Zap,
+  Brain,
+  CheckCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { generateQuestions, analyzeResults, saveTestResult } from "@/lib/api";
@@ -70,6 +73,80 @@ export default function TesMinatPage() {
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
 
+  // Tambahkan state baru di bagian atas component
+  const [aiLogs, setAiLogs] = useState([]);
+  const [currentFact, setCurrentFact] = useState(0);
+
+  const funFacts = [
+    "💡 Rata-rata orang ganti karier 5-7 kali dalam hidupnya!",
+    "🎯 70% kesuksesan karier datang dari passion dan minat!",
+    "🚀 Karier di bidang tech tumbuh 20% lebih cepat dari industri lain!",
+    "🧠 AI dapat memprediksi karier cocok dengan akurasi 85%!",
+    "⭐ 90% orang sukses bilang mereka 'mengikuti passion' mereka!",
+  ];
+
+  const simulateAILogs = (userAge) => {
+    setAiLogs([]); // Reset logs
+
+    const logs = [
+      { time: 0, text: "🔌 Connecting to H-Mate AI server...", type: "info" },
+      { time: 800, text: "✓ Connection established", type: "success" },
+      { time: 1200, text: "🧠 Loading AI model: GPT-4o-mini", type: "info" },
+      { time: 2000, text: "✓ Model loaded successfully", type: "success" },
+      { time: 2500, text: "📊 Analyzing user profile...", type: "info" },
+      {
+        time: 3200,
+        text: `  └─ Age: ${userAge || "N/A"} years old`,
+        type: "detail",
+      },
+      {
+        time: 3500,
+        text: "  └─ Detected interests: Technology, Creative",
+        type: "detail",
+      },
+      { time: 4000, text: "✓ Profile analysis complete", type: "success" },
+      {
+        time: 4500,
+        text: "🎯 Generating personalized questions...",
+        type: "info",
+      },
+      {
+        time: 5500,
+        text: "  └─ Question 1-5: Interest mapping",
+        type: "detail",
+      },
+      {
+        time: 6500,
+        text: "  └─ Question 6-10: Skill assessment",
+        type: "detail",
+      },
+      {
+        time: 7500,
+        text: "  └─ Question 11-15: Career alignment",
+        type: "detail",
+      },
+      {
+        time: 8500,
+        text: "  └─ Question 16-20: Personality traits",
+        type: "detail",
+      },
+      { time: 9500, text: "  └─ Question 21-25: Future goals", type: "detail" },
+      { time: 10500, text: "🔍 Validating question quality...", type: "info" },
+      { time: 11500, text: "✓ All questions validated", type: "success" },
+      {
+        time: 12000,
+        text: "🎉 Generation complete! 25 questions ready",
+        type: "success",
+      },
+    ];
+
+    logs.forEach((log) => {
+      setTimeout(() => {
+        setAiLogs((prev) => [...prev, log]);
+      }, log.time);
+    });
+  };
+
   const handleStartTest = async () => {
     setStep("loading");
     setError(null);
@@ -88,6 +165,14 @@ export default function TesMinatPage() {
         console.log("⚠️ Could not fetch user age");
       }
 
+      // START SIMULATION LOGS
+      simulateAILogs(userAge);
+
+      // Start fun fact rotation
+      const factInterval = setInterval(() => {
+        setCurrentFact((prev) => (prev + 1) % funFacts.length);
+      }, 4000);
+
       // Generate questions with retry
       let response;
       let currentRetry = 0;
@@ -99,10 +184,8 @@ export default function TesMinatPage() {
               MAX_RETRIES + 1
             })...`
           );
-
           response = await generateQuestions(25, userAge);
 
-          // Validasi response
           if (
             !response?.data?.questions ||
             response.data.questions.length === 0
@@ -120,18 +203,19 @@ export default function TesMinatPage() {
           currentRetry++;
 
           if (currentRetry > MAX_RETRIES) {
+            clearInterval(factInterval);
             throw error;
           }
 
-          // Show retry notification
           toast.loading(`Mencoba lagi... (${currentRetry}/${MAX_RETRIES})`);
-
-          // Wait before retry (exponential backoff)
           await new Promise((resolve) =>
             setTimeout(resolve, 1000 * currentRetry)
           );
         }
       }
+
+      // Stop fact rotation
+      clearInterval(factInterval);
 
       // Set questions
       setQuestions(response.data.questions);
@@ -141,54 +225,16 @@ export default function TesMinatPage() {
       toast.success(`✅ ${response.data.questions.length} pertanyaan siap!`);
     } catch (error) {
       console.error("❌ Failed to generate questions:", error);
-
       setError(
         error.message === "No questions generated"
           ? "AI tidak bisa generate pertanyaan. Silakan coba lagi."
           : "Terjadi kesalahan saat memuat pertanyaan. Silakan coba lagi."
       );
-
       setRetryCount(retryCount + 1);
       setStep("error");
-
       toast.error("Gagal generate pertanyaan");
     }
   };
-
-
-  // CARI FUNGSI handleStartTest di src/app/tes-minat/page.js
-  // GANTI DENGAN KODE INI:
-
-  // const handleStartTest = async () => {
-  //   setStep("loading");
-  //   setError(null);
-
-  //   try {
-  //     // Get current user to send age
-  //     let userAge = null;
-  //     try {
-  //       const userRes = await fetch("/api/auth/me");
-  //       if (userRes.ok) {
-  //         const userData = await userRes.json();
-  //         userAge = userData.user?.age;
-  //       }
-  //       console.log("Age:", userAge);
-  //     } catch (e) {
-  //       console.log("Could not fetch user age, using default");
-  //     }
-
-  //     // Generate questions with user age
-  //     const response = await generateQuestions(30, userAge);
-  //     setQuestions(response.data.questions);
-  //     setStep("test");
-  //   } catch (error) {
-  //     console.error("Error generating questions:", error);
-  //     setError("Gagal generate pertanyaan. Silakan coba lagi ya!");
-  //     setStep("error");
-  //   }
-  // };
-
-  // SISANYA TIDAK DIUBAH
 
   const handleAnswer = () => {
     if (!selectedOption) return;
@@ -495,24 +541,236 @@ export default function TesMinatPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="max-w-2xl mx-auto text-center"
+              className="max-w-4xl mx-auto"
             >
-              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-12">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                >
-                  <Loader2 className="w-16 h-16 text-yellow-400 mx-auto mb-6" />
-                </motion.div>
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Mempersiapkan Pertanyaan...
-                </h2>
-                <p className="text-slate-400">
-                  H-Mate AI sedang membuat pertanyaan khusus untukmu
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 md:p-8">
+                {/* Header with Robot */}
+                <div className="flex items-start gap-6 mb-6">
+                  {/* Animated Robot Character */}
+                  <div className="relative w-24 h-24 flex-shrink-0">
+                    {/* Robot Head */}
+                    <motion.div
+                      animate={{
+                        rotate: [-3, 3, -3],
+                        y: [0, -3, 0],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-0 bg-gradient-to-br from-yellow-500/30 to-yellow-600/30 rounded-2xl border-4 border-yellow-500/50 shadow-xl shadow-yellow-500/20"
+                    >
+                      {/* Antenna */}
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className="absolute -top-4 left-1/2 -translate-x-1/2"
+                      >
+                        <div className="w-1 h-4 bg-yellow-500/50" />
+                        <motion.div
+                          animate={{ scale: [1, 1.3, 1] }}
+                          transition={{ duration: 1, repeat: Infinity }}
+                          className="w-2 h-2 bg-yellow-400 rounded-full mx-auto"
+                        />
+                      </motion.div>
+
+                      {/* Eyes */}
+                      <div className="flex gap-4 justify-center mt-6">
+                        <motion.div
+                          animate={{ scale: [1, 0.2, 1] }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                          }}
+                          className="w-3 h-3 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50"
+                        />
+                        <motion.div
+                          animate={{ scale: [1, 0.2, 1] }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            repeatDelay: 2,
+                          }}
+                          className="w-3 h-3 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50"
+                        />
+                      </div>
+
+                      {/* Mouth */}
+                      <motion.div
+                        animate={{ scaleX: [1, 1.3, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="w-8 h-1.5 bg-yellow-400 rounded-full mx-auto mt-3"
+                      />
+                    </motion.div>
+
+                    {/* Thinking particles */}
+                    {[...Array(3)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-2 h-2 rounded-full"
+                        animate={{
+                          x: [0, 15, 30],
+                          y: [-10, -25, -40],
+                          opacity: [0, 1, 0],
+                          scale: [0, 1, 0.5],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          delay: i * 0.4,
+                        }}
+                        style={{
+                          right: -10,
+                          top: 10,
+                          backgroundColor: "#facc15",
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Title & Status */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "linear",
+                        }}
+                      >
+                        <Loader2 className="w-6 h-6 text-yellow-400" />
+                      </motion.div>
+                      <h2 className="text-2xl font-bold text-white">
+                        H-Mate AI Processing...
+                      </h2>
+                    </div>
+
+                    <p className="text-slate-400 text-sm mb-4">
+                      Sedang membuat pertanyaan personalized khusus untukmu
+                    </p>
+
+                    {/* Status Indicators */}
+                    <div className="flex gap-2">
+                      <motion.div
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="px-3 py-1 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center gap-2"
+                      >
+                        <div className="w-2 h-2 bg-green-400 rounded-full" />
+                        <span className="text-xs text-green-400 font-medium">
+                          Server Active
+                        </span>
+                      </motion.div>
+                      <motion.div
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{
+                          duration: 1.5,
+                          repeat: Infinity,
+                          delay: 0.5,
+                        }}
+                        className="px-3 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded-lg flex items-center gap-2"
+                      >
+                        <Sparkles className="w-3 h-3 text-yellow-400" />
+                        <span className="text-xs text-yellow-400 font-medium">
+                          AI Thinking
+                        </span>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Terminal-style logs */}
+                <div className="bg-slate-950/80 border border-slate-800 rounded-xl overflow-hidden">
+                  {/* Terminal Header */}
+                  <div className="bg-slate-800/50 border-b border-slate-700 px-4 py-2 flex items-center gap-2">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                      <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                    </div>
+                    <span className="text-xs text-slate-400 font-mono ml-2">
+                      H-Mate AI Terminal v2.0
+                    </span>
+                  </div>
+
+                  {/* Logs */}
+                  <div className="p-4 font-mono text-sm max-h-80 overflow-y-auto">
+                    {aiLogs.map((log, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`mb-2 flex items-start gap-2 ${
+                          log.type === "success"
+                            ? "text-green-400"
+                            : log.type === "detail"
+                            ? "text-slate-500"
+                            : "text-slate-300"
+                        }`}
+                      >
+                        <span className="text-slate-600 text-xs flex-shrink-0">
+                          [
+                          {new Date().toLocaleTimeString("id-ID", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
+                          ]
+                        </span>
+                        <span className="flex-1">{log.text}</span>
+                        {log.type === "success" && (
+                          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                        )}
+                      </motion.div>
+                    ))}
+
+                    {/* Blinking cursor */}
+                    <motion.span
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                      className="inline-block w-2 h-4 bg-yellow-400 ml-1"
+                    />
+                  </div>
+                </div>
+
+                {/* Fun Fact */}
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentFact}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.5 }}
+                    className="mt-6 bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4"
+                  >
+                    <p className="text-sm text-yellow-400 text-center">
+                      {funFacts[currentFact]}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
+
+                {/* Progress Dots */}
+                <div className="flex justify-center gap-2 mt-6">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-2 h-2 bg-yellow-400 rounded-full"
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [0.3, 1, 0.3],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Estimated Time */}
+                <p className="text-xs text-slate-500 text-center mt-4">
+                  ⏱️ Estimasi waktu: 10-30 detik tergantung server AI
                 </p>
               </div>
             </motion.div>
