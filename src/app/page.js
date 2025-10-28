@@ -63,23 +63,31 @@ export default function HomePage() {
   const { user, loading, isLoggedIn } = useAuth();
 
   // Di dalam component
-  const [summaryId, setSummaryId] = useState(null);
-  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [profileId, setProfileId] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     if (isLoggedIn && user?.id) {
-      // Fetch summary untuk dapetin summaryId
+      setLoadingProfile(true);
+
       fetch(`/api/ratings?userId=${user.id}`)
         .then((res) => res.json())
         .then((data) => {
           if (data.success && data.data) {
-            setSummaryId(data.data.id);
+            setProfileId(data.data.id); // ✅ Ini profileId yang valid
+            console.log("✅ Profile ID loaded:", data.data.id);
+          } else {
+            console.log("⚠️ No profile found:", data.error);
           }
         })
-        .catch((err) => console.error("Error fetching summary:", err))
-        .finally(() => setLoadingSummary(false));
+        .catch((err) => {
+          console.error("❌ Error fetching profile:", err);
+        })
+        .finally(() => {
+          setLoadingProfile(false);
+        });
     } else {
-      setLoadingSummary(false);
+      setLoadingProfile(false);
     }
   }, [isLoggedIn, user?.id]);
 
@@ -196,17 +204,21 @@ export default function HomePage() {
               </div>
             </div>
           ) : isLoggedIn ? (
-            // Logged In - Show Rating Section ONLY if summaryId exists
-            summaryId ? (
+            profileId ? (
               <AiRatingSection
                 userId={user?.id}
-                profileId={summaryId} // ✅ Sekarang ada value yang valid
+                profileId={profileId} // ✅ Valid profile ID
               />
             ) : (
-              // Belum ada summary
               <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
                 <p className="text-center text-slate-400">
-                  Belum ada hasil tes. Mulai tes untuk melihat analisis AI!
+                  Belum ada hasil tes.{" "}
+                  <a
+                    href="/dashboard"
+                    className="text-yellow-400 hover:underline"
+                  >
+                    Mulai tes sekarang!
+                  </a>
                 </p>
               </div>
             )

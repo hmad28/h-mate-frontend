@@ -2,7 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { summaryRatings, careerSummaries } from "@/lib/schema";
+import { summaryRatings, careerSummaries, userProfiles } from "@/lib/schema";
 import { eq, and, desc } from "drizzle-orm";
 
 // Helper function to validate UUID
@@ -139,7 +139,7 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
     const summaryId = searchParams.get("summaryId");
-    const checkRating = searchParams.get("checkRating"); // Flag untuk check existing rating
+    const checkRating = searchParams.get("checkRating");
 
     if (!userId) {
       return NextResponse.json({ error: "userId diperlukan" }, { status: 400 });
@@ -152,8 +152,7 @@ export async function GET(req) {
       );
     }
 
-    // 🔍 Route 1: Check existing rating (untuk dashboard edit feature)
-    // URL: /api/ratings?userId=xxx&summaryId=yyy&checkRating=true
+    // 🔍 Route 1: Check existing rating
     if (summaryId && checkRating === "true") {
       if (!isValidUUID(summaryId)) {
         return NextResponse.json(
@@ -191,43 +190,49 @@ export async function GET(req) {
       );
     }
 
-    // 🔍 Route 2: Get summary by userId (untuk homepage)
-    // URL: /api/ratings?userId=xxx
-    const [summary] = await db
-      .select({
-        id: careerSummaries.id,
-        userId: careerSummaries.userId,
-        personality: careerSummaries.personality,
-        careerPaths: careerSummaries.careerPaths,
-        strengths: careerSummaries.strengths,
-        weaknesses: careerSummaries.weaknesses,
-        recommendations: careerSummaries.recommendations,
-        createdAt: careerSummaries.createdAt,
-      })
-      .from(careerSummaries)
-      .where(eq(careerSummaries.userId, userId))
-      .orderBy(desc(careerSummaries.createdAt)) // Latest summary
+    // 🔍 Route 2: Get USER PROFILE by userId (bukan career summary!)
+    console.log("🔍 Fetching profile for userId:", userId);
+
+    const profiles = await db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.userId, userId))
+      .orderBy(desc(userProfiles.createdAt))
       .limit(1);
 
-    if (!summary) {
+    console.log("📊 Profile query result:", profiles);
+
+    if (!profiles || profiles.length === 0) {
       return NextResponse.json(
         {
           success: false,
-          error: "Summary tidak ditemukan",
+          error:
+            "Profile tidak ditemukan. Silakan selesaikan tes terlebih dahulu.",
           data: null,
         },
         { status: 404 }
       );
     }
 
-    console.log("✅ Summary fetched with ID:", summary.id);
+    const profile = profiles[0];
+    console.log("✅ Profile fetched with ID:", profile.id);
 
     return NextResponse.json({
       success: true,
-      data: summary,
+      data: {
+        id: profile.id, // Ini yang akan jadi summaryId/profileId
+        userId: profile.userId,
+        personality: profile.personality,
+        careerPaths: profile.careerPaths,
+        strengths: profile.strengths,
+        weaknesses: profile.weaknesses,
+        recommendations: profile.recommendations,
+        createdAt: profile.createdAt,
+      },
     });
   } catch (error) {
     console.error("❌ Error in GET:", error);
+    console.error("❌ Error stack:", error.stack);
     return NextResponse.json(
       { error: "Gagal mengambil data", details: error.message },
       { status: 500 }
