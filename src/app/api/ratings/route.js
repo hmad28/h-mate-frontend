@@ -193,8 +193,6 @@ export async function GET(req) {
 
     // 🔍 Route 2: Get summary by userId (untuk homepage)
     // URL: /api/ratings?userId=xxx
-    console.log("🔍 Fetching summary for userId:", userId);
-
     const [summary] = await db
       .select({
         id: careerSummaries.id,
@@ -211,10 +209,7 @@ export async function GET(req) {
       .orderBy(desc(careerSummaries.createdAt)) // Latest summary
       .limit(1);
 
-    console.log("📦 Summary result:", summary);
-
     if (!summary) {
-      console.log("❌ No summary found for user:", userId);
       return NextResponse.json(
         {
           success: false,
