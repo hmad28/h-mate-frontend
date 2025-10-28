@@ -59,10 +59,15 @@ export default function AiRatingSection({ summaryId, userId, profileId }) {
         const response = await fetch(`/api/ratings?userId=${userId}`);
         const data = await response.json();
 
+        console.log("📥 Fetch summary response:", data);
+
         if (data.success && data.data && data.data.id) {
           const id = data.data.id;
+          console.log("✅ Summary ID found:", id);
           setFetchedSummaryId(id);
           await checkExistingRating(id);
+        } else {
+          console.log("❌ No summary data in response:", data);
         }
       } catch (error) {
         console.error("Error fetching summary:", error);
