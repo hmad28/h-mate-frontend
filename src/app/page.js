@@ -19,6 +19,7 @@ import Image from "next/image";
 import { useAuth } from "@/hooks/useAuth";
 import AiRatingSection from "@/components/AiRatingSection";
 import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function HomePage() {
   const { scrollYProgress } = useScroll();
@@ -60,6 +61,27 @@ export default function HomePage() {
   };
 
   const { user, loading, isLoggedIn } = useAuth();
+
+  // Di dalam component
+  const [summaryId, setSummaryId] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(true);
+
+  useEffect(() => {
+    if (isLoggedIn && user?.id) {
+      // Fetch summary untuk dapetin summaryId
+      fetch(`/api/ratings?userId=${user.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            setSummaryId(data.data.id);
+          }
+        })
+        .catch((err) => console.error("Error fetching summary:", err))
+        .finally(() => setLoadingSummary(false));
+    } else {
+      setLoadingSummary(false);
+    }
+  }, [isLoggedIn, user?.id]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
@@ -174,11 +196,20 @@ export default function HomePage() {
               </div>
             </div>
           ) : isLoggedIn ? (
-            // Logged In - Show Rating Section
-            <AiRatingSection
-              userId={user?.id}
-              profileId={user?.profileId || null}
-            />
+            // Logged In - Show Rating Section ONLY if summaryId exists
+            summaryId ? (
+              <AiRatingSection
+                userId={user?.id}
+                profileId={summaryId} // ✅ Sekarang ada value yang valid
+              />
+            ) : (
+              // Belum ada summary
+              <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
+                <p className="text-center text-slate-400">
+                  Belum ada hasil tes. Mulai tes untuk melihat analisis AI!
+                </p>
+              </div>
+            )
           ) : (
             // Logged Out - Show Auth CTA
             <motion.div
