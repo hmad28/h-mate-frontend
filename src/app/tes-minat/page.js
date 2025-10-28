@@ -90,33 +90,33 @@ export default function TesMinatPage() {
 
     const logs = [
       { time: 0, text: "🔌 Connecting to H-Mate AI server...", type: "info" },
-      { time: 800, text: "✓ Connection established", type: "success" },
-      { time: 1200, text: "🧠 Loading AI model: GPT-4o-mini", type: "info" },
-      { time: 2000, text: "✓ Model loaded successfully", type: "success" },
-      { time: 2500, text: "📊 Analyzing user profile...", type: "info" },
+      { time: 1000, text: "✓ Connection established", type: "success" },
+      { time: 1700, text: "🧠 Loading AI model: H-Mate-AI-v2.8", type: "info" },
+      { time: 2300, text: "✓ Model loaded successfully", type: "success" },
+      { time: 2800, text: "📊 Analyzing user profile...", type: "info" },
       {
-        time: 3200,
+        time: 3500,
         text: `  └─ Age: ${userAge || "N/A"} years old`,
         type: "detail",
       },
       {
-        time: 3500,
+        time: 4100,
         text: "  └─ Detected interests: Technology, Creative",
         type: "detail",
       },
-      { time: 4000, text: "✓ Profile analysis complete", type: "success" },
+      { time: 4700, text: "✓ Profile analysis complete", type: "success" },
       {
-        time: 4500,
+        time: 5500,
         text: "🎯 Generating personalized questions...",
         type: "info",
       },
       {
-        time: 5500,
+        time: 6000,
         text: "  └─ Question 1-5: Interest mapping",
         type: "detail",
       },
       {
-        time: 6500,
+        time: 6700,
         text: "  └─ Question 6-10: Skill assessment",
         type: "detail",
       },
@@ -134,7 +134,7 @@ export default function TesMinatPage() {
       { time: 10500, text: "🔍 Validating question quality...", type: "info" },
       { time: 11500, text: "✓ All questions validated", type: "success" },
       {
-        time: 12000,
+        time: 13000,
         text: "🎉 Generation complete! 25 questions ready",
         type: "success",
       },
@@ -688,12 +688,12 @@ export default function TesMinatPage() {
                       <div className="w-3 h-3 rounded-full bg-green-500/50" />
                     </div>
                     <span className="text-xs text-slate-400 font-mono ml-2">
-                      H-Mate AI Terminal v2.0
+                      H-Mate AI Terminal v2.8
                     </span>
                   </div>
 
                   {/* Logs */}
-                  <div className="p-4 font-mono text-sm max-h-80 overflow-y-auto">
+                  <div className="p-4 font-mono text-sm max-h-50 overflow-y-auto">
                     {aiLogs.map((log, index) => (
                       <motion.div
                         key={index}
