@@ -1,6 +1,10 @@
+// /lib/auth.js
 import bcrypt from "bcryptjs";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
+import { db } from "@/lib/db";
+import { users } from "@/lib/schema";
+import { eq } from "drizzle-orm";
 
 const sessionOptions = {
   password: process.env.SESSION_SECRET,
@@ -31,7 +35,34 @@ export async function isAuthenticated() {
   return !!session.user;
 }
 
+// ✅ FIX: Fetch fresh data from DB setiap kali dipanggil
 export async function getCurrentUser() {
-  const session = await getSession();
-  return session.user || null;
+  try {
+    const session = await getSession();
+
+    if (!session.user) {
+      return null;
+    }
+
+    // ✅ Fetch fresh user data from database (termasuk age)
+    const [user] = await db
+      .select({
+        id: users.id,
+        username: users.username,
+        age: users.age, // ✅ Include age
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .where(eq(users.id, session.user.id))
+      .limit(1);
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.error("❌ getCurrentUser error:", error);
+    return null;
+  }
 }
