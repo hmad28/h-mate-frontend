@@ -157,7 +157,7 @@ export default function HomePage() {
 
         <motion.p
           variants={itemVariants}
-          className="text-lg text-slate-400 text-center mb-12 max-w-2xl mx-auto leading-relaxed"
+          className="md:text-lg text-slate-400 text-center mb-12 max-w-2xl mx-auto leading-relaxed"
         >
           Platform AI terdepan yang membantu generasi muda Indonesia menemukan
           dan meraih karier ideal di era digital
@@ -182,7 +182,7 @@ export default function HomePage() {
           ) : (
             // Logged Out - Show Auth CTA
             <motion.div
-              className="relative bg-gradient-to-br from-yellow-500/15 via-slate-900/50 to-yellow-600/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-8 overflow-hidden"
+              className="relative bg-gradient-to-br from-yellow-500/15 via-slate-900/50 to-yellow-600/10 backdrop-blur-xl border border-yellow-500/30 rounded-3xl p-6 md:p-8 overflow-hidden"
               whileHover={{ scale: 1.01 }}
               transition={{ type: "spring", stiffness: 300 }}
             >

@@ -27,32 +27,36 @@ export default function Footer() {
             {/* Made by Section */}
             <div className="space-y-2 text-xs md:text-base">
               <motion.div
-                className="flex items-center justify-center gap-2 text-slate-300 text-base"
+                className="flex flex-col md:flex-row items-center justify-center gap-2 text-slate-300 text-base"
                 whileHover={{ scale: 1.02 }}
               >
-                <span>by</span>
-                <a
-                  href="https://www.hammad.biz.id/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-yellow-400 font-bold hover:text-yellow-300 transition-colors"
-                >
-                  Hammad
-                </a>
-                <span>• untuk Indonesia Emas 2045</span>
-                <motion.span
-                  animate={{
-                    rotate: [0, 10, -10, 0],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className="text-base"
-                >
-                  🇮🇩
-                </motion.span>
+                <div>
+                  <span>by </span>
+                  <a
+                    href="https://www.hammad.biz.id/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-400 font-bold hover:text-yellow-300 transition-colors"
+                  >
+                    Hammad
+                  </a>
+                </div>
+                <div>
+                  <span>• untuk Indonesia Emas 2045 </span>
+                  <motion.span
+                    animate={{
+                      rotate: [0, 10, -10, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="text-base"
+                  >
+                    🇮🇩
+                  </motion.span>
+                </div>
               </motion.div>
 
               {/* Indonesia Tag */}
