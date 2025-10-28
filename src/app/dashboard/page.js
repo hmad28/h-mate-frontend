@@ -522,29 +522,9 @@ export default function DashboardPage() {
                 </h3>
                 <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-xs sm:text-sm">
                   Untuk mendapatkan AI Career Insights yang akurat, kamu perlu
-                  melakukan tes kepribadian dan minat terlebih dahulu. Yuk mulai
+                  melakukan tes minat bakat atau roadmap karir terlebih dahulu. Yuk mulai
                   perjalanan kariermu!
                 </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <motion.button
-                    onClick={() => (window.location.href = "/tes-kepribadian")}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-bold shadow-lg hover:shadow-purple-400/50 transition text-sm sm:text-base"
-                  >
-                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Tes Kepribadian</span>
-                  </motion.button>
-                  <motion.button
-                    onClick={() => (window.location.href = "/tes-minat")}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl font-bold shadow-lg hover:shadow-green-400/50 transition text-sm sm:text-base"
-                  >
-                    <Target className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>Tes Minat</span>
-                  </motion.button>
-                </div>
               </div>
             ) : (
               // Has Activity - Show Generate Button
