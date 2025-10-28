@@ -89,53 +89,85 @@ export default function TesMinatPage() {
     setAiLogs([]); // Reset logs
 
     const logs = [
-      { time: 0, text: "🔌 Connecting to H-Mate AI server...", type: "info" },
-      { time: 1000, text: "✓ Connection established", type: "success" },
-      { time: 1700, text: "🧠 Loading AI model: H-Mate-AI-v2.8", type: "info" },
-      { time: 2300, text: "✓ Model loaded successfully", type: "success" },
-      { time: 2800, text: "📊 Analyzing user profile...", type: "info" },
+      { time: 0, text: "🔌 Initializing H-Mate AI system...", type: "info" },
+      { time: 800, text: "✓ System ready", type: "success" },
       {
-        time: 3500,
-        text: `  └─ Age: ${userAge || "N/A"} years old`,
+        time: 1600,
+        text: "🧠 Loading AI model: H-Mate-AI-v2.8 ...",
+        type: "info",
+      },
+      { time: 2800, text: "✓ AI model activated", type: "success" },
+      { time: 3500, text: "📊 Scanning user profile data...", type: "info" },
+      {
+        time: 4800,
+        text: `  └─ User age: ${userAge || "N/A"} years`,
         type: "detail",
       },
       {
-        time: 4100,
-        text: "  └─ Detected interests: Technology, Creative",
+        time: 5900,
+        text: "  └─ Interest patterns: Unknown",
         type: "detail",
       },
-      { time: 4700, text: "✓ Profile analysis complete", type: "success" },
+      { time: 7200, text: "✓ Profile scan completed", type: "success" },
       {
-        time: 5500,
-        text: "🎯 Generating personalized questions...",
+        time: 8500,
+        text: "🎯 Crafting personalized assessment...",
         type: "info",
       },
       {
-        time: 6000,
-        text: "  └─ Question 1-5: Interest mapping",
+        time: 10200,
+        text: "  └─ Block 1: Interest exploration (Q1-5)",
         type: "detail",
       },
       {
-        time: 6700,
-        text: "  └─ Question 6-10: Skill assessment",
+        time: 12800,
+        text: "  └─ Block 2: Skill evaluation (Q6-10)",
         type: "detail",
       },
       {
-        time: 7500,
-        text: "  └─ Question 11-15: Career alignment",
+        time: 16500,
+        text: "  └─ Block 3: Career preference mapping (Q11-15)",
         type: "detail",
       },
       {
-        time: 8500,
-        text: "  └─ Question 16-20: Personality traits",
+        time: 21000,
+        text: "  └─ Block 4: Personality indicators (Q16-20)",
         type: "detail",
       },
-      { time: 9500, text: "  └─ Question 21-25: Future goals", type: "detail" },
-      { time: 10500, text: "🔍 Validating question quality...", type: "info" },
-      { time: 11500, text: "✓ All questions validated", type: "success" },
       {
-        time: 13000,
-        text: "🎉 Generation complete! 25 questions ready",
+        time: 26500,
+        text: "  └─ Block 5: Aspiration analysis (Q21-25)",
+        type: "detail",
+      },
+      {
+        time: 32000,
+        text: "🔍 Running quality assurance checks...",
+        type: "info",
+      },
+      {
+        time: 38000,
+        text: "  └─ Checking question relevance...",
+        type: "detail",
+      },
+      {
+        time: 43000,
+        text: "  └─ Validating answer options...",
+        type: "detail",
+      },
+      { time: 47500, text: "✓ Quality check passed", type: "success" },
+      {
+        time: 50000,
+        text: "🎨 Finalizing assessment structure...",
+        type: "info",
+      },
+      {
+        time: 54000,
+        text: "✓ Assessment ready for deployment",
+        type: "success",
+      },
+      {
+        time: 57000,
+        text: "🎉 Success! Your personalized test is ready",
         type: "success",
       },
     ];
@@ -222,7 +254,7 @@ export default function TesMinatPage() {
       setRetryCount(0);
       setStep("test");
 
-      toast.success(`✅ ${response.data.questions.length} pertanyaan siap!`);
+      toast.success(`${response.data.questions.length} pertanyaan siap!`);
     } catch (error) {
       console.error("❌ Failed to generate questions:", error);
       setError(
