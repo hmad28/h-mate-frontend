@@ -465,7 +465,7 @@ export default function DashboardPage() {
 
                   {/* Disclaimer */}
                   {aiSummary.disclaimer && (
-                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 sm:p-6">
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 sm:p-6 mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <AlertCircle className="w-5 h-5 text-amber-400" />
                         <h3 className="font-semibold text-amber-400 text-sm sm:text-base">
