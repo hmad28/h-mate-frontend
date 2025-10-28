@@ -82,6 +82,7 @@ export default function TesMinatPage() {
           const userData = await userRes.json();
           userAge = userData.user?.age;
         }
+        console.log("Age:", userAge);
       } catch (e) {
         console.log("Could not fetch user age, using default");
       }
