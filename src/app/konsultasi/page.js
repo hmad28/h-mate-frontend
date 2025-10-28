@@ -380,7 +380,7 @@ export default function KonsultasiPage() {
       </div>
 
       {/* Input Area */}
-      <div className="bg-slate-900/50 backdrop-blur-xl border-t border-slate-800/50 sticky bottom-0 z-10">
+      <div className="bg-slate-900/50 backdrop-blur-xl border-t border-slate-800/50 fixed w-full bottom-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="max-w-3xl mx-auto flex gap-3">
             <motion.div
