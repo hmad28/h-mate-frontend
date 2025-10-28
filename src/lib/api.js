@@ -35,7 +35,7 @@ export async function sendConsultation(message, history = []) {
   return apiCall("/api/konsultasi", { message, history });
 }
 
-export async function generateQuestions(questionCount = 20, userAge = null) {
+export async function generateQuestions(questionCount = 30, userAge = null) {
   return apiCall("/api/generate-questions", { questionCount, userAge });
 }
 
