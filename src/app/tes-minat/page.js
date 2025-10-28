@@ -294,17 +294,17 @@ export default function TesMinatPage() {
                 </h2>
 
                 <p className="text-slate-300 mb-8 leading-relaxed">
-                  Tes ini akan memberikan 20 pertanyaan interaktif yang
-                  di-generate oleh AI. Jawab dengan jujur sesuai kepribadian dan
+                  Tes ini akan memberikan 30 pertanyaan interaktif yang
+                  di-generate oleh H-Mate AI. Jawab dengan jujur sesuai kepribadian dan
                   minatmu. Hasil tes akan memberikan rekomendasi karier yang
                   cocok untukmu! 🎯
                 </p>
 
                 <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mb-8">
                   <p className="text-sm text-yellow-400">
-                    ⏱️ Estimasi waktu: 10-15 menit
+                    ⏱️ Estimasi waktu: 15-20 menit
                     <br />
-                    📊 Hasil personalized dari AI
+                    📊 Hasil personalized dari H-Mate AI
                   </p>
                 </div>
 
@@ -344,7 +344,7 @@ export default function TesMinatPage() {
                   Mempersiapkan Pertanyaan...
                 </h2>
                 <p className="text-slate-400">
-                  AI sedang membuat pertanyaan khusus untukmu
+                  H-Mate AI sedang membuat pertanyaan khusus untukmu
                 </p>
               </div>
             </motion.div>

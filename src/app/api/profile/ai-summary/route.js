@@ -17,7 +17,7 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    console.log("🧠 Generating AI Summary for:", user.username);
+    console.log("🧠 Generating AI Summary for:", user.username, "age: ", user.age);
 
     // Fetch ALL user data comprehensively
     const [latestTests, userRoadmaps, recentConversations, profile] =
