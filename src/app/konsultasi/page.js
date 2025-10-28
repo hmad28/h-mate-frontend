@@ -21,6 +21,7 @@ export default function KonsultasiPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -29,6 +30,18 @@ export default function KonsultasiPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Auto-focus input saat halaman load
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  // Auto-focus setelah loading selesai (AI selesai jawab)
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
 
   // Load user info on mount
   useEffect(() => {
@@ -64,13 +77,28 @@ export default function KonsultasiPage() {
         const data = await response.json();
         if (data.updated) {
           console.log("✅ Profile updated based on conversation");
-          // Optional: Show subtle notification
-          // toast.success('Profile diupdate berdasarkan percakapan', { duration: 2000 });
         }
       }
     } catch (error) {
       console.error("Error analyzing conversation:", error);
-      // Silent fail - don't interrupt user experience
+    }
+  };
+
+  // Auto-resize textarea
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  };
+
+  // Handle keyboard shortcuts
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 
@@ -81,18 +109,21 @@ export default function KonsultasiPage() {
     const userMessage = input.trim();
     setInput("");
 
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
+
     const newMessages = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
 
     try {
-      // Prepare history with user context
       const history = messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
       }));
 
-      // Add system context about user (if available)
       const contextualHistory = currentUser
         ? [
             {
@@ -104,7 +135,6 @@ export default function KonsultasiPage() {
         : history;
 
       const response = await sendConsultation(userMessage, contextualHistory);
-
       const assistantMessage = response.data.response;
 
       setMessages([
@@ -115,7 +145,6 @@ export default function KonsultasiPage() {
         },
       ]);
 
-      // Background: Analyze conversation and update profile (async, non-blocking)
       analyzeAndUpdateProfile(userMessage, newMessages);
     } catch (error) {
       console.error("Error:", error);
@@ -130,6 +159,7 @@ export default function KonsultasiPage() {
       toast.error("Terjadi kesalahan");
     } finally {
       setIsLoading(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
@@ -201,7 +231,7 @@ export default function KonsultasiPage() {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto relative z-10">
+      <div className="flex-1 container mx-auto px-4 py-6 overflow-y-auto relative z-10 mb-25">
         <div className="max-w-3xl mx-auto space-y-6">
           <AnimatePresence mode="popLayout">
             {messages.map((message, index) => (
@@ -218,7 +248,6 @@ export default function KonsultasiPage() {
                   message.role === "user" ? "flex-row-reverse" : "flex-row"
                 }`}
               >
-                {/* Avatar */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -246,7 +275,6 @@ export default function KonsultasiPage() {
                   )}
                 </motion.div>
 
-                {/* Message Bubble */}
                 <motion.div
                   className={`flex-1 max-w-[85%] ${
                     message.role === "user"
@@ -338,7 +366,6 @@ export default function KonsultasiPage() {
             ))}
           </AnimatePresence>
 
-          {/* Loading indicator */}
           {isLoading && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -388,18 +415,15 @@ export default function KonsultasiPage() {
               whileFocus={{ scale: 1.01 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <input
-                type="text"
+              <textarea
+                ref={inputRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
                 placeholder="Tanya seputar karier, skill, atau edukasi..."
-                className="w-full px-5 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-yellow-500/50 focus:bg-slate-800/70 transition-all text-sm"
+                className="w-full px-5 py-3.5 rounded-2xl bg-slate-800/50 border border-slate-700/50 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-yellow-500/50 focus:bg-slate-800/70 transition-all text-sm resize-none overflow-hidden"
+                style={{ minHeight: "48px", maxHeight: "200px" }}
+                rows={1}
                 disabled={isLoading}
               />
             </motion.div>
@@ -428,14 +452,16 @@ export default function KonsultasiPage() {
             </motion.button>
           </div>
 
-          {/* Hint text */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="text-center text-xs text-slate-600 mt-3"
           >
-            Tekan Enter untuk mengirim
+            <span className="hidden sm:inline">
+              Enter untuk mengirim • Shift+Enter untuk baris baru
+            </span>
+            <span className="sm:hidden">Enter untuk mengirim</span>
           </motion.p>
         </div>
       </div>
