@@ -2,8 +2,9 @@
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { summaryRatings, careerSummaries, userProfiles } from "@/lib/schema";
+import { summaryRatings } from "@/lib/schema";
 import { eq, and, desc } from "drizzle-orm";
+import crypto from "crypto"; // ✅ Tambahkan ini
 
 // Helper function to validate UUID
 function isValidUUID(uuid) {
@@ -55,11 +56,14 @@ export async function POST(req) {
       );
     }
 
-    // ✅ INSERT rating langsung (gak perlu cek existing)
+    // ✅ Generate random UUID untuk summaryId
+    const generatedSummaryId = crypto.randomUUID();
+
+    // ✅ INSERT rating
     const [result] = await db
       .insert(summaryRatings)
       .values({
-        summaryId: null, // atau crypto.randomUUID() kalau mau ada value
+        summaryId: generatedSummaryId, // ✅ UUID random, bukan null
         userId,
         rating,
         isAccurate,
@@ -79,6 +83,7 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error("❌ Error saving rating:", error);
+    console.error("❌ Full error:", error.stack); // ✅ Lebih detail
     return NextResponse.json(
       { error: "Gagal menyimpan rating", details: error.message },
       { status: 500 }
