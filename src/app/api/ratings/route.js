@@ -2,8 +2,8 @@
 
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { summaryRatings } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import { summaryRatings, careerSummaries } from "@/lib/schema";
+import { eq, and, desc } from "drizzle-orm";
 
 // Helper function to validate UUID
 function isValidUUID(uuid) {
@@ -138,15 +138,64 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+    const summaryId = searchParams.get("summaryId");
+    const checkRating = searchParams.get("checkRating"); // Flag untuk check existing rating
 
     if (!userId) {
       return NextResponse.json({ error: "userId diperlukan" }, { status: 400 });
     }
 
-    // ✅ PASTIKAN SELECT ID
+    if (!isValidUUID(userId)) {
+      return NextResponse.json(
+        { error: "userId harus berformat UUID yang valid" },
+        { status: 400 }
+      );
+    }
+
+    // 🔍 Route 1: Check existing rating (untuk dashboard edit feature)
+    // URL: /api/ratings?userId=xxx&summaryId=yyy&checkRating=true
+    if (summaryId && checkRating === "true") {
+      if (!isValidUUID(summaryId)) {
+        return NextResponse.json(
+          { error: "summaryId harus berformat UUID yang valid" },
+          { status: 400 }
+        );
+      }
+
+      const existingRating = await db
+        .select()
+        .from(summaryRatings)
+        .where(
+          and(
+            eq(summaryRatings.summaryId, summaryId),
+            eq(summaryRatings.userId, userId)
+          )
+        )
+        .limit(1);
+
+      if (existingRating.length === 0) {
+        return NextResponse.json(
+          { data: null, hasRated: false },
+          { status: 200 }
+        );
+      }
+
+      console.log("✅ Existing rating found:", existingRating[0].id);
+
+      return NextResponse.json(
+        {
+          data: existingRating[0],
+          hasRated: true,
+        },
+        { status: 200 }
+      );
+    }
+
+    // 🔍 Route 2: Get summary by userId (untuk homepage)
+    // URL: /api/ratings?userId=xxx
     const [summary] = await db
       .select({
-        id: careerSummaries.id, // ⭐ INI PENTING!
+        id: careerSummaries.id,
         userId: careerSummaries.userId,
         personality: careerSummaries.personality,
         careerPaths: careerSummaries.careerPaths,
@@ -157,12 +206,16 @@ export async function GET(req) {
       })
       .from(careerSummaries)
       .where(eq(careerSummaries.userId, userId))
-      .orderBy(careerSummaries.createdAt)
+      .orderBy(desc(careerSummaries.createdAt)) // Latest summary
       .limit(1);
 
     if (!summary) {
       return NextResponse.json(
-        { error: "Summary tidak ditemukan" },
+        {
+          success: false,
+          error: "Summary tidak ditemukan",
+          data: null,
+        },
         { status: 404 }
       );
     }
@@ -174,9 +227,9 @@ export async function GET(req) {
       data: summary,
     });
   } catch (error) {
-    console.error("❌ Error fetching summary:", error);
+    console.error("❌ Error in GET:", error);
     return NextResponse.json(
-      { error: "Gagal mengambil summary", details: error.message },
+      { error: "Gagal mengambil data", details: error.message },
       { status: 500 }
     );
   }
