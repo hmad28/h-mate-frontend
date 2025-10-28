@@ -778,32 +778,6 @@ export default function DashboardPage() {
             </motion.div>
           )}
 
-        {/* User Profile Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-xl p-8 shadow-xl"
-        >
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <User className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-white">
-                {user?.username}
-              </h3>
-              <p className="text-slate-400">
-                {user?.age} tahun • Member sejak{" "}
-                {new Date(user?.createdAt || Date.now()).toLocaleDateString(
-                  "id-ID",
-                  { year: "numeric", month: "long", day: "numeric" }
-                )}
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
         {/* AI Rating Section */}
         {aiSummary && user && profileData?.profile?.id && (
           <AiRatingSection

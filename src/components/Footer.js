@@ -25,7 +25,7 @@ export default function Footer() {
             className="text-center space-y-6"
           >
             {/* Made by Section */}
-            <div className="space-y-2">
+            <div className="space-y-2 text-xs">
               <motion.div
                 className="flex items-center justify-center gap-2 text-slate-300 text-base"
                 whileHover={{ scale: 1.02 }}
