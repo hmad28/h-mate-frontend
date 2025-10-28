@@ -546,7 +546,7 @@ export default function TesMinatPage() {
                             // Hit backend API untuk generate roadmap
                             const roadmapResponse = await fetch(
                               `${
-                                process.env.NEXT_PUBLIC_BACKEND_URL ||
+                                process.env.NEXT_PUBLIC_API_URL ||
                                 "http://localhost:5000"
                               }/api/roadmap/generate`,
                               {
@@ -565,12 +565,11 @@ export default function TesMinatPage() {
                               throw new Error("Gagal generate roadmap");
                             }
 
-                            const roadmapResult = await roadmapResponse.json();
+                            const roadmapData = await roadmapResponse.json();
 
-                            if (!roadmapResult.success) {
+                            if (!roadmapData.success) {
                               throw new Error(
-                                roadmapResult.message ||
-                                  "Gagal generate roadmap"
+                                roadmapData.message || "Gagal generate roadmap"
                               );
                             }
 
@@ -581,12 +580,11 @@ export default function TesMinatPage() {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
-                                  title: roadmapResult.data.title,
+                                  title: roadmapData.data.title,
                                   targetRole: career.title,
                                   currentStatus: "pelajar",
-                                  roadmapData: roadmapResult.data,
-                                  estimatedTime:
-                                    roadmapResult.data.estimatedTime,
+                                  roadmapData: roadmapData.data,
+                                  estimatedTime: roadmapData.data.estimatedTime,
                                 }),
                               }
                             );
