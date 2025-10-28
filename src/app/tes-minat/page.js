@@ -531,27 +531,85 @@ export default function TesMinatPage() {
                       Karier yang Cocok Untukmu
                     </h3>
                   </div>
+                  <p className="text-slate-400 text-sm mb-4">
+                    💡 Klik salah satu karier untuk generate roadmap perjalanan
+                    kariermu
+                  </p>
                   <div className="space-y-3">
                     {result.recommended_careers.map((career, index) => (
-                      <motion.div
+                      <motion.button
                         key={index}
+                        onClick={async () => {
+                          try {
+                            setStep("generating-roadmap");
+
+                            const roadmapResponse = await fetch(
+                              `/api/roadmap/generate`,
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  targetRole: career.title,
+                                  currentStatus: "pelajar",
+                                  hasGoal: true,
+                                }),
+                              }
+                            );
+
+                            if (!roadmapResponse.ok) {
+                              throw new Error("Gagal generate roadmap");
+                            }
+
+                            const roadmapData = await roadmapResponse.json();
+
+                            const saveResponse = await fetch(
+                              "/api/roadmaps/save",
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  title: roadmapData.data.title,
+                                  targetRole: career.title,
+                                  currentStatus: "pelajar",
+                                  roadmapData: roadmapData.data,
+                                  estimatedTime:
+                                    roadmapData.data.estimatedTime ||
+                                    roadmapData.data.totalDuration,
+                                }),
+                              }
+                            );
+
+                            if (!saveResponse.ok) {
+                              throw new Error("Gagal save roadmap");
+                            }
+
+                            const savedRoadmap = await saveResponse.json();
+                            window.location.href = `/roadmap/${savedRoadmap.data.id}`;
+                          } catch (error) {
+                            console.error("Error:", error);
+                            alert("Gagal membuat roadmap. Coba lagi!");
+                            setStep("result");
+                          }
+                        }}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-5 hover:border-yellow-500/30 hover:bg-slate-800/50 transition-all"
+                        whileHover={{ scale: 1.02, x: 5 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full text-left bg-slate-800/30 border border-slate-700/50 rounded-2xl p-5 hover:border-yellow-500/30 hover:bg-slate-800/50 transition-all cursor-pointer group"
                       >
                         <div className="flex items-start justify-between mb-2 gap-3">
-                          <h4 className="text-lg font-bold text-white">
+                          <h4 className="text-lg font-bold text-white group-hover:text-yellow-400 transition">
                             {career.title}
                           </h4>
                           <span className="bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap">
                             {career.match_percentage}% Match
                           </span>
                         </div>
-                        <p className="text-slate-400 text-sm mb-3 leading-relaxed">
+                        <p className="text-slate-400 text-sm mb-3 leading-relaxed group-hover:text-slate-300 transition">
                           {career.reason}
                         </p>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 mb-3">
                           {career.skills_needed.map((skill, idx) => (
                             <span
                               key={idx}
@@ -561,7 +619,10 @@ export default function TesMinatPage() {
                             </span>
                           ))}
                         </div>
-                      </motion.div>
+                        <p className="text-xs text-yellow-400/70 opacity-0 group-hover:opacity-100 transition">
+                          🚀 Klik untuk generate roadmap →
+                        </p>
+                      </motion.button>
                     ))}
                   </div>
                 </div>

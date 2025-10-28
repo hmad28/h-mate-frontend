@@ -528,6 +528,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
+        {/* dashboard */}
         {/* Career Recommendations Card - IF EXISTS */}
         {profileData?.latestTests &&
           profileData.latestTests.length > 0 &&
