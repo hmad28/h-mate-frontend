@@ -87,7 +87,7 @@ export default function TesMinatPage() {
       }
 
       // Generate questions with user age
-      const response = await generateQuestions(20, userAge);
+      const response = await generateQuestions(30, userAge);
       setQuestions(response.data.questions);
       setStep("test");
     } catch (error) {
