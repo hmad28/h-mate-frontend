@@ -543,8 +543,12 @@ export default function TesMinatPage() {
                           try {
                             setStep("generating-roadmap");
 
+                            // Hit backend API untuk generate roadmap
                             const roadmapResponse = await fetch(
-                              `/api/roadmaps/generate`,
+                              `${
+                                process.env.NEXT_PUBLIC_BACKEND_URL ||
+                                "http://localhost:5000"
+                              }/api/roadmap/generate`,
                               {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
@@ -552,6 +556,7 @@ export default function TesMinatPage() {
                                   targetRole: career.title,
                                   currentStatus: "pelajar",
                                   hasGoal: true,
+                                  existingSkills: career.skills_needed || [],
                                 }),
                               }
                             );
@@ -560,21 +565,28 @@ export default function TesMinatPage() {
                               throw new Error("Gagal generate roadmap");
                             }
 
-                            const roadmapData = await roadmapResponse.json();
+                            const roadmapResult = await roadmapResponse.json();
 
+                            if (!roadmapResult.success) {
+                              throw new Error(
+                                roadmapResult.message ||
+                                  "Gagal generate roadmap"
+                              );
+                            }
+
+                            // Save roadmap ke database
                             const saveResponse = await fetch(
                               "/api/roadmaps/save",
                               {
                                 method: "POST",
                                 headers: { "Content-Type": "application/json" },
                                 body: JSON.stringify({
-                                  title: roadmapData.data.title,
+                                  title: roadmapResult.data.title,
                                   targetRole: career.title,
                                   currentStatus: "pelajar",
-                                  roadmapData: roadmapData.data,
+                                  roadmapData: roadmapResult.data,
                                   estimatedTime:
-                                    roadmapData.data.estimatedTime ||
-                                    roadmapData.data.totalDuration,
+                                    roadmapResult.data.estimatedTime,
                                 }),
                               }
                             );
@@ -584,10 +596,12 @@ export default function TesMinatPage() {
                             }
 
                             const savedRoadmap = await saveResponse.json();
+
+                            // Redirect ke detail roadmap
                             window.location.href = `/roadmap/${savedRoadmap.data.id}`;
                           } catch (error) {
                             console.error("Error:", error);
-                            alert("Gagal membuat roadmap. Coba lagi!");
+                            alert(`Gagal membuat roadmap: ${error.message}`);
                             setStep("result");
                           }
                         }}
