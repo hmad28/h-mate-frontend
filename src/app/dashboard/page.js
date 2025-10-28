@@ -17,6 +17,8 @@ import {
   RefreshCw,
   Brain,
   Rocket,
+  Lightbulb,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -407,6 +409,84 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   </div>
+
+                  {/* Recommended Soft Skills */}
+                  {aiSummary.recommendedSoftSkills &&
+                    aiSummary.recommendedSoftSkills.length > 0 && (
+                      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-xl p-4 sm:p-6 mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Target className="w-5 h-5 text-blue-400" />
+                          <h3 className="font-semibold text-white text-base sm:text-lg">
+                            Soft Skills yang Perlu Dikembangkan
+                          </h3>
+                        </div>
+                        <div className="space-y-3">
+                          {aiSummary.recommendedSoftSkills.map((skill, idx) => (
+                            <motion.div
+                              key={idx}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: idx * 0.1 }}
+                              className="bg-slate-900/40 border border-slate-700/50 rounded-lg p-4"
+                            >
+                              <div className="flex items-start justify-between gap-3 mb-2">
+                                <h4 className="font-bold text-white text-sm sm:text-base">
+                                  {skill.skill}
+                                </h4>
+                                <span
+                                  className={`text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 ${
+                                    skill.priority === "High"
+                                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                      : skill.priority === "Medium"
+                                      ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                      : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                  }`}
+                                >
+                                  {skill.priority}
+                                </span>
+                              </div>
+                              <p className="text-slate-300 text-xs sm:text-sm mb-2">
+                                {skill.reason}
+                              </p>
+                              <div className="flex items-start gap-2 bg-slate-800/50 rounded-lg p-3 mt-2">
+                                <Lightbulb className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-slate-400 text-xs">
+                                  <span className="font-semibold text-yellow-400">
+                                    Cara Kembangkan:
+                                  </span>{" "}
+                                  {skill.howToDevelop}
+                                </p>
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Disclaimer */}
+                  {aiSummary.disclaimer && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 sm:p-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertCircle className="w-5 h-5 text-amber-400" />
+                        <h3 className="font-semibold text-amber-400 text-sm sm:text-base">
+                          {aiSummary.disclaimer.title}
+                        </h3>
+                      </div>
+                      <ul className="space-y-2">
+                        {aiSummary.disclaimer.points.map((point, idx) => (
+                          <li
+                            key={idx}
+                            className="flex items-start gap-2 text-xs sm:text-sm text-slate-300"
+                          >
+                            <span className="text-amber-400 flex-shrink-0 mt-1">
+                              •
+                            </span>
+                            <span>{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Motivation Message */}
                   <div className="text-center p-4 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/30 rounded-xl">
