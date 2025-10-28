@@ -14,6 +14,7 @@ import {
   Lightbulb,
   Rocket,
   Award,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { generateQuestions, analyzeResults, saveTestResult } from "@/lib/api";
@@ -66,15 +67,15 @@ export default function TesMinatPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // CARI FUNGSI handleStartTest di src/app/tes-minat/page.js
-  // GANTI DENGAN KODE INI:
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
 
   const handleStartTest = async () => {
     setStep("loading");
     setError(null);
 
     try {
-      // Get current user to send age
+      // Get user age
       let userAge = null;
       try {
         const userRes = await fetch("/api/auth/me");
@@ -82,21 +83,110 @@ export default function TesMinatPage() {
           const userData = await userRes.json();
           userAge = userData.user?.age;
         }
-        console.log("Age:", userAge);
+        console.log("👤 User age:", userAge);
       } catch (e) {
-        console.log("Could not fetch user age, using default");
+        console.log("⚠️ Could not fetch user age");
       }
 
-      // Generate questions with user age
-      const response = await generateQuestions(30, userAge);
+      // Generate questions with retry
+      let response;
+      let currentRetry = 0;
+
+      while (currentRetry <= MAX_RETRIES) {
+        try {
+          console.log(
+            `🚀 Generating questions (attempt ${currentRetry + 1}/${
+              MAX_RETRIES + 1
+            })...`
+          );
+
+          response = await generateQuestions(30, userAge);
+
+          // Validasi response
+          if (
+            !response?.data?.questions ||
+            response.data.questions.length === 0
+          ) {
+            throw new Error("No questions generated");
+          }
+
+          console.log(`✅ Got ${response.data.questions.length} questions`);
+          break;
+        } catch (error) {
+          console.error(
+            `❌ Attempt ${currentRetry + 1} failed:`,
+            error.message
+          );
+          currentRetry++;
+
+          if (currentRetry > MAX_RETRIES) {
+            throw error;
+          }
+
+          // Show retry notification
+          toast.loading(`Mencoba lagi... (${currentRetry}/${MAX_RETRIES})`);
+
+          // Wait before retry (exponential backoff)
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * currentRetry)
+          );
+        }
+      }
+
+      // Set questions
       setQuestions(response.data.questions);
+      setRetryCount(0);
       setStep("test");
+
+      toast.success(`✅ ${response.data.questions.length} pertanyaan siap!`);
     } catch (error) {
-      console.error("Error generating questions:", error);
-      setError("Gagal generate pertanyaan. Silakan coba lagi ya!");
+      console.error("❌ Failed to generate questions:", error);
+
+      setError(
+        error.message === "No questions generated"
+          ? "AI tidak bisa generate pertanyaan. Silakan coba lagi."
+          : "Terjadi kesalahan saat memuat pertanyaan. Silakan coba lagi."
+      );
+
+      setRetryCount(retryCount + 1);
       setStep("error");
+
+      toast.error("Gagal generate pertanyaan");
     }
   };
+
+
+  // CARI FUNGSI handleStartTest di src/app/tes-minat/page.js
+  // GANTI DENGAN KODE INI:
+
+  // const handleStartTest = async () => {
+  //   setStep("loading");
+  //   setError(null);
+
+  //   try {
+  //     // Get current user to send age
+  //     let userAge = null;
+  //     try {
+  //       const userRes = await fetch("/api/auth/me");
+  //       if (userRes.ok) {
+  //         const userData = await userRes.json();
+  //         userAge = userData.user?.age;
+  //       }
+  //       console.log("Age:", userAge);
+  //     } catch (e) {
+  //       console.log("Could not fetch user age, using default");
+  //     }
+
+  //     // Generate questions with user age
+  //     const response = await generateQuestions(30, userAge);
+  //     setQuestions(response.data.questions);
+  //     setStep("test");
+  //   } catch (error) {
+  //     console.error("Error generating questions:", error);
+  //     setError("Gagal generate pertanyaan. Silakan coba lagi ya!");
+  //     setStep("error");
+  //   }
+  // };
 
   // SISANYA TIDAK DIUBAH
 
@@ -265,58 +355,79 @@ export default function TesMinatPage() {
       <div className="container mx-auto px-4 py-8 relative z-10">
         <AnimatePresence mode="wait">
           {/* START SCREEN */}
-          {step === "start" && (
+          {step === "error" && (
             <motion.div
-              key="start"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
+              key="error"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
               className="max-w-2xl mx-auto text-center"
             >
-              <div className="bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8 md:p-12">
+              <div className="bg-slate-900/50 backdrop-blur-xl border border-red-500/20 rounded-3xl p-8 md:p-12">
+                {/* Error Icon */}
                 <motion.div
-                  className="w-20 h-20 bg-yellow-500/20 border border-yellow-500/30 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                  className="w-20 h-20 bg-red-500/20 border border-red-500/30 rounded-3xl flex items-center justify-center mx-auto mb-6"
                   animate={{
-                    rotate: [0, 5, -5, 0],
-                    scale: [1, 1.05, 1],
+                    scale: [1, 1.1, 1],
                   }}
                   transition={{
                     duration: 2,
                     repeat: Infinity,
-                    ease: "easeInOut",
                   }}
                 >
-                  <Target className="w-10 h-10 text-yellow-400" />
+                  <AlertCircle className="w-10 h-10 text-red-400" />
                 </motion.div>
 
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-                  Siap Temukan Karier Impianmu?
+                {/* Error Message */}
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                  Oops! Ada Masalah
                 </h2>
 
-                <p className="text-slate-300 mb-8 leading-relaxed">
-                  Tes ini akan memberikan 30 pertanyaan interaktif yang
-                  di-generate oleh H-Mate AI. Jawab dengan jujur sesuai kepribadian dan
-                  minatmu. Hasil tes akan memberikan rekomendasi karier yang
-                  cocok untukmu! 🎯
-                </p>
+                <p className="text-red-400 mb-6 text-base">{error}</p>
 
-                <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mb-8">
-                  <p className="text-sm text-yellow-400">
-                    ⏱️ Estimasi waktu: 15-20 menit
-                    <br />
-                    📊 Hasil personalized dari H-Mate AI
-                  </p>
+                {/* Retry Info */}
+                {retryCount > 0 && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-4 mb-6">
+                    <p className="text-sm text-yellow-400">
+                      💡 Sudah {retryCount} kali mencoba.
+                      {retryCount >= 3 && " Mungkin ada masalah server."}
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <motion.button
+                    onClick={handleStartTest}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-6 py-3 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold hover:bg-yellow-500/30 transition-all"
+                  >
+                    🔄 Coba Lagi
+                  </motion.button>
+
+                  <Link href="/">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-6 py-3 border border-slate-700/50 bg-slate-800/30 text-slate-300 rounded-2xl font-bold hover:bg-slate-800/50 transition-all"
+                    >
+                      ← Kembali
+                    </motion.button>
+                  </Link>
                 </div>
 
-                <motion.button
-                  onClick={handleStartTest}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-2xl font-bold text-lg hover:bg-yellow-500/30 transition-all"
-                >
-                  Mulai Tes Sekarang
-                </motion.button>
+                {/* Tech Info (untuk debugging) */}
+                {process.env.NODE_ENV === "development" && (
+                  <details className="mt-6 text-left">
+                    <summary className="text-xs text-slate-500 cursor-pointer hover:text-slate-400">
+                      Technical Details
+                    </summary>
+                    <pre className="mt-2 text-xs text-slate-500 bg-slate-800/50 p-3 rounded-lg overflow-auto">
+                      {JSON.stringify({ error: error, retryCount }, null, 2)}
+                    </pre>
+                  </details>
+                )}
               </div>
             </motion.div>
           )}
