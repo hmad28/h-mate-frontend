@@ -204,24 +204,8 @@ export default function HomePage() {
               </div>
             </div>
           ) : isLoggedIn ? (
-            profileId ? (
-              <AiRatingSection
-                userId={user?.id}
-                profileId={profileId} // ✅ Valid profile ID
-              />
-            ) : (
-              <div className="relative bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
-                <p className="text-center text-slate-400">
-                  Belum ada hasil tes.{" "}
-                  <a
-                    href="/dashboard"
-                    className="text-yellow-400 hover:underline"
-                  >
-                    Mulai tes sekarang!
-                  </a>
-                </p>
-              </div>
-            )
+            // ✅ Langsung show rating kalo login
+            <AiRatingSection userId={user?.id} />
           ) : (
             // Logged Out - Show Auth CTA
             <motion.div

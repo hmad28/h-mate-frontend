@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ThumbsUp, ThumbsDown, Send } from "lucide-react";
 import { toast } from "sonner";
 
-export default function AiRatingSection({ userId, profileId }) {
+export default function AiRatingSection({ userId }) {
   const [isAccurate, setIsAccurate] = useState(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +28,6 @@ export default function AiRatingSection({ userId, profileId }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          summaryId: profileId,
           userId: userId,
           isAccurate: isAccurate,
           feedbackReason: feedbackText.trim(),

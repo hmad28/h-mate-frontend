@@ -15,27 +15,14 @@ function isValidUUID(uuid) {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { summaryId, userId, isAccurate, feedbackReason, rating } = body;
+    const { userId, isAccurate, feedbackReason, rating } = body;
 
-    console.log("📥 Received payload:", {
-      summaryId,
-      userId,
-      isAccurate,
-      rating,
-    });
+    console.log("📥 Received payload:", { userId, isAccurate, rating });
 
     // Validation
-    if (!summaryId || !userId) {
+    if (!userId) {
       return NextResponse.json(
-        { error: "summaryId dan userId wajib diisi" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ VALIDATE UUID FORMAT
-    if (!isValidUUID(summaryId)) {
-      return NextResponse.json(
-        { error: "summaryId harus berformat UUID yang valid" },
+        { error: "userId wajib diisi" },
         { status: 400 }
       );
     }
@@ -68,62 +55,27 @@ export async function POST(req) {
       );
     }
 
-    // 🔄 Check if user already rated this summary
-    const existingRating = await db
-      .select()
-      .from(summaryRatings)
-      .where(
-        and(
-          eq(summaryRatings.summaryId, summaryId),
-          eq(summaryRatings.userId, userId)
-        )
-      )
-      .limit(1);
+    // ✅ INSERT rating langsung (gak perlu cek existing)
+    const [result] = await db
+      .insert(summaryRatings)
+      .values({
+        summaryId: null, // atau crypto.randomUUID() kalau mau ada value
+        userId,
+        rating,
+        isAccurate,
+        feedbackReason: feedbackReason.trim(),
+      })
+      .returning();
 
-    let result;
-    let isUpdate = false;
-
-    if (existingRating.length > 0) {
-      // ✏️ UPDATE existing rating
-      [result] = await db
-        .update(summaryRatings)
-        .set({
-          rating,
-          isAccurate,
-          feedbackReason: feedbackReason.trim(),
-          createdAt: new Date(), // Update timestamp
-        })
-        .where(eq(summaryRatings.id, existingRating[0].id))
-        .returning();
-
-      isUpdate = true;
-      console.log("✅ Rating updated successfully:", result.id);
-    } else {
-      // ➕ INSERT new rating
-      [result] = await db
-        .insert(summaryRatings)
-        .values({
-          summaryId,
-          userId,
-          rating,
-          isAccurate,
-          feedbackReason: feedbackReason.trim(),
-        })
-        .returning();
-
-      console.log("✅ Rating saved successfully:", result.id);
-    }
+    console.log("✅ Rating saved successfully:", result.id);
 
     return NextResponse.json(
       {
         success: true,
-        message: isUpdate
-          ? "Rating berhasil diperbarui"
-          : "Rating berhasil disimpan",
+        message: "Rating berhasil disimpan",
         data: result,
-        isUpdate,
       },
-      { status: isUpdate ? 200 : 201 }
+      { status: 201 }
     );
   } catch (error) {
     console.error("❌ Error saving rating:", error);
