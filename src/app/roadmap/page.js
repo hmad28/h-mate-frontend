@@ -27,6 +27,7 @@ import {
 } from "@/lib/api";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import RoadmapLoadingScreen from "@/components/RoadmapLoadingScreen";
 
 // Toast Notification Component
 const Toast = ({ message, type = "success", onClose }) => {
@@ -304,8 +305,8 @@ export default function RoadmapPage() {
   const handlePelajarWithGoal = async () => {
     if (!goalInput.trim()) return;
 
-    setIsLoading(true);
-    setLoadingMessage("Membuat roadmap untukmu...");
+    setIsLoading(true); // Ini akan trigger loading screen
+    setLoadingMessage("generating");
 
     try {
       const response = await generateRoadmap({
@@ -1243,6 +1244,19 @@ export default function RoadmapPage() {
                 </div>
               </motion.div>
             )}
+
+          {/* Loading Screen saat generate roadmap */}
+          {isLoading && loadingMessage === "generating" && (
+            <RoadmapLoadingScreen
+              targetRole={
+                goalInput ||
+                selectedJob?.title ||
+                switchTarget ||
+                professionInput
+              }
+              userType={userType}
+            />
+          )}
 
           {/* STEP 2: Roadmap Display (Read-Only) */}
           {currentStep === 2 && roadmap && (
