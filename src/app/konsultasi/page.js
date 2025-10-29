@@ -382,7 +382,12 @@ export default function KonsultasiPage() {
                   ease: "easeInOut",
                 }}
               >
-                <Bot className="w-5 h-5 text-yellow-400" />
+                <Image
+                  src="/images/h-logo.png"
+                  alt="H-Mate Logo"
+                  width={25}
+                  height={25}
+                />
               </motion.div>
               <div className="bg-slate-900/50 border border-slate-800/50 rounded-3xl rounded-tl-lg px-5 py-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 text-slate-400">
