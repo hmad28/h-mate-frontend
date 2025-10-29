@@ -1246,7 +1246,7 @@ export default function RoadmapPage() {
             )}
 
           {/* Loading Screen saat generate roadmap */}
-          {isLoading && loadingMessage === "generating" && (
+          {/* {isLoading && loadingMessage === "generating" && (
             <RoadmapLoadingScreen
               targetRole={
                 goalInput ||
@@ -1256,7 +1256,7 @@ export default function RoadmapPage() {
               }
               userType={userType}
             />
-          )}
+          )} */}
 
           {/* STEP 2: Roadmap Display (Read-Only) */}
           {currentStep === 2 && roadmap && (
