@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 export default function VisitorTracker() {
   useEffect(() => {
+    console.log("🚀 VisitorTracker mounted");
     trackVisitor();
 
     // Heartbeat setiap 30 detik untuk update "last seen"
@@ -39,14 +40,14 @@ export default function VisitorTracker() {
   function getBrowserLocation() {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        console.log("Browser geolocation not supported");
+        console.log("❌ Browser geolocation not supported");
         resolve(null);
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log("✅ Browser geolocation success");
+          console.log("✅ Browser geolocation success:", position.coords);
           resolve({
             lat: position.coords.latitude,
             lon: position.coords.longitude,
@@ -69,12 +70,14 @@ export default function VisitorTracker() {
   // Reverse geocode
   async function reverseGeocode(lat, lon) {
     try {
+      console.log("🌍 Reverse geocoding:", lat, lon);
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
       );
       const data = await response.json();
 
       if (data.address) {
+        console.log("✅ Reverse geocode success:", data.address);
         return {
           city:
             data.address.city ||
@@ -89,7 +92,7 @@ export default function VisitorTracker() {
         };
       }
     } catch (error) {
-      console.error("Reverse geocode error:", error);
+      console.error("❌ Reverse geocode error:", error);
     }
     return null;
   }
@@ -101,6 +104,9 @@ export default function VisitorTracker() {
       sessionId =
         "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
       sessionStorage.setItem("visitorSessionId", sessionId);
+      console.log("🆔 New session ID:", sessionId);
+    } else {
+      console.log("🆔 Existing session ID:", sessionId);
     }
     return sessionId;
   }
@@ -119,27 +125,45 @@ export default function VisitorTracker() {
         localStorage.setItem("visitors", JSON.stringify(stored));
 
         // Trigger storage event untuk tab lain
-        window.dispatchEvent(new Event("storage"));
-        console.log("💓 Heartbeat updated");
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "visitors",
+            newValue: JSON.stringify(stored),
+          })
+        );
+        console.log("💓 Heartbeat updated for session:", sessionId);
+      } else {
+        console.log("⚠️ Session not found in storage, re-tracking...");
+        trackVisitor();
       }
     } catch (error) {
-      console.error("Error updating heartbeat:", error);
+      console.error("❌ Error updating heartbeat:", error);
     }
   }
 
   // Track visitor
   async function trackVisitor() {
+    console.log("📍 Starting visitor tracking...");
     const sessionId = getSessionId();
 
-    // Cek apakah session ini sudah ada
+    // Cek apakah session ini sudah ada DAN masih fresh (< 5 menit)
     const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
     const existingVisitor = stored.find((v) => v.sessionId === sessionId);
 
     if (existingVisitor) {
-      // Update last seen untuk visitor yang sudah ada
-      updateHeartbeat();
-      console.log("⚠️ Existing session, heartbeat updated");
-      return;
+      const timeSinceLastSeen =
+        Date.now() -
+        new Date(
+          existingVisitor.lastSeen || existingVisitor.timestamp
+        ).getTime();
+      if (timeSinceLastSeen < 5 * 60 * 1000) {
+        // Update last seen untuk visitor yang sudah ada
+        updateHeartbeat();
+        console.log("⚠️ Existing fresh session, heartbeat updated");
+        return;
+      } else {
+        console.log("🔄 Existing stale session, re-tracking...");
+      }
     }
 
     // Try GPS first
@@ -155,7 +179,10 @@ export default function VisitorTracker() {
         const ipResponse = await fetch("https://api.ipify.org?format=json");
         const ipData = await ipResponse.json();
         ipInfo = ipData.ip;
-      } catch (e) {}
+        console.log("📡 IP:", ipInfo);
+      } catch (e) {
+        console.error("❌ IP fetch failed:", e);
+      }
 
       const visitor = {
         sessionId: sessionId,
@@ -179,7 +206,7 @@ export default function VisitorTracker() {
     }
 
     // Fallback to IP geolocation
-    console.log("❌ GPS denied, using IP geolocation");
+    console.log("🔄 GPS not available, using IP geolocation");
 
     const providers = [
       {
@@ -234,11 +261,14 @@ export default function VisitorTracker() {
 
     for (let i = 0; i < providers.length; i++) {
       try {
+        console.log("🔍 Trying provider:", providers[i].name);
         const response = await fetch(providers[i].url);
         const rawData = await response.json();
         const parsed = providers[i].parse(rawData);
 
         if (parsed && parsed.lat && parsed.lon) {
+          console.log("✅ Provider success:", providers[i].name, parsed);
+
           const visitor = {
             sessionId: sessionId,
             ip: parsed.ip,
@@ -260,7 +290,7 @@ export default function VisitorTracker() {
           return;
         }
       } catch (error) {
-        console.error("Provider error:", providers[i].name, error);
+        console.error("❌ Provider error:", providers[i].name, error);
       }
     }
 
@@ -272,22 +302,30 @@ export default function VisitorTracker() {
     try {
       const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
 
-      // Tambah visitor baru
-      stored.unshift(visitor);
+      // Remove old entry dengan sessionId yang sama
+      const filtered = stored.filter((v) => v.sessionId !== visitor.sessionId);
+
+      // Tambah visitor baru di awal
+      filtered.unshift(visitor);
 
       // Keep last 100 visitors
-      if (stored.length > 100) {
-        stored.splice(100);
+      if (filtered.length > 100) {
+        filtered.splice(100);
       }
 
-      localStorage.setItem("visitors", JSON.stringify(stored));
+      localStorage.setItem("visitors", JSON.stringify(filtered));
 
       // Trigger storage event untuk tab lain
-      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(
+        new StorageEvent("storage", {
+          key: "visitors",
+          newValue: JSON.stringify(filtered),
+        })
+      );
 
-      console.log("✅ Visitor tracked:", visitor);
+      console.log("✅ Visitor saved:", visitor);
     } catch (error) {
-      console.error("Error saving visitor:", error);
+      console.error("❌ Error saving visitor:", error);
     }
   }
 
