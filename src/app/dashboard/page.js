@@ -623,6 +623,24 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
+        {showMapWidget && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8"
+          >
+            <iframe
+              src="/visitor-map.html"
+              style={{
+                width: "100%",
+                height: "1200px",
+                border: "none",
+                borderRadius: "24px",
+              }}
+            />
+          </motion.div>
+        )}
+
         {/* Saved Roadmaps - IF EXISTS */}
         {profileData?.roadmaps && profileData.roadmaps.length > 0 && (
           <motion.div
