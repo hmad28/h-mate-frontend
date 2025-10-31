@@ -31,12 +31,19 @@ export default function DashboardPage() {
   const [aiSummary, setAiSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showMapWidget, setShowMapWidget] = useState(false);
 
   useEffect(() => {
     fetchUser();
     fetchProfile();
     fetchAiSummary();
   }, []);
+
+  useEffect(() => {
+  if (user?.username === 'matt') {
+    setShowMapWidget(true);
+  }
+}, [user]);
 
   // Check if user has any activity
   const hasNoActivity =
@@ -522,8 +529,8 @@ export default function DashboardPage() {
                 </h3>
                 <p className="text-slate-400 mb-6 max-w-2xl mx-auto text-xs sm:text-sm">
                   Untuk mendapatkan AI Career Insights yang akurat, kamu perlu
-                  melakukan tes minat bakat atau roadmap karir terlebih dahulu. Yuk mulai
-                  perjalanan kariermu!
+                  melakukan tes minat bakat atau roadmap karir terlebih dahulu.
+                  Yuk mulai perjalanan kariermu!
                 </p>
               </div>
             ) : (
@@ -559,6 +566,60 @@ export default function DashboardPage() {
                 </motion.button>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {/* Map Visitors Widget - Only for matt */}
+        {showMapWidget && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8"
+          >
+            <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl border border-cyan-500/30 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="p-6 border-b border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center">
+                    <Map className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                      Visitor Analytics
+                      <span className="text-xs bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 px-2 py-1 rounded-full">
+                        Live
+                      </span>
+                    </h2>
+                    <p className="text-sm text-slate-400">
+                      Real-time visitor tracking
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-slate-900/40">
+                <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800/50">
+                  <div
+                    ref={(el) => {
+                      if (el && !el.querySelector("#mapmyvisitors")) {
+                        const script = document.createElement("script");
+                        script.type = "text/javascript";
+                        script.id = "mapmyvisitors";
+                        script.src =
+                          "//mapmyvisitors.com/map.js?d=WbBbani0dqSTrqJFwWlwNpN-WWm08O1rKkyWK90_Cxg&cl=ffffff&w=a";
+                        el.appendChild(script);
+                      }
+                    }}
+                    className="min-h-[300px]"
+                  />
+                  <noscript>
+                    <div className="text-slate-400 text-center py-8">
+                      JavaScript is required to view the visitor map
+                    </div>
+                  </noscript>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
 
