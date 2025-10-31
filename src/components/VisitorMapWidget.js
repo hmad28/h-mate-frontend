@@ -24,6 +24,9 @@ export default function VisitorMapWidget() {
   };
 
   useEffect(() => {
+    // Skip on server-side
+    if (typeof window === "undefined") return;
+
     console.log("🚀 VisitorMapWidget mounted");
     loadVisitors();
 
@@ -32,59 +35,36 @@ export default function VisitorMapWidget() {
       loadVisitors();
     }, 5000);
 
-    const handleCustomStorage = () => {
-      console.log("📡 Custom storage event");
+    // Listen for storage changes from other tabs/components
+    const handleStorageChange = () => {
+      console.log("📡 Storage event detected");
       loadVisitors();
     };
-    window.addEventListener("visitorUpdate", handleCustomStorage);
+
+    window.addEventListener("storage", handleStorageChange);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("visitorUpdate", handleCustomStorage);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
-  const loadVisitors = async () => {
+  const loadVisitors = () => {
     try {
-      // List all visitor keys
-      const result = await window.storage.list("visitors:");
+      const stored = localStorage.getItem("visitors");
 
-      if (result && result.keys) {
-        console.log("📦 Found visitor keys:", result.keys.length);
-
-        // Fetch all visitors
-        const visitorPromises = result.keys.map((key) =>
-          window.storage
-            .get(key)
-            .then((res) => {
-              if (res && res.value) {
-                try {
-                  return JSON.parse(res.value);
-                } catch (e) {
-                  console.error("Parse error for key:", key, e);
-                  return null;
-                }
-              }
-              return null;
-            })
-            .catch((err) => {
-              console.error("Error fetching key:", key, err);
-              return null;
-            })
-        );
-
-        const visitorsData = await Promise.all(visitorPromises);
-        const validVisitors = visitorsData.filter((v) => v !== null);
+      if (stored) {
+        const visitorsData = JSON.parse(stored);
 
         // Sort by timestamp (newest first)
-        validVisitors.sort(
+        visitorsData.sort(
           (a, b) =>
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
         );
 
-        console.log("✅ Loaded visitors:", validVisitors.length);
-        setVisitors(validVisitors);
-        calculateStats(validVisitors);
+        console.log("✅ Loaded visitors:", visitorsData.length);
+        setVisitors(visitorsData);
+        calculateStats(visitorsData);
       } else {
         console.log("⚠️ No visitors found");
         setVisitors([]);
@@ -147,33 +127,54 @@ export default function VisitorMapWidget() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const handleClear = async () => {
+  const handleClear = () => {
     if (!window.confirm("Are you sure you want to clear all visitor data?"))
       return;
 
     try {
       console.log("🗑️ Clear data triggered");
-
-      // Get all visitor keys
-      const result = await window.storage.list("visitors:");
-
-      if (result && result.keys) {
-        // Delete all visitors
-        const deletePromises = result.keys.map((key) =>
-          window.storage.delete(key).catch((err) => {
-            console.error("Error deleting key:", key, err);
-          })
-        );
-
-        await Promise.all(deletePromises);
-      }
+      localStorage.removeItem("visitors");
 
       setVisitors([]);
       setStats({ total: 0, countries: 0, today: 0, online: 0 });
       showToast("All data cleared!", "success");
+
+      // Notify other tabs/components
+      window.dispatchEvent(new Event("storage"));
     } catch (error) {
       console.error("❌ Error clearing data:", error);
       showToast("Error clearing data", "error");
+    }
+  };
+
+  const handleCleanup = () => {
+    try {
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+      const stored = localStorage.getItem("visitors");
+
+      if (!stored) {
+        showToast("No data to cleanup", "error");
+        return;
+      }
+
+      const allVisitors = JSON.parse(stored);
+      const beforeCount = allVisitors.length;
+
+      const activeVisitors = allVisitors.filter((v) => {
+        const lastSeenTime = new Date(v.lastSeen || v.timestamp).getTime();
+        return lastSeenTime > oneHourAgo;
+      });
+
+      localStorage.setItem("visitors", JSON.stringify(activeVisitors));
+
+      const removedCount = beforeCount - activeVisitors.length;
+      showToast(`Removed ${removedCount} inactive visitors`, "success");
+
+      loadVisitors();
+      window.dispatchEvent(new Event("storage"));
+    } catch (error) {
+      console.error("❌ Error cleaning up:", error);
+      showToast("Error cleaning up data", "error");
     }
   };
 
@@ -224,14 +225,35 @@ export default function VisitorMapWidget() {
                 onClick={handleRefresh}
                 disabled={isRefreshing}
                 className="p-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/30 transition disabled:opacity-50"
+                title="Refresh data"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
                 />
               </button>
               <button
+                onClick={handleCleanup}
+                className="p-2 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition"
+                title="Remove inactive visitors (>1 hour)"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                  ></path>
+                </svg>
+              </button>
+              <button
                 onClick={handleClear}
                 className="p-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition"
+                title="Clear all data"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -272,7 +294,7 @@ export default function VisitorMapWidget() {
             <h3 className="text-lg font-bold text-white">Recent Visitors</h3>
             <span className="text-xs text-slate-500">
               {visitors.length > 0
-                ? `Showing ${Math.min(visitors.length, 20)} of ${
+                ? `Showing ${Math.min(visitors.length, 50)} of ${
                     visitors.length
                   }`
                 : "No data"}
@@ -286,12 +308,12 @@ export default function VisitorMapWidget() {
               </div>
               <p className="text-slate-400 mb-2">No visitors tracked yet</p>
               <p className="text-sm text-slate-500">
-                Visit the homepage to start tracking visitors
+                Visitors will appear here automatically
               </p>
             </div>
           ) : (
             <div className="space-y-3">
-              {visitors.slice(0, 20).map((visitor, idx) => {
+              {visitors.slice(0, 50).map((visitor, idx) => {
                 const active = isActive(visitor);
                 return (
                   <div
@@ -335,7 +357,7 @@ export default function VisitorMapWidget() {
         <div className="px-6 py-3 bg-slate-900/40 border-t border-slate-800/50">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Last refresh: {new Date().toLocaleTimeString()}</span>
-            <span>Storage: window.storage API</span>
+            <span>Storage: localStorage</span>
           </div>
         </div>
       </div>
