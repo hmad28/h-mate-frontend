@@ -23,12 +23,28 @@
             100% { transform: rotate(360deg); }
         }
 
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
         .pulse-dot {
             animation: pulse-dot 2s infinite;
         }
 
         .spinner {
             animation: spin 1s linear infinite;
+        }
+
+        .new-visitor {
+            animation: slideIn 0.5s ease-out;
+            border-left: 3px solid #3b82f6 !important;
         }
 
         #map {
@@ -55,6 +71,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                     <span>Refresh Data</span>
+                </button>
+                <button 
+                    onclick="cleanupInactive()" 
+                    class="px-6 py-2.5 bg-yellow-500/20 border border-yellow-500/30 text-yellow-400 rounded-lg text-sm hover:bg-yellow-500/30 transition flex items-center gap-2"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                    </svg>
+                    <span>Cleanup Inactive</span>
                 </button>
                 <button 
                     onclick="clearData()" 
@@ -103,7 +128,10 @@
                 <h2 class="text-2xl font-bold text-blue-400">🗺️ Visitor Map</h2>
                 <div class="flex items-center gap-2">
                     <div class="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-full">
-                        <span id="markerCount">0</span> markers
+                        <span id="activeMarkers">0</span> active
+                    </div>
+                    <div class="text-xs bg-slate-500/20 border border-slate-500/30 text-slate-400 px-3 py-1 rounded-full">
+                        <span id="totalMarkers">0</span> total
                     </div>
                     <button 
                         onclick="fitMapBounds()" 
@@ -116,10 +144,10 @@
             <div id="map" class="h-[500px] rounded-xl"></div>
             <div class="mt-4 text-xs text-slate-500 text-center">
                 Last updated: <span id="lastUpdate">Never</span> • 
-                Provider: <span id="apiProvider">Loading...</span>
+                Auto-refresh: <span class="text-green-400">Every 5s</span>
             </div>
             <div class="mt-2 text-xs text-slate-400 text-center">
-                💡 Tip: Allow location access for accurate GPS-based tracking
+                💡 Tip: Active visitors shown in <span class="text-green-400">green</span>, inactive in <span class="text-slate-400">gray</span>
             </div>
         </div>
 
@@ -144,8 +172,10 @@
     <script>
         var visitorData = [];
         var map;
-        var markers = [];
+        var markers = {};
         var markersGroup;
+        var previousVisitorCount = 0;
+        var newVisitorIds = new Set();
 
         // Update status
         function updateStatus(text, color) {
@@ -153,7 +183,6 @@
             var indicatorEl = document.getElementById('statusIndicator');
             statusEl.textContent = text;
             
-            // Update indicator color
             var dotClass = color === 'green' ? 'bg-green-500' : 
                           color === 'red' ? 'bg-red-500' : 
                           color === 'blue' ? 'bg-blue-500' : 'bg-yellow-500';
@@ -184,7 +213,7 @@
 
         // Fit map to show all markers
         function fitMapBounds() {
-            if (markers.length > 0) {
+            if (Object.keys(markers).length > 0) {
                 map.fitBounds(markersGroup.getBounds(), { padding: [50, 50] });
             }
         }
@@ -211,25 +240,47 @@
             return Math.floor(seconds / 86400) + 'd ago';
         }
 
+        // Check if visitor is active (last seen within 2 minutes)
+        function isActive(visitor) {
+            if (!visitor.lastSeen) return false;
+            var twoMinAgo = Date.now() - 2 * 60 * 1000;
+            return new Date(visitor.lastSeen).getTime() > twoMinAgo;
+        }
+
         // Load visitor data
         function loadVisitors() {
-            updateStatus('Loading visitors...', 'blue');
-            
             var stored = localStorage.getItem('visitors');
             if (stored) {
-                visitorData = JSON.parse(stored);
+                var newData = JSON.parse(stored);
+                
+                // Detect new visitors
+                if (newData.length > previousVisitorCount) {
+                    var newCount = newData.length - previousVisitorCount;
+                    console.log('🆕 ' + newCount + ' new visitor(s) detected!');
+                    
+                    // Mark baru visitors
+                    for (var i = 0; i < newCount; i++) {
+                        if (newData[i].sessionId) {
+                            newVisitorIds.add(newData[i].sessionId);
+                        }
+                    }
+                    
+                    // Clear highlight after 10 seconds
+                    setTimeout(function() {
+                        newVisitorIds.clear();
+                    }, 10000);
+                }
+                
+                previousVisitorCount = newData.length;
+                visitorData = newData;
+                
                 console.log('✅ Loaded', visitorData.length, 'visitors from storage');
             } else {
                 visitorData = [];
                 console.log('⚠️ No stored visitors found');
             }
             
-            if (visitorData.length > 0) {
-                updateStatus('Loaded ' + visitorData.length + ' visitors', 'green');
-            } else {
-                updateStatus('No visitors yet', 'yellow');
-            }
-            
+            updateStatus('Live tracking active', 'green');
             updateStats();
             updateMap();
             updateVisitorsList();
@@ -249,56 +300,86 @@
             }).length;
             document.getElementById('todayVisits').textContent = todayCount;
             
-            var fiveMinAgo = Date.now() - 5 * 60 * 1000;
-            var onlineCount = visitorData.filter(function(v) {
-                return new Date(v.timestamp).getTime() > fiveMinAgo;
+            var activeCount = visitorData.filter(function(v) {
+                return isActive(v);
             }).length;
-            document.getElementById('onlineNow').textContent = onlineCount;
+            document.getElementById('onlineNow').textContent = activeCount;
 
             document.getElementById('visitorCount').textContent = Math.min(visitorData.length, 20);
         }
 
         // Update map markers
         function updateMap() {
-            // Clear existing markers
-            markersGroup.clearLayers();
-            markers = [];
+            var activeCount = 0;
+            var existingSessionIds = new Set();
             
-            // Add markers for each visitor
+            // Update existing markers and add new ones
             visitorData.forEach(function(visitor) {
-                if (visitor.lat && visitor.lon) {
-                    var marker = L.circleMarker([visitor.lat, visitor.lon], {
-                        radius: 8,
-                        fillColor: '#60a5fa',
-                        color: '#fff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(markersGroup);
+                if (visitor.lat && visitor.lon && visitor.sessionId) {
+                    existingSessionIds.add(visitor.sessionId);
+                    var active = isActive(visitor);
+                    if (active) activeCount++;
                     
-                    marker.bindPopup(
-                        '<div style="color: #000; min-width: 200px;">' +
-                        '<b style="font-size: 16px;">' + getFlag(visitor.countryCode) + ' ' + (visitor.city || 'Unknown') + '</b><br>' +
-                        '<hr style="margin: 8px 0; border-color: #ddd;">' +
-                        '<div style="margin: 4px 0;"><b>Country:</b> ' + visitor.country + '</div>' +
-                        '<div style="margin: 4px 0;"><b>IP:</b> ' + visitor.ip + '</div>' +
-                        '<div style="margin: 4px 0;"><b>Time:</b> ' + timeAgo(visitor.timestamp) + '</div>' +
-                        '<div style="margin: 4px 0;"><b>Provider:</b> ' + visitor.provider + '</div>' +
-                        '</div>'
-                    );
-                    
-                    markers.push(marker);
+                    if (markers[visitor.sessionId]) {
+                        // Update existing marker
+                        var marker = markers[visitor.sessionId];
+                        marker.setStyle({
+                            fillColor: active ? '#10b981' : '#64748b',
+                            color: '#fff',
+                            weight: 2,
+                            opacity: active ? 1 : 0.5,
+                            fillOpacity: active ? 0.8 : 0.4
+                        });
+                        
+                        marker.setPopupContent(
+                            '<div style="color: #000; min-width: 200px;">' +
+                            '<b style="font-size: 16px;">' + getFlag(visitor.countryCode) + ' ' + (visitor.city || 'Unknown') + '</b><br>' +
+                            '<hr style="margin: 8px 0; border-color: #ddd;">' +
+                            '<div style="margin: 4px 0;"><b>Country:</b> ' + visitor.country + '</div>' +
+                            '<div style="margin: 4px 0;"><b>IP:</b> ' + visitor.ip + '</div>' +
+                            '<div style="margin: 4px 0;"><b>Status:</b> <span style="color: ' + (active ? '#10b981' : '#64748b') + ';">' + (active ? 'Online' : 'Offline') + '</span></div>' +
+                            '<div style="margin: 4px 0;"><b>Last seen:</b> ' + timeAgo(visitor.lastSeen || visitor.timestamp) + '</div>' +
+                            '<div style="margin: 4px 0;"><b>Provider:</b> ' + visitor.provider + '</div>' +
+                            '</div>'
+                        );
+                    } else {
+                        // Create new marker
+                        var marker = L.circleMarker([visitor.lat, visitor.lon], {
+                            radius: 8,
+                            fillColor: active ? '#10b981' : '#64748b',
+                            color: '#fff',
+                            weight: 2,
+                            opacity: active ? 1 : 0.5,
+                            fillOpacity: active ? 0.8 : 0.4
+                        }).addTo(markersGroup);
+                        
+                        marker.bindPopup(
+                            '<div style="color: #000; min-width: 200px;">' +
+                            '<b style="font-size: 16px;">' + getFlag(visitor.countryCode) + ' ' + (visitor.city || 'Unknown') + '</b><br>' +
+                            '<hr style="margin: 8px 0; border-color: #ddd;">' +
+                            '<div style="margin: 4px 0;"><b>Country:</b> ' + visitor.country + '</div>' +
+                            '<div style="margin: 4px 0;"><b>IP:</b> ' + visitor.ip + '</div>' +
+                            '<div style="margin: 4px 0;"><b>Status:</b> <span style="color: ' + (active ? '#10b981' : '#64748b') + ';">' + (active ? 'Online' : 'Offline') + '</span></div>' +
+                            '<div style="margin: 4px 0;"><b>Last seen:</b> ' + timeAgo(visitor.lastSeen || visitor.timestamp) + '</div>' +
+                            '<div style="margin: 4px 0;"><b>Provider:</b> ' + visitor.provider + '</div>' +
+                            '</div>'
+                        );
+                        
+                        markers[visitor.sessionId] = marker;
+                    }
+                }
+            });
+            
+            // Remove markers for visitors that no longer exist
+            Object.keys(markers).forEach(function(sessionId) {
+                if (!existingSessionIds.has(sessionId)) {
+                    markersGroup.removeLayer(markers[sessionId]);
+                    delete markers[sessionId];
                 }
             });
 
-            document.getElementById('markerCount').textContent = markers.length;
-
-            // Auto fit bounds if there are markers
-            if (markers.length > 0) {
-                setTimeout(function() {
-                    fitMapBounds();
-                }, 500);
-            }
+            document.getElementById('activeMarkers').textContent = activeCount;
+            document.getElementById('totalMarkers').textContent = Object.keys(markers).length;
         }
 
         // Update visitors list
@@ -314,19 +395,21 @@
             var recentVisitors = visitorData.slice(0, 20);
             
             recentVisitors.forEach(function(visitor) {
-                var isRecent = (Date.now() - new Date(visitor.timestamp).getTime()) < 5 * 60 * 1000;
+                var active = isActive(visitor);
+                var isNew = visitor.sessionId && newVisitorIds.has(visitor.sessionId);
                 
-                html += '<div class="bg-slate-950/50 border border-slate-800/50 rounded-xl p-4 mb-3 flex items-center gap-4 hover:bg-slate-950/80 hover:border-blue-500/30 hover:translate-x-1 transition-all">';
+                html += '<div class="bg-slate-950/50 border border-slate-800/50 rounded-xl p-4 mb-3 flex items-center gap-4 hover:bg-slate-950/80 hover:border-blue-500/30 hover:translate-x-1 transition-all' + (isNew ? ' new-visitor' : '') + '">';
                 html += '<div class="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center text-2xl flex-shrink-0">';
                 html += getFlag(visitor.countryCode);
                 html += '</div>';
                 html += '<div class="flex-1 min-w-0">';
                 html += '<div class="font-semibold text-white flex items-center gap-2">';
-                if (isRecent) html += '<span class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></span>';
+                if (active) html += '<span class="w-2 h-2 bg-green-500 rounded-full pulse-dot"></span>';
+                if (isNew) html += '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">NEW</span>';
                 html += '<span class="truncate">' + (visitor.city || 'Unknown') + ', ' + visitor.country + '</span>';
                 html += '</div>';
-                html += '<div class="text-sm text-slate-400 truncate">IP: ' + visitor.ip + ' • ' + timeAgo(visitor.timestamp) + '</div>';
-                html += '<div class="text-xs text-slate-500">Provider: ' + visitor.provider + '</div>';
+                html += '<div class="text-sm text-slate-400 truncate">IP: ' + visitor.ip + ' • ' + timeAgo(visitor.lastSeen || visitor.timestamp) + '</div>';
+                html += '<div class="text-xs text-slate-500">Provider: ' + visitor.provider + ' • ' + (active ? '<span class="text-green-400">Online</span>' : '<span class="text-slate-400">Offline</span>') + '</div>';
                 html += '</div>';
                 html += '</div>';
             });
@@ -344,10 +427,25 @@
         function refreshData() {
             updateStatus('Refreshing...', 'blue');
             console.log('🔄 Refreshing data...');
+            loadVisitors();
+        }
+
+        // Cleanup inactive visitors (older than 1 hour)
+        function cleanupInactive() {
+            var oneHourAgo = Date.now() - 60 * 60 * 1000;
+            var beforeCount = visitorData.length;
             
-            setTimeout(function() {
-                loadVisitors();
-            }, 500);
+            visitorData = visitorData.filter(function(v) {
+                var lastSeenTime = new Date(v.lastSeen || v.timestamp).getTime();
+                return lastSeenTime > oneHourAgo;
+            });
+            
+            localStorage.setItem('visitors', JSON.stringify(visitorData));
+            
+            var removedCount = beforeCount - visitorData.length;
+            alert('Removed ' + removedCount + ' inactive visitors (>1 hour old)');
+            
+            refreshData();
         }
 
         // Clear all data
@@ -355,6 +453,9 @@
             if (confirm('Are you sure you want to clear all visitor data?')) {
                 localStorage.removeItem('visitors');
                 visitorData = [];
+                markers = {};
+                markersGroup.clearLayers();
+                previousVisitorCount = 0;
                 updateStats();
                 updateMap();
                 updateVisitorsList();
@@ -363,18 +464,26 @@
             }
         }
 
+        // Listen for storage changes (from other tabs)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'visitors') {
+                console.log('📡 Storage changed, reloading...');
+                loadVisitors();
+            }
+        });
+
         // Initialize everything
         function init() {
-            console.log('🚀 Initializing Visitor Map Tracker...');
+            console.log('🚀 Initializing Real-time Visitor Map Tracker...');
             initMap();
             loadVisitors();
             
-            // Auto refresh every 30 seconds
+            // Auto refresh every 5 seconds
             setInterval(function() {
                 if (document.visibilityState === 'visible') {
-                    refreshData();
+                    loadVisitors();
                 }
-            }, 30000);
+            }, 5000);
         }
 
         window.onload = init;

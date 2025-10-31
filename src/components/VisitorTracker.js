@@ -5,23 +5,39 @@ import { useEffect } from "react";
 export default function VisitorTracker() {
   useEffect(() => {
     trackVisitor();
+
+    // Heartbeat setiap 30 detik untuk update "last seen"
+    const heartbeatInterval = setInterval(() => {
+      updateHeartbeat();
+    }, 30000);
+
+    // Update saat tab menjadi visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        updateHeartbeat();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   // Get country flag emoji
   function getFlag(countryCode) {
     if (!countryCode || countryCode.length !== 2) return "🌍";
-    var codePoints = countryCode
+    const codePoints = countryCode
       .toUpperCase()
       .split("")
-      .map(function (char) {
-        return 127397 + char.charCodeAt(0);
-      });
-    return String.fromCodePoint.apply(String, codePoints);
+      .map((char) => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
   }
 
   // Get location from browser geolocation API
   function getBrowserLocation() {
-    return new Promise(function (resolve) {
+    return new Promise((resolve) => {
       if (!navigator.geolocation) {
         console.log("Browser geolocation not supported");
         resolve(null);
@@ -29,7 +45,7 @@ export default function VisitorTracker() {
       }
 
       navigator.geolocation.getCurrentPosition(
-        function (position) {
+        (position) => {
           console.log("✅ Browser geolocation success");
           resolve({
             lat: position.coords.latitude,
@@ -37,7 +53,7 @@ export default function VisitorTracker() {
             accuracy: position.coords.accuracy,
           });
         },
-        function (error) {
+        (error) => {
           console.log("❌ Browser geolocation denied:", error.message);
           resolve(null);
         },
@@ -53,10 +69,10 @@ export default function VisitorTracker() {
   // Reverse geocode
   async function reverseGeocode(lat, lon) {
     try {
-      var response = await fetch(
+      const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
       );
-      var data = await response.json();
+      const data = await response.json();
 
       if (data.address) {
         return {
@@ -78,24 +94,71 @@ export default function VisitorTracker() {
     return null;
   }
 
+  // Generate unique session ID
+  function getSessionId() {
+    let sessionId = sessionStorage.getItem("visitorSessionId");
+    if (!sessionId) {
+      sessionId =
+        "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+      sessionStorage.setItem("visitorSessionId", sessionId);
+    }
+    return sessionId;
+  }
+
+  // Update heartbeat untuk visitor yang sudah ada
+  function updateHeartbeat() {
+    try {
+      const sessionId = getSessionId();
+      const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
+
+      const visitorIndex = stored.findIndex((v) => v.sessionId === sessionId);
+
+      if (visitorIndex !== -1) {
+        stored[visitorIndex].lastSeen = new Date().toISOString();
+        stored[visitorIndex].isActive = true;
+        localStorage.setItem("visitors", JSON.stringify(stored));
+
+        // Trigger storage event untuk tab lain
+        window.dispatchEvent(new Event("storage"));
+        console.log("💓 Heartbeat updated");
+      }
+    } catch (error) {
+      console.error("Error updating heartbeat:", error);
+    }
+  }
+
   // Track visitor
   async function trackVisitor() {
+    const sessionId = getSessionId();
+
+    // Cek apakah session ini sudah ada
+    const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
+    const existingVisitor = stored.find((v) => v.sessionId === sessionId);
+
+    if (existingVisitor) {
+      // Update last seen untuk visitor yang sudah ada
+      updateHeartbeat();
+      console.log("⚠️ Existing session, heartbeat updated");
+      return;
+    }
+
     // Try GPS first
-    var browserLoc = await getBrowserLocation();
+    const browserLoc = await getBrowserLocation();
 
     if (browserLoc) {
       console.log("✅ Using GPS location");
 
-      var geoData = await reverseGeocode(browserLoc.lat, browserLoc.lon);
+      const geoData = await reverseGeocode(browserLoc.lat, browserLoc.lon);
 
-      var ipInfo = "Unknown";
+      let ipInfo = "Unknown";
       try {
-        var ipResponse = await fetch("https://api.ipify.org?format=json");
-        var ipData = await ipResponse.json();
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipResponse.json();
         ipInfo = ipData.ip;
       } catch (e) {}
 
-      var visitor = {
+      const visitor = {
+        sessionId: sessionId,
         ip: ipInfo,
         country: geoData ? geoData.country : "Unknown",
         countryCode: geoData ? geoData.countryCode : "XX",
@@ -104,6 +167,8 @@ export default function VisitorTracker() {
         lat: browserLoc.lat,
         lon: browserLoc.lon,
         timestamp: new Date().toISOString(),
+        lastSeen: new Date().toISOString(),
+        isActive: true,
         userAgent: navigator.userAgent,
         provider: "Browser GPS (±" + Math.round(browserLoc.accuracy) + "m)",
         page: window.location.pathname,
@@ -116,11 +181,11 @@ export default function VisitorTracker() {
     // Fallback to IP geolocation
     console.log("❌ GPS denied, using IP geolocation");
 
-    var providers = [
+    const providers = [
       {
         name: "ipapi.co",
         url: "https://ipapi.co/json/",
-        parse: function (data) {
+        parse: (data) => {
           if (data.error) return null;
           return {
             ip: data.ip,
@@ -136,7 +201,7 @@ export default function VisitorTracker() {
       {
         name: "ip-api.com",
         url: "http://ip-api.com/json/?fields=status,country,countryCode,regionName,city,lat,lon,query",
-        parse: function (data) {
+        parse: (data) => {
           if (data.status !== "success") return null;
           return {
             ip: data.query,
@@ -152,7 +217,7 @@ export default function VisitorTracker() {
       {
         name: "ipwhois.app",
         url: "https://ipwhois.app/json/",
-        parse: function (data) {
+        parse: (data) => {
           if (!data.success) return null;
           return {
             ip: data.ip,
@@ -167,14 +232,15 @@ export default function VisitorTracker() {
       },
     ];
 
-    for (var i = 0; i < providers.length; i++) {
+    for (let i = 0; i < providers.length; i++) {
       try {
-        var response = await fetch(providers[i].url);
-        var rawData = await response.json();
-        var parsed = providers[i].parse(rawData);
+        const response = await fetch(providers[i].url);
+        const rawData = await response.json();
+        const parsed = providers[i].parse(rawData);
 
         if (parsed && parsed.lat && parsed.lon) {
-          var visitor = {
+          const visitor = {
+            sessionId: sessionId,
             ip: parsed.ip,
             country: parsed.country,
             countryCode: parsed.countryCode,
@@ -183,6 +249,8 @@ export default function VisitorTracker() {
             lat: parsed.lat,
             lon: parsed.lon,
             timestamp: new Date().toISOString(),
+            lastSeen: new Date().toISOString(),
+            isActive: true,
             userAgent: navigator.userAgent,
             provider: providers[i].name + " (IP-based)",
             page: window.location.pathname,
@@ -202,24 +270,22 @@ export default function VisitorTracker() {
   // Save visitor to localStorage
   function saveVisitor(visitor) {
     try {
-      var stored = JSON.parse(localStorage.getItem("visitors") || "[]");
+      const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
 
-      // Prevent duplicate (same IP within 5 minutes)
-      var fiveMinAgo = Date.now() - 5 * 60 * 1000;
-      var isDuplicate = stored.some(function (v) {
-        return (
-          v.ip === visitor.ip && new Date(v.timestamp).getTime() > fiveMinAgo
-        );
-      });
+      // Tambah visitor baru
+      stored.unshift(visitor);
 
-      if (!isDuplicate) {
-        stored.unshift(visitor);
-        if (stored.length > 100) stored = stored.slice(0, 100);
-        localStorage.setItem("visitors", JSON.stringify(stored));
-        console.log("✅ Visitor tracked:", visitor);
-      } else {
-        console.log("⚠️ Duplicate visitor, skipped");
+      // Keep last 100 visitors
+      if (stored.length > 100) {
+        stored.splice(100);
       }
+
+      localStorage.setItem("visitors", JSON.stringify(stored));
+
+      // Trigger storage event untuk tab lain
+      window.dispatchEvent(new Event("storage"));
+
+      console.log("✅ Visitor tracked:", visitor);
     } catch (error) {
       console.error("Error saving visitor:", error);
     }
