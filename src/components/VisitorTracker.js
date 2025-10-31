@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 
 export default function VisitorTracker() {
@@ -7,12 +5,11 @@ export default function VisitorTracker() {
     console.log("🚀 VisitorTracker mounted");
     trackVisitor();
 
-    // Heartbeat setiap 30 detik untuk update "last seen"
+    // Heartbeat every 30 seconds
     const heartbeatInterval = setInterval(() => {
       updateHeartbeat();
     }, 30000);
 
-    // Update saat tab menjadi visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         updateHeartbeat();
@@ -26,48 +23,44 @@ export default function VisitorTracker() {
     };
   }, []);
 
-  // Get country flag emoji
-  function getFlag(countryCode) {
-    if (!countryCode || countryCode.length !== 2) return "🌍";
-    const codePoints = countryCode
-      .toUpperCase()
-      .split("")
-      .map((char) => 127397 + char.charCodeAt(0));
-    return String.fromCodePoint(...codePoints);
+  function getSessionId() {
+    // Use in-memory session ID (akan hilang saat refresh, tapi itu normal behavior)
+    if (!window.visitorSessionId) {
+      window.visitorSessionId =
+        "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
+      console.log("🆔 New session ID:", window.visitorSessionId);
+    }
+    return window.visitorSessionId;
   }
 
-  // Get location from browser geolocation API
-  function getBrowserLocation() {
-    return new Promise((resolve) => {
-      if (!navigator.geolocation) {
-        console.log("❌ Browser geolocation not supported");
-        resolve(null);
-        return;
+  async function updateHeartbeat() {
+    try {
+      const sessionId = getSessionId();
+
+      // Get existing visitor data
+      const result = await window.storage.get("visitors:" + sessionId);
+
+      if (result) {
+        const visitor = JSON.parse(result.value);
+        visitor.lastSeen = new Date().toISOString();
+        visitor.isActive = true;
+
+        await window.storage.set(
+          "visitors:" + sessionId,
+          JSON.stringify(visitor)
+        );
+        window.dispatchEvent(new Event("visitorUpdate"));
+        console.log("💓 Heartbeat updated for session:", sessionId);
+      } else {
+        console.log("⚠️ Session not found, re-tracking...");
+        trackVisitor();
       }
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          console.log("✅ Browser geolocation success:", position.coords);
-          resolve({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-          });
-        },
-        (error) => {
-          console.log("❌ Browser geolocation denied:", error.message);
-          resolve(null);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0,
-        }
-      );
-    });
+    } catch (error) {
+      console.log("⚠️ Heartbeat error (might be new session):", error.message);
+      trackVisitor();
+    }
   }
 
-  // Reverse geocode
   async function reverseGeocode(lat, lon) {
     try {
       console.log("🌍 Reverse geocoding:", lat, lon);
@@ -97,113 +90,29 @@ export default function VisitorTracker() {
     return null;
   }
 
-  // Generate unique session ID
-  function getSessionId() {
-    let sessionId = sessionStorage.getItem("visitorSessionId");
-    if (!sessionId) {
-      sessionId =
-        "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-      sessionStorage.setItem("visitorSessionId", sessionId);
-      console.log("🆔 New session ID:", sessionId);
-    } else {
-      console.log("🆔 Existing session ID:", sessionId);
-    }
-    return sessionId;
-  }
-
-  // Update heartbeat untuk visitor yang sudah ada
-  function updateHeartbeat() {
-    try {
-      const sessionId = getSessionId();
-      const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
-
-      const visitorIndex = stored.findIndex((v) => v.sessionId === sessionId);
-
-      if (visitorIndex !== -1) {
-        stored[visitorIndex].lastSeen = new Date().toISOString();
-        stored[visitorIndex].isActive = true;
-        localStorage.setItem("visitors", JSON.stringify(stored));
-
-        // ✅ TAMBAHKAN INI
-        window.dispatchEvent(new Event("visitorUpdate"));
-
-        console.log("💓 Heartbeat updated for session:", sessionId);
-      } else {
-        console.log("⚠️ Session not found in storage, re-tracking...");
-        trackVisitor();
-      }
-    } catch (error) {
-      console.error("❌ Error updating heartbeat:", error);
-    }
-  }
-
-  // Track visitor
   async function trackVisitor() {
     console.log("📍 Starting visitor tracking...");
     const sessionId = getSessionId();
 
-    // Cek apakah session ini sudah ada DAN masih fresh (< 5 menit)
-    const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
-    const existingVisitor = stored.find((v) => v.sessionId === sessionId);
-
-    if (existingVisitor) {
-      const timeSinceLastSeen =
-        Date.now() -
-        new Date(
-          existingVisitor.lastSeen || existingVisitor.timestamp
-        ).getTime();
-      if (timeSinceLastSeen < 5 * 60 * 1000) {
-        // Update last seen untuk visitor yang sudah ada
-        updateHeartbeat();
-        console.log("⚠️ Existing fresh session, heartbeat updated");
-        return;
-      } else {
-        console.log("🔄 Existing stale session, re-tracking...");
+    // Check if already tracked recently
+    try {
+      const result = await window.storage.get("visitors:" + sessionId);
+      if (result) {
+        const existing = JSON.parse(result.value);
+        const timeSince =
+          Date.now() -
+          new Date(existing.lastSeen || existing.timestamp).getTime();
+        if (timeSince < 5 * 60 * 1000) {
+          updateHeartbeat();
+          console.log("⚠️ Existing fresh session, heartbeat updated");
+          return;
+        }
       }
+    } catch (error) {
+      console.log("🔄 No existing session found, tracking new visitor");
     }
 
-    // Try GPS first
-    const browserLoc = await getBrowserLocation();
-
-    if (browserLoc) {
-      console.log("✅ Using GPS location");
-
-      const geoData = await reverseGeocode(browserLoc.lat, browserLoc.lon);
-
-      let ipInfo = "Unknown";
-      try {
-        const ipResponse = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipResponse.json();
-        ipInfo = ipData.ip;
-        console.log("📡 IP:", ipInfo);
-      } catch (e) {
-        console.error("❌ IP fetch failed:", e);
-      }
-
-      const visitor = {
-        sessionId: sessionId,
-        ip: ipInfo,
-        country: geoData ? geoData.country : "Unknown",
-        countryCode: geoData ? geoData.countryCode : "XX",
-        city: geoData ? geoData.city : "Unknown",
-        region: geoData ? geoData.region : "Unknown",
-        lat: browserLoc.lat,
-        lon: browserLoc.lon,
-        timestamp: new Date().toISOString(),
-        lastSeen: new Date().toISOString(),
-        isActive: true,
-        userAgent: navigator.userAgent,
-        provider: "Browser GPS (±" + Math.round(browserLoc.accuracy) + "m)",
-        page: window.location.pathname,
-      };
-
-      saveVisitor(visitor);
-      return;
-    }
-
-    // Fallback to IP geolocation
-    console.log("🔄 GPS not available, using IP geolocation");
-
+    // Try IP geolocation providers
     const providers = [
       {
         name: "ipapi.co",
@@ -237,33 +146,17 @@ export default function VisitorTracker() {
           };
         },
       },
-      {
-        name: "ipwhois.app",
-        url: "https://ipwhois.app/json/",
-        parse: (data) => {
-          if (!data.success) return null;
-          return {
-            ip: data.ip,
-            country: data.country,
-            countryCode: data.country_code,
-            city: data.city,
-            region: data.region,
-            lat: data.latitude,
-            lon: data.longitude,
-          };
-        },
-      },
     ];
 
-    for (let i = 0; i < providers.length; i++) {
+    for (let provider of providers) {
       try {
-        console.log("🔍 Trying provider:", providers[i].name);
-        const response = await fetch(providers[i].url);
+        console.log("🔍 Trying provider:", provider.name);
+        const response = await fetch(provider.url);
         const rawData = await response.json();
-        const parsed = providers[i].parse(rawData);
+        const parsed = provider.parse(rawData);
 
         if (parsed && parsed.lat && parsed.lon) {
-          console.log("✅ Provider success:", providers[i].name, parsed);
+          console.log("✅ Provider success:", provider.name, parsed);
 
           const visitor = {
             sessionId: sessionId,
@@ -278,48 +171,31 @@ export default function VisitorTracker() {
             lastSeen: new Date().toISOString(),
             isActive: true,
             userAgent: navigator.userAgent,
-            provider: providers[i].name + " (IP-based)",
+            provider: provider.name + " (IP-based)",
             page: window.location.pathname,
           };
 
-          saveVisitor(visitor);
+          await saveVisitor(visitor);
           return;
         }
       } catch (error) {
-        console.error("❌ Provider error:", providers[i].name, error);
+        console.error("❌ Provider error:", provider.name, error);
       }
     }
 
     console.error("❌ All tracking methods failed");
   }
 
-  function saveVisitor(visitor) {
+  async function saveVisitor(visitor) {
     try {
-      const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
-
-      // Remove old entry dengan sessionId yang sama
-      const filtered = stored.filter((v) => v.sessionId !== visitor.sessionId);
-
-      // Tambah visitor baru di awal
-      filtered.unshift(visitor);
-
-      // Keep last 100 visitors
-      if (filtered.length > 100) {
-        filtered.splice(100);
-      }
-
-      localStorage.setItem("visitors", JSON.stringify(filtered));
-
-      // ✅ TAMBAHKAN INI - Trigger custom event untuk same-window communication
-      window.dispatchEvent(new Event("visitorUpdate"));
-
-      // Trigger storage event untuk cross-tab (optional)
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "visitors",
-          newValue: JSON.stringify(filtered),
-        })
+      // Save visitor with their session ID as key
+      await window.storage.set(
+        "visitors:" + visitor.sessionId,
+        JSON.stringify(visitor)
       );
+
+      // Trigger update event
+      window.dispatchEvent(new Event("visitorUpdate"));
 
       console.log("✅ Visitor saved:", visitor);
     } catch (error) {
@@ -327,5 +203,5 @@ export default function VisitorTracker() {
     }
   }
 
-  return null; // Invisible component
+  return null;
 }

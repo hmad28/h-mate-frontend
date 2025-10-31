@@ -18,7 +18,6 @@ export default function VisitorMapWidget() {
   const [toast, setToast] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Show toast notification
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -28,22 +27,11 @@ export default function VisitorMapWidget() {
     console.log("🚀 VisitorMapWidget mounted");
     loadVisitors();
 
-    // Auto refresh every 3 seconds
     const interval = setInterval(() => {
       console.log("🔄 Auto refresh...");
       loadVisitors();
-    }, 3000);
+    }, 5000);
 
-    // Listen for storage changes from other tabs/windows
-    const handleStorage = (e) => {
-      console.log("📡 Storage event:", e.key);
-      if (e.key === "visitors") {
-        loadVisitors();
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-
-    // Listen for custom events (same window)
     const handleCustomStorage = () => {
       console.log("📡 Custom storage event");
       loadVisitors();
@@ -52,23 +40,53 @@ export default function VisitorMapWidget() {
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener("storage", handleStorage);
       window.removeEventListener("visitorUpdate", handleCustomStorage);
     };
   }, []);
 
-  const loadVisitors = () => {
+  const loadVisitors = async () => {
     try {
-      const stored = localStorage.getItem("visitors");
-      console.log("📦 Raw localStorage data:", stored);
+      // List all visitor keys
+      const result = await window.storage.list("visitors:");
 
-      if (stored) {
-        const data = JSON.parse(stored);
-        console.log("✅ Parsed visitors:", data.length, "items");
-        setVisitors(data);
-        calculateStats(data);
+      if (result && result.keys) {
+        console.log("📦 Found visitor keys:", result.keys.length);
+
+        // Fetch all visitors
+        const visitorPromises = result.keys.map((key) =>
+          window.storage
+            .get(key)
+            .then((res) => {
+              if (res && res.value) {
+                try {
+                  return JSON.parse(res.value);
+                } catch (e) {
+                  console.error("Parse error for key:", key, e);
+                  return null;
+                }
+              }
+              return null;
+            })
+            .catch((err) => {
+              console.error("Error fetching key:", key, err);
+              return null;
+            })
+        );
+
+        const visitorsData = await Promise.all(visitorPromises);
+        const validVisitors = visitorsData.filter((v) => v !== null);
+
+        // Sort by timestamp (newest first)
+        validVisitors.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
+        console.log("✅ Loaded visitors:", validVisitors.length);
+        setVisitors(validVisitors);
+        calculateStats(validVisitors);
       } else {
-        console.log("⚠️ No visitors in localStorage");
+        console.log("⚠️ No visitors found");
         setVisitors([]);
         calculateStats([]);
       }
@@ -129,17 +147,38 @@ export default function VisitorMapWidget() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const handleClear = () => {
-    console.log("🗑️ Clear data triggered");
-    localStorage.removeItem("visitors");
-    setVisitors([]);
-    setStats({ total: 0, countries: 0, today: 0, online: 0 });
-    showToast("All data cleared!", "success");
+  const handleClear = async () => {
+    if (!window.confirm("Are you sure you want to clear all visitor data?"))
+      return;
+
+    try {
+      console.log("🗑️ Clear data triggered");
+
+      // Get all visitor keys
+      const result = await window.storage.list("visitors:");
+
+      if (result && result.keys) {
+        // Delete all visitors
+        const deletePromises = result.keys.map((key) =>
+          window.storage.delete(key).catch((err) => {
+            console.error("Error deleting key:", key, err);
+          })
+        );
+
+        await Promise.all(deletePromises);
+      }
+
+      setVisitors([]);
+      setStats({ total: 0, countries: 0, today: 0, online: 0 });
+      showToast("All data cleared!", "success");
+    } catch (error) {
+      console.error("❌ Error clearing data:", error);
+      showToast("Error clearing data", "error");
+    }
   };
 
   return (
     <div className="relative">
-      {/* Toast Notification */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top">
           <div
@@ -160,7 +199,6 @@ export default function VisitorMapWidget() {
       )}
 
       <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl border border-cyan-500/30 rounded-3xl overflow-hidden shadow-2xl">
-        {/* Header */}
         <div className="p-6 border-b border-slate-700/50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -176,7 +214,7 @@ export default function VisitorMapWidget() {
                   </span>
                 </h2>
                 <p className="text-sm text-slate-400">
-                  Real-time tracking • Auto-refresh every 3s
+                  Real-time tracking • Auto-refresh every 5s
                 </p>
               </div>
             </div>
@@ -201,7 +239,6 @@ export default function VisitorMapWidget() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-slate-900/40">
           <div className="text-center p-4 bg-slate-950/50 rounded-xl border border-slate-800/50">
             <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
@@ -230,7 +267,6 @@ export default function VisitorMapWidget() {
           </div>
         </div>
 
-        {/* Visitor List */}
         <div className="p-6 bg-slate-950/50 max-h-[600px] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-white">Recent Visitors</h3>
@@ -296,11 +332,10 @@ export default function VisitorMapWidget() {
           )}
         </div>
 
-        {/* Debug Info */}
         <div className="px-6 py-3 bg-slate-900/40 border-t border-slate-800/50">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Last refresh: {new Date().toLocaleTimeString()}</span>
-            <span>localStorage key: visitors</span>
+            <span>Storage: window.storage API</span>
           </div>
         </div>
       </div>

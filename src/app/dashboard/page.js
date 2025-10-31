@@ -570,6 +570,7 @@ export default function DashboardPage() {
             )}
           </motion.div>
         )}
+        
         {/* Map Visitors Widget - Only for matt */}
         {showMapWidget && (
           <motion.div
