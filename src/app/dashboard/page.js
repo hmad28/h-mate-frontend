@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import Link from "next/link";
 import AiRatingSection from "@/components/AiRatingSection"; // sesuaikan path
+import VisitorMapWidget from "@/components/VisitorMapWidget";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -210,7 +211,6 @@ export default function DashboardPage() {
             <span className="text-xs md:text-base">Logout</span>
           </motion.button>
         </motion.div>
-
         {/* AI SUMMARY CARD - COMPACT & ELEGANT */}
         {aiSummary ? (
           <motion.div
@@ -570,7 +570,6 @@ export default function DashboardPage() {
             )}
           </motion.div>
         )}
-
         {/* Map Visitors Widget - Only for matt */}
         {showMapWidget && (
           <motion.div
@@ -625,21 +624,14 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {showMapWidget && user?.username === "matt" && (
+        {/* // Di dalam dashboard component: */}
+        {user?.username === "matt" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mt-8"
           >
-            <iframe
-              src="/visitor-map.html"
-              style={{
-                width: "100%",
-                height: "1200px",
-                border: "none",
-                borderRadius: "24px",
-              }}
-            />
+            <VisitorMapWidget />
           </motion.div>
         )}
 
@@ -712,7 +704,6 @@ export default function DashboardPage() {
             </div>
           </motion.div>
         )}
-
         {/* dashboard */}
         {/* Career Recommendations Card - IF EXISTS */}
         {profileData?.latestTests &&
@@ -862,7 +853,6 @@ export default function DashboardPage() {
               </motion.div>
             );
           })()}
-
         {/* Quick Actions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -897,7 +887,6 @@ export default function DashboardPage() {
             ))}
           </div>
         </motion.div>
-
         {/* Recent Activity - IF EXISTS */}
         {profileData?.recentActivities &&
           profileData.recentActivities.length > 0 && (
@@ -962,7 +951,6 @@ export default function DashboardPage() {
               </div>
             </motion.div>
           )}
-
         {/* AI Rating Section */}
         {aiSummary && user && profileData?.profile?.id && (
           <AiRatingSection

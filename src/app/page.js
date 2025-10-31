@@ -95,7 +95,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
       
-      <VisitorTracker />
+      {/* di homepage */}
+      <VisitorTracker /> 
       
       {/* Enhanced Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
