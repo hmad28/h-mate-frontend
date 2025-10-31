@@ -623,7 +623,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {showMapWidget && (
+        {showMapWidget && user?.username === "matt" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

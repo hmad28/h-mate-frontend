@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import AiRatingSection from "@/components/AiRatingSection";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import VisitorTracker from "@/components/VisitorTracker";
 
 export default function HomePage() {
   const { scrollYProgress } = useScroll();
@@ -93,6 +94,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+      
+      <VisitorTracker />
+      
       {/* Enhanced Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
