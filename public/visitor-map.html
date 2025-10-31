@@ -176,6 +176,9 @@
         var markersGroup;
         var previousVisitorCount = 0;
         var newVisitorIds = new Set();
+        
+        // AUTO-TRACK VISITOR ON LOAD
+        var hasTrackedThisSession = false;
 
         // Update status
         function updateStatus(text, color) {
@@ -472,11 +475,120 @@
             }
         });
 
+        // AUTO TRACK VISITOR
+        function autoTrackVisitor() {
+            if (hasTrackedThisSession) {
+                console.log('⚠️ Already tracked this session');
+                return;
+            }
+
+            console.log('📍 Auto-tracking visitor...');
+            hasTrackedThisSession = true;
+
+            // Try IP geolocation first (faster than GPS)
+            var providers = [
+                {
+                    name: 'ipapi.co',
+                    url: 'https://ipapi.co/json/',
+                    parse: function(data) {
+                        if (data.error) return null;
+                        return {
+                            ip: data.ip,
+                            country: data.country_name,
+                            countryCode: data.country_code,
+                            city: data.city,
+                            region: data.region,
+                            lat: data.latitude,
+                            lon: data.longitude
+                        };
+                    }
+                },
+                {
+                    name: 'ip-api.com',
+                    url: 'http://ip-api.com/json/?fields=status,country,countryCode,regionName,city,lat,lon,query',
+                    parse: function(data) {
+                        if (data.status !== 'success') return null;
+                        return {
+                            ip: data.query,
+                            country: data.country,
+                            countryCode: data.countryCode,
+                            city: data.city,
+                            region: data.regionName,
+                            lat: data.lat,
+                            lon: data.lon
+                        };
+                    }
+                }
+            ];
+
+            function tryProvider(index) {
+                if (index >= providers.length) {
+                    console.error('❌ All providers failed');
+                    return;
+                }
+
+                var provider = providers[index];
+                console.log('🔍 Trying provider:', provider.name);
+
+                fetch(provider.url)
+                    .then(function(response) { return response.json(); })
+                    .then(function(data) {
+                        var parsed = provider.parse(data);
+                        if (parsed && parsed.lat && parsed.lon) {
+                            console.log('✅ Provider success:', provider.name, parsed);
+                            
+                            var sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                            
+                            var visitor = {
+                                sessionId: sessionId,
+                                ip: parsed.ip,
+                                country: parsed.country,
+                                countryCode: parsed.countryCode,
+                                city: parsed.city,
+                                region: parsed.region,
+                                lat: parsed.lat,
+                                lon: parsed.lon,
+                                timestamp: new Date().toISOString(),
+                                lastSeen: new Date().toISOString(),
+                                isActive: true,
+                                userAgent: navigator.userAgent,
+                                provider: provider.name + ' (IP-based)',
+                                page: window.location.pathname
+                            };
+
+                            // Save to localStorage
+                            var stored = JSON.parse(localStorage.getItem('visitors') || '[]');
+                            stored.unshift(visitor);
+                            if (stored.length > 100) stored.splice(100);
+                            localStorage.setItem('visitors', JSON.stringify(stored));
+                            
+                            console.log('✅ Visitor auto-tracked:', visitor);
+                            
+                            // Reload data
+                            loadVisitors();
+                        } else {
+                            tryProvider(index + 1);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('❌ Provider error:', provider.name, error);
+                        tryProvider(index + 1);
+                    });
+            }
+
+            tryProvider(0);
+        }
+
         // Initialize everything
         function init() {
             console.log('🚀 Initializing Real-time Visitor Map Tracker...');
             initMap();
             loadVisitors();
+            
+            // Auto-track visitor setelah 1 detik
+            setTimeout(function() {
+                autoTrackVisitor();
+            }, 1000);
             
             // Auto refresh every 5 seconds
             setInterval(function() {
