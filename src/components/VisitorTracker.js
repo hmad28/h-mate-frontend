@@ -124,13 +124,9 @@ export default function VisitorTracker() {
         stored[visitorIndex].isActive = true;
         localStorage.setItem("visitors", JSON.stringify(stored));
 
-        // Trigger storage event untuk tab lain
-        window.dispatchEvent(
-          new StorageEvent("storage", {
-            key: "visitors",
-            newValue: JSON.stringify(stored),
-          })
-        );
+        // ✅ TAMBAHKAN INI
+        window.dispatchEvent(new Event("visitorUpdate"));
+
         console.log("💓 Heartbeat updated for session:", sessionId);
       } else {
         console.log("⚠️ Session not found in storage, re-tracking...");
@@ -297,7 +293,6 @@ export default function VisitorTracker() {
     console.error("❌ All tracking methods failed");
   }
 
-  // Save visitor to localStorage
   function saveVisitor(visitor) {
     try {
       const stored = JSON.parse(localStorage.getItem("visitors") || "[]");
@@ -315,7 +310,10 @@ export default function VisitorTracker() {
 
       localStorage.setItem("visitors", JSON.stringify(filtered));
 
-      // Trigger storage event untuk tab lain
+      // ✅ TAMBAHKAN INI - Trigger custom event untuk same-window communication
+      window.dispatchEvent(new Event("visitorUpdate"));
+
+      // Trigger storage event untuk cross-tab (optional)
       window.dispatchEvent(
         new StorageEvent("storage", {
           key: "visitors",
