@@ -606,7 +606,7 @@ export default function DashboardPage() {
                         script.type = "text/javascript";
                         script.id = "mapmyvisitors";
                         script.src =
-                          "//mapmyvisitors.com/map.js?d=WbBbani0dqSTrqJFwWlwNpN-WWm08O1rKkyWK90_Cxg&cl=ffffff&w=a";
+                          "//mapmyvisitors.com/map.js?d=DAy8ar4X0q45ALRvy9B7XNoptVWZJpKrSM0fh59whYE&cl=ffffff&w=a";
                         el.appendChild(script);
                       }
                     }}
