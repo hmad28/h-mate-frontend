@@ -43,13 +43,35 @@
             <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent mb-3">
                 🌍 Visitor Analytics
             </h1>
-            <p class="text-slate-400">Real-time visitor tracking & geolocation</p>
-            <button 
-                onclick="clearData()" 
-                class="mt-3 px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition"
-            >
-                Clear All Data
-            </button>
+            <p class="text-slate-400 mb-4">Real-time visitor tracking & geolocation</p>
+            
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-center gap-3 flex-wrap">
+                <button 
+                    onclick="refreshData()" 
+                    class="px-6 py-2.5 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg text-sm hover:bg-blue-500/30 transition flex items-center gap-2"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    <span>Refresh Data</span>
+                </button>
+                <button 
+                    onclick="clearData()" 
+                    class="px-6 py-2.5 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg text-sm hover:bg-red-500/30 transition flex items-center gap-2"
+                >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span>Clear All Data</span>
+                </button>
+            </div>
+
+            <!-- Status Indicator -->
+            <div id="statusIndicator" class="mt-4 inline-block px-4 py-2 bg-slate-800/50 border border-slate-700/50 rounded-lg text-sm text-slate-400">
+                <span class="w-2 h-2 bg-yellow-500 rounded-full inline-block mr-2 pulse-dot"></span>
+                <span id="statusText">Initializing...</span>
+            </div>
         </div>
 
         <!-- Stats Grid -->
@@ -79,13 +101,22 @@
         <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 mb-8">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-2xl font-bold text-blue-400">🗺️ Visitor Map</h2>
-                <div class="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-full">
-                    GPS Enabled
+                <div class="flex items-center gap-2">
+                    <div class="text-xs bg-green-500/20 border border-green-500/30 text-green-400 px-3 py-1 rounded-full">
+                        <span id="markerCount">0</span> markers
+                    </div>
+                    <button 
+                        onclick="fitMapBounds()" 
+                        class="text-xs bg-purple-500/20 border border-purple-500/30 text-purple-400 px-3 py-1 rounded-full hover:bg-purple-500/30 transition"
+                    >
+                        Fit View
+                    </button>
                 </div>
             </div>
             <div id="map" class="h-[500px] rounded-xl"></div>
             <div class="mt-4 text-xs text-slate-500 text-center">
-                API Provider: <span id="apiProvider">Loading...</span>
+                Last updated: <span id="lastUpdate">Never</span> • 
+                Provider: <span id="apiProvider">Loading...</span>
             </div>
             <div class="mt-2 text-xs text-slate-400 text-center">
                 💡 Tip: Allow location access for accurate GPS-based tracking
@@ -94,7 +125,12 @@
 
         <!-- Recent Visitors -->
         <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6">
-            <h2 class="text-2xl font-bold text-purple-400 mb-4">👥 Recent Visitors</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-purple-400">👥 Recent Visitors</h2>
+                <div class="text-xs text-slate-500">
+                    Showing last <span id="visitorCount">0</span> visitors
+                </div>
+            </div>
             <div id="visitorsList">
                 <div class="text-center py-10">
                     <div class="w-10 h-10 border-3 border-blue-400 border-t-transparent rounded-full spinner mx-auto mb-4"></div>
@@ -109,6 +145,22 @@
         var visitorData = [];
         var map;
         var markers = [];
+        var markersGroup;
+
+        // Update status
+        function updateStatus(text, color) {
+            var statusEl = document.getElementById('statusText');
+            var indicatorEl = document.getElementById('statusIndicator');
+            statusEl.textContent = text;
+            
+            // Update indicator color
+            var dotClass = color === 'green' ? 'bg-green-500' : 
+                          color === 'red' ? 'bg-red-500' : 
+                          color === 'blue' ? 'bg-blue-500' : 'bg-yellow-500';
+            
+            var dot = indicatorEl.querySelector('span:first-child');
+            dot.className = 'w-2 h-2 rounded-full inline-block mr-2 pulse-dot ' + dotClass;
+        }
 
         // Initialize map
         function initMap() {
@@ -126,6 +178,15 @@
                 attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
                 noWrap: true
             }).addTo(map);
+
+            markersGroup = L.featureGroup().addTo(map);
+        }
+
+        // Fit map to show all markers
+        function fitMapBounds() {
+            if (markers.length > 0) {
+                map.fitBounds(markersGroup.getBounds(), { padding: [50, 50] });
+            }
         }
 
         // Get country flag emoji
@@ -150,235 +211,29 @@
             return Math.floor(seconds / 86400) + 'd ago';
         }
 
-        // Get location from browser geolocation API (most accurate)
-        function getBrowserLocation() {
-            return new Promise(function(resolve) {
-                if (!navigator.geolocation) {
-                    console.log('Browser geolocation not supported');
-                    resolve(null);
-                    return;
-                }
-
-                navigator.geolocation.getCurrentPosition(
-                    function(position) {
-                        console.log('✅ Browser geolocation success:', position.coords);
-                        resolve({
-                            lat: position.coords.latitude,
-                            lon: position.coords.longitude,
-                            accuracy: position.coords.accuracy
-                        });
-                    },
-                    function(error) {
-                        console.log('❌ Browser geolocation denied or failed:', error.message);
-                        resolve(null);
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            });
-        }
-
-        // Reverse geocode coordinates to get city/country
-        async function reverseGeocode(lat, lon) {
-            try {
-                var response = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon);
-                var data = await response.json();
-                
-                if (data.address) {
-                    return {
-                        city: data.address.city || data.address.town || data.address.village || data.address.county,
-                        country: data.address.country,
-                        countryCode: data.address.country_code ? data.address.country_code.toUpperCase() : null,
-                        region: data.address.state || data.address.region
-                    };
-                }
-            } catch (error) {
-                console.error('Reverse geocode error:', error);
-            }
-            return null;
-        }
-
-        // Track current visitor - Hybrid: GPS first, fallback to IP
-        async function trackVisitor() {
-            // TRY 1: Browser Geolocation (GPS/WiFi) - MEMINTA IZIN USER
-            var browserLoc = await getBrowserLocation();
-            
-            if (browserLoc) {
-                console.log('✅ Using browser geolocation (GPS/WiFi based) - USER MENGIZINKAN');
-                
-                // Get city/country from coordinates
-                var geoData = await reverseGeocode(browserLoc.lat, browserLoc.lon);
-                
-                // Get IP info for additional data
-                var ipInfo = null;
-                try {
-                    var ipResponse = await fetch('https://api.ipify.org?format=json');
-                    var ipData = await ipResponse.json();
-                    ipInfo = ipData.ip;
-                } catch (e) {
-                    ipInfo = 'Unknown';
-                }
-                
-                var visitor = {
-                    ip: ipInfo,
-                    country: geoData ? geoData.country : 'Unknown',
-                    countryCode: geoData ? geoData.countryCode : 'XX',
-                    city: geoData ? geoData.city : 'Unknown',
-                    region: geoData ? geoData.region : 'Unknown',
-                    lat: browserLoc.lat,
-                    lon: browserLoc.lon,
-                    timestamp: new Date().toISOString(),
-                    userAgent: navigator.userAgent,
-                    provider: 'Browser GPS (±' + Math.round(browserLoc.accuracy) + 'm)',
-                    accuracy: browserLoc.accuracy
-                };
-                
-                console.log('✅ Successfully tracked with GPS:', visitor);
-                document.getElementById('apiProvider').textContent = visitor.provider;
-                
-                // Store in localStorage
-                var stored = JSON.parse(localStorage.getItem('visitors') || '[]');
-                var fiveMinAgo = Date.now() - 5 * 60 * 1000;
-                var isDuplicate = stored.some(function(v) {
-                    return v.ip === visitor.ip && new Date(v.timestamp).getTime() > fiveMinAgo;
-                });
-                
-                if (!isDuplicate) {
-                    stored.unshift(visitor);
-                    if (stored.length > 100) stored = stored.slice(0, 100);
-                    localStorage.setItem('visitors', JSON.stringify(stored));
-                }
-                
-                return visitor;
-            }
-            
-            // TRY 2: IP Geolocation - FALLBACK (TANPA IZIN)
-            console.log('❌ Browser geolocation not available, trying IP-based... USER TIDAK MENGIZINKAN atau BROWSER TIDAK SUPPORT');
-            
-            var providers = [
-                {
-                    name: 'ipapi.co',
-                    url: 'https://ipapi.co/json/',
-                    parse: function(data) {
-                        if (data.error) return null;
-                        return {
-                            ip: data.ip,
-                            country: data.country_name,
-                            countryCode: data.country_code,
-                            city: data.city,
-                            region: data.region,
-                            lat: data.latitude,
-                            lon: data.longitude
-                        };
-                    }
-                },
-                {
-                    name: 'ip-api.com',
-                    url: 'http://ip-api.com/json/?fields=status,country,countryCode,regionName,city,lat,lon,query',
-                    parse: function(data) {
-                        if (data.status !== 'success') return null;
-                        return {
-                            ip: data.query,
-                            country: data.country,
-                            countryCode: data.countryCode,
-                            city: data.city,
-                            region: data.regionName,
-                            lat: data.lat,
-                            lon: data.lon
-                        };
-                    }
-                },
-                {
-                    name: 'ipwhois.app',
-                    url: 'https://ipwhois.app/json/',
-                    parse: function(data) {
-                        if (!data.success) return null;
-                        return {
-                            ip: data.ip,
-                            country: data.country,
-                            countryCode: data.country_code,
-                            city: data.city,
-                            region: data.region,
-                            lat: data.latitude,
-                            lon: data.longitude
-                        };
-                    }
-                }
-            ];
-
-            for (var i = 0; i < providers.length; i++) {
-                try {
-                    console.log('Trying IP provider:', providers[i].name);
-                    var response = await fetch(providers[i].url);
-                    var rawData = await response.json();
-                    console.log('Raw response from', providers[i].name, ':', rawData);
-                    
-                    var parsed = providers[i].parse(rawData);
-                    
-                    if (parsed && parsed.lat && parsed.lon) {
-                        var visitor = {
-                            ip: parsed.ip,
-                            country: parsed.country,
-                            countryCode: parsed.countryCode,
-                            city: parsed.city,
-                            region: parsed.region,
-                            lat: parsed.lat,
-                            lon: parsed.lon,
-                            timestamp: new Date().toISOString(),
-                            userAgent: navigator.userAgent,
-                            provider: providers[i].name + ' (IP-based)',
-                            accuracy: null
-                        };
-                        
-                        console.log('✅ Successfully tracked with IP geolocation:', visitor);
-                        document.getElementById('apiProvider').textContent = visitor.provider;
-                        
-                        // Store in localStorage
-                        var stored = JSON.parse(localStorage.getItem('visitors') || '[]');
-                        var fiveMinAgo = Date.now() - 5 * 60 * 1000;
-                        var isDuplicate = stored.some(function(v) {
-                            return v.ip === visitor.ip && new Date(v.timestamp).getTime() > fiveMinAgo;
-                        });
-                        
-                        if (!isDuplicate) {
-                            stored.unshift(visitor);
-                            if (stored.length > 100) stored = stored.slice(0, 100);
-                            localStorage.setItem('visitors', JSON.stringify(stored));
-                        } else {
-                            console.log('Duplicate visitor within 5 minutes, skipping...');
-                        }
-                        
-                        return visitor;
-                    } else {
-                        console.log('❌ Provider', providers[i].name, 'returned invalid data');
-                    }
-                } catch (error) {
-                    console.error('Error with provider', providers[i].name, ':', error);
-                }
-            }
-            
-            console.error('❌ All providers failed');
-            document.getElementById('apiProvider').textContent = 'All providers failed';
-            return null;
-        }
-
         // Load visitor data
         function loadVisitors() {
+            updateStatus('Loading visitors...', 'blue');
+            
             var stored = localStorage.getItem('visitors');
             if (stored) {
                 visitorData = JSON.parse(stored);
-                console.log('Loaded', visitorData.length, 'visitors from storage');
+                console.log('✅ Loaded', visitorData.length, 'visitors from storage');
             } else {
                 visitorData = [];
-                console.log('No stored visitors found');
+                console.log('⚠️ No stored visitors found');
+            }
+            
+            if (visitorData.length > 0) {
+                updateStatus('Loaded ' + visitorData.length + ' visitors', 'green');
+            } else {
+                updateStatus('No visitors yet', 'yellow');
             }
             
             updateStats();
             updateMap();
             updateVisitorsList();
+            updateLastUpdate();
         }
 
         // Update statistics
@@ -399,39 +254,51 @@
                 return new Date(v.timestamp).getTime() > fiveMinAgo;
             }).length;
             document.getElementById('onlineNow').textContent = onlineCount;
+
+            document.getElementById('visitorCount').textContent = Math.min(visitorData.length, 20);
         }
 
         // Update map markers
         function updateMap() {
-            markers.forEach(function(marker) {
-                map.removeLayer(marker);
-            });
+            // Clear existing markers
+            markersGroup.clearLayers();
             markers = [];
             
+            // Add markers for each visitor
             visitorData.forEach(function(visitor) {
                 if (visitor.lat && visitor.lon) {
                     var marker = L.circleMarker([visitor.lat, visitor.lon], {
-                        radius: 6,
+                        radius: 8,
                         fillColor: '#60a5fa',
                         color: '#fff',
                         weight: 2,
                         opacity: 1,
                         fillOpacity: 0.8
-                    }).addTo(map);
+                    }).addTo(markersGroup);
                     
                     marker.bindPopup(
-                        '<div style="color: #000">' +
-                        '<b>' + (visitor.city || 'Unknown') + '</b><br>' +
-                        visitor.country + '<br>' +
-                        '<small>IP: ' + visitor.ip + '</small><br>' +
-                        '<small>' + timeAgo(visitor.timestamp) + '</small><br>' +
-                        '<small>Provider: ' + visitor.provider + '</small>' +
+                        '<div style="color: #000; min-width: 200px;">' +
+                        '<b style="font-size: 16px;">' + getFlag(visitor.countryCode) + ' ' + (visitor.city || 'Unknown') + '</b><br>' +
+                        '<hr style="margin: 8px 0; border-color: #ddd;">' +
+                        '<div style="margin: 4px 0;"><b>Country:</b> ' + visitor.country + '</div>' +
+                        '<div style="margin: 4px 0;"><b>IP:</b> ' + visitor.ip + '</div>' +
+                        '<div style="margin: 4px 0;"><b>Time:</b> ' + timeAgo(visitor.timestamp) + '</div>' +
+                        '<div style="margin: 4px 0;"><b>Provider:</b> ' + visitor.provider + '</div>' +
                         '</div>'
                     );
                     
                     markers.push(marker);
                 }
             });
+
+            document.getElementById('markerCount').textContent = markers.length;
+
+            // Auto fit bounds if there are markers
+            if (markers.length > 0) {
+                setTimeout(function() {
+                    fitMapBounds();
+                }, 500);
+            }
         }
 
         // Update visitors list
@@ -439,7 +306,7 @@
             var listEl = document.getElementById('visitorsList');
             
             if (visitorData.length === 0) {
-                listEl.innerHTML = '<div class="text-center py-10 text-slate-400">No visitors yet. Refresh the page to track yourself!</div>';
+                listEl.innerHTML = '<div class="text-center py-10 text-slate-400">No visitors yet. Visit the homepage to track yourself!</div>';
                 return;
             }
             
@@ -467,6 +334,22 @@
             listEl.innerHTML = html;
         }
 
+        // Update last update time
+        function updateLastUpdate() {
+            var now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+        }
+
+        // Refresh data
+        function refreshData() {
+            updateStatus('Refreshing...', 'blue');
+            console.log('🔄 Refreshing data...');
+            
+            setTimeout(function() {
+                loadVisitors();
+            }, 500);
+        }
+
         // Clear all data
         function clearData() {
             if (confirm('Are you sure you want to clear all visitor data?')) {
@@ -475,26 +358,22 @@
                 updateStats();
                 updateMap();
                 updateVisitorsList();
-                alert('All data cleared! Refresh the page to track yourself again.');
+                updateStatus('Data cleared', 'red');
+                console.log('🗑️ All data cleared!');
             }
         }
 
         // Initialize everything
-        async function init() {
+        function init() {
+            console.log('🚀 Initializing Visitor Map Tracker...');
             initMap();
-            
-            // Load existing data first
             loadVisitors();
             
-            // Then track current visitor (akan minta izin GPS atau fallback ke IP)
-            await trackVisitor();
-            
-            // Reload data after tracking
-            loadVisitors();
-            
-            // Update time ago every 30 seconds
+            // Auto refresh every 30 seconds
             setInterval(function() {
-                updateVisitorsList();
+                if (document.visibilityState === 'visible') {
+                    refreshData();
+                }
             }, 30000);
         }
 
