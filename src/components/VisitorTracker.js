@@ -2,6 +2,9 @@ import { useEffect } from "react";
 
 export default function VisitorTracker() {
   useEffect(() => {
+    // Skip on server-side
+    if (typeof window === "undefined") return;
+
     console.log("🚀 VisitorTracker mounted");
     trackVisitor();
 
@@ -24,7 +27,9 @@ export default function VisitorTracker() {
   }, []);
 
   function getSessionId() {
-    // Use in-memory session ID (akan hilang saat refresh, tapi itu normal behavior)
+    if (typeof window === "undefined") return null;
+
+    // Use in-memory session ID
     if (!window.visitorSessionId) {
       window.visitorSessionId =
         "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
@@ -36,76 +41,60 @@ export default function VisitorTracker() {
   async function updateHeartbeat() {
     try {
       const sessionId = getSessionId();
+      if (!sessionId) return;
 
-      // Get existing visitor data
-      const result = await window.storage.get("visitors:" + sessionId);
+      // Get all visitors from localStorage
+      const stored = localStorage.getItem("visitors");
+      if (!stored) {
+        console.log("⚠️ No visitors data, re-tracking...");
+        trackVisitor();
+        return;
+      }
 
-      if (result) {
-        const visitor = JSON.parse(result.value);
-        visitor.lastSeen = new Date().toISOString();
-        visitor.isActive = true;
+      const visitors = JSON.parse(stored);
+      const visitorIndex = visitors.findIndex((v) => v.sessionId === sessionId);
 
-        await window.storage.set(
-          "visitors:" + sessionId,
-          JSON.stringify(visitor)
-        );
-        window.dispatchEvent(new Event("visitorUpdate"));
+      if (visitorIndex !== -1) {
+        // Update existing visitor's lastSeen
+        visitors[visitorIndex].lastSeen = new Date().toISOString();
+        visitors[visitorIndex].isActive = true;
+
+        localStorage.setItem("visitors", JSON.stringify(visitors));
+        window.dispatchEvent(new Event("storage"));
         console.log("💓 Heartbeat updated for session:", sessionId);
       } else {
         console.log("⚠️ Session not found, re-tracking...");
         trackVisitor();
       }
     } catch (error) {
-      console.log("⚠️ Heartbeat error (might be new session):", error.message);
+      console.log("⚠️ Heartbeat error:", error.message);
       trackVisitor();
     }
   }
 
-  async function reverseGeocode(lat, lon) {
-    try {
-      console.log("🌍 Reverse geocoding:", lat, lon);
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
-      );
-      const data = await response.json();
-
-      if (data.address) {
-        console.log("✅ Reverse geocode success:", data.address);
-        return {
-          city:
-            data.address.city ||
-            data.address.town ||
-            data.address.village ||
-            data.address.county,
-          country: data.address.country,
-          countryCode: data.address.country_code
-            ? data.address.country_code.toUpperCase()
-            : null,
-          region: data.address.state || data.address.region,
-        };
-      }
-    } catch (error) {
-      console.error("❌ Reverse geocode error:", error);
-    }
-    return null;
-  }
-
   async function trackVisitor() {
+    if (typeof window === "undefined") return;
+
     console.log("📍 Starting visitor tracking...");
     const sessionId = getSessionId();
+    if (!sessionId) return;
 
     // Check if already tracked recently
     try {
-      const result = await window.storage.get("visitors:" + sessionId);
-      if (result) {
-        const existing = JSON.parse(result.value);
-        const timeSince =
-          Date.now() -
-          new Date(existing.lastSeen || existing.timestamp).getTime();
-        if (timeSince < 5 * 60 * 1000) {
-          updateHeartbeat();
-          console.log("⚠️ Existing fresh session, heartbeat updated");
-          return;
+      const stored = localStorage.getItem("visitors");
+      if (stored) {
+        const visitors = JSON.parse(stored);
+        const existing = visitors.find((v) => v.sessionId === sessionId);
+
+        if (existing) {
+          const timeSince =
+            Date.now() -
+            new Date(existing.lastSeen || existing.timestamp).getTime();
+          if (timeSince < 5 * 60 * 1000) {
+            updateHeartbeat();
+            console.log("⚠️ Existing fresh session, heartbeat updated");
+            return;
+          }
         }
       }
     } catch (error) {
@@ -188,14 +177,23 @@ export default function VisitorTracker() {
 
   async function saveVisitor(visitor) {
     try {
-      // Save visitor with their session ID as key
-      await window.storage.set(
-        "visitors:" + visitor.sessionId,
-        JSON.stringify(visitor)
-      );
+      // Get existing visitors from localStorage
+      const stored = localStorage.getItem("visitors");
+      const visitors = stored ? JSON.parse(stored) : [];
 
-      // Trigger update event
-      window.dispatchEvent(new Event("visitorUpdate"));
+      // Add new visitor at the beginning
+      visitors.unshift(visitor);
+
+      // Keep only last 100 visitors
+      if (visitors.length > 100) {
+        visitors.splice(100);
+      }
+
+      // Save back to localStorage
+      localStorage.setItem("visitors", JSON.stringify(visitors));
+
+      // Trigger storage event for other tabs/components
+      window.dispatchEvent(new Event("storage"));
 
       console.log("✅ Visitor saved:", visitor);
     } catch (error) {
