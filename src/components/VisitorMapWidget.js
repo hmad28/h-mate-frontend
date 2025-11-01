@@ -1,11 +1,4 @@
 import { useState, useEffect } from "react";
-import {
-  RefreshCw,
-  Trash2,
-  MapPin,
-  AlertCircle,
-  CheckCircle,
-} from "lucide-react";
 
 export default function VisitorMapWidget() {
   const [visitors, setVisitors] = useState([]);
@@ -17,6 +10,7 @@ export default function VisitorMapWidget() {
   });
   const [toast, setToast] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -24,7 +18,6 @@ export default function VisitorMapWidget() {
   };
 
   useEffect(() => {
-    // Skip on server-side
     if (typeof window === "undefined") return;
 
     console.log("🚀 VisitorMapWidget mounted");
@@ -35,28 +28,19 @@ export default function VisitorMapWidget() {
       loadVisitors();
     }, 5000);
 
-    // Listen for storage changes from other tabs/components
-    const handleStorageChange = () => {
-      console.log("📡 Storage event detected");
-      loadVisitors();
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
     return () => {
       clearInterval(interval);
-      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
-  const loadVisitors = () => {
+  const loadVisitors = async () => {
     try {
-      const stored = localStorage.getItem("visitors");
+      setIsLoading(true);
+      const result = await window.storage.get("visitors", true);
 
-      if (stored) {
-        const visitorsData = JSON.parse(stored);
+      if (result && result.value) {
+        const visitorsData = JSON.parse(result.value);
 
-        // Sort by timestamp (newest first)
         visitorsData.sort(
           (a, b) =>
             new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
@@ -72,7 +56,10 @@ export default function VisitorMapWidget() {
       }
     } catch (error) {
       console.error("❌ Error loading visitors:", error);
-      showToast("Error loading data", "error");
+      setVisitors([]);
+      calculateStats([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,51 +114,51 @@ export default function VisitorMapWidget() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const handleClear = () => {
+  const handleClear = async () => {
     if (!window.confirm("Are you sure you want to clear all visitor data?"))
       return;
 
     try {
       console.log("🗑️ Clear data triggered");
-      localStorage.removeItem("visitors");
+      await window.storage.delete("visitors", true);
 
       setVisitors([]);
       setStats({ total: 0, countries: 0, today: 0, online: 0 });
       showToast("All data cleared!", "success");
-
-      // Notify other tabs/components
-      window.dispatchEvent(new Event("storage"));
     } catch (error) {
       console.error("❌ Error clearing data:", error);
       showToast("Error clearing data", "error");
     }
   };
 
-  const handleCleanup = () => {
+  const handleCleanup = async () => {
     try {
-      const oneHourAgo = Date.now() - 60 * 60 * 1000;
-      const stored = localStorage.getItem("visitors");
+      const result = await window.storage.get("visitors", true);
 
-      if (!stored) {
+      if (!result || !result.value) {
         showToast("No data to cleanup", "error");
         return;
       }
 
-      const allVisitors = JSON.parse(stored);
+      const allVisitors = JSON.parse(result.value);
       const beforeCount = allVisitors.length;
 
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
       const activeVisitors = allVisitors.filter((v) => {
         const lastSeenTime = new Date(v.lastSeen || v.timestamp).getTime();
         return lastSeenTime > oneHourAgo;
       });
 
-      localStorage.setItem("visitors", JSON.stringify(activeVisitors));
+      await window.storage.set(
+        "visitors",
+        JSON.stringify(activeVisitors),
+        true
+      );
 
       const removedCount = beforeCount - activeVisitors.length;
       showToast(`Removed ${removedCount} inactive visitors`, "success");
 
       loadVisitors();
-      window.dispatchEvent(new Event("storage"));
     } catch (error) {
       console.error("❌ Error cleaning up:", error);
       showToast("Error cleaning up data", "error");
@@ -181,7 +168,7 @@ export default function VisitorMapWidget() {
   return (
     <div className="relative">
       {toast && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-top">
+        <div className="fixed top-4 right-4 z-50">
           <div
             className={`flex items-center gap-3 px-6 py-3 rounded-xl shadow-2xl border ${
               toast.type === "success"
@@ -189,11 +176,21 @@ export default function VisitorMapWidget() {
                 : "bg-red-500/20 border-red-500/30 text-red-400"
             }`}
           >
-            {toast.type === "success" ? (
-              <CheckCircle className="w-5 h-5" />
-            ) : (
-              <AlertCircle className="w-5 h-5" />
-            )}
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              {toast.type === "success" ? (
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
+              ) : (
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              )}
+            </svg>
             <span className="font-medium">{toast.message}</span>
           </div>
         </div>
@@ -204,7 +201,25 @@ export default function VisitorMapWidget() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-white" />
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -227,9 +242,19 @@ export default function VisitorMapWidget() {
                 className="p-2 bg-blue-500/20 border border-blue-500/30 text-blue-400 rounded-lg hover:bg-blue-500/30 transition disabled:opacity-50"
                 title="Refresh data"
               >
-                <RefreshCw
+                <svg
                   className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-                />
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
               </button>
               <button
                 onClick={handleCleanup}
@@ -255,7 +280,19 @@ export default function VisitorMapWidget() {
                 className="p-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition"
                 title="Clear all data"
               >
-                <Trash2 className="w-4 h-4" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
               </button>
             </div>
           </div>
@@ -301,10 +338,33 @@ export default function VisitorMapWidget() {
             </span>
           </div>
 
-          {visitors.length === 0 ? (
+          {isLoading ? (
+            <div className="text-center py-20">
+              <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-slate-400">Loading visitors...</p>
+            </div>
+          ) : visitors.length === 0 ? (
             <div className="text-center py-20">
               <div className="w-16 h-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-8 h-8 text-slate-600" />
+                <svg
+                  className="w-8 h-8 text-slate-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
               </div>
               <p className="text-slate-400 mb-2">No visitors tracked yet</p>
               <p className="text-sm text-slate-500">
@@ -357,7 +417,7 @@ export default function VisitorMapWidget() {
         <div className="px-6 py-3 bg-slate-900/40 border-t border-slate-800/50">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Last refresh: {new Date().toLocaleTimeString()}</span>
-            <span>Storage: localStorage</span>
+            <span>Storage: window.storage (shared)</span>
           </div>
         </div>
       </div>

@@ -2,13 +2,12 @@ import { useEffect } from "react";
 
 export default function VisitorTracker() {
   useEffect(() => {
-    // Skip on server-side
     if (typeof window === "undefined") return;
 
     console.log("🚀 VisitorTracker mounted");
     trackVisitor();
 
-    // Heartbeat every 30 seconds
+    // Heartbeat setiap 30 detik
     const heartbeatInterval = setInterval(() => {
       updateHeartbeat();
     }, 30000);
@@ -29,7 +28,6 @@ export default function VisitorTracker() {
   function getSessionId() {
     if (typeof window === "undefined") return null;
 
-    // Use in-memory session ID
     if (!window.visitorSessionId) {
       window.visitorSessionId =
         "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
@@ -43,24 +41,23 @@ export default function VisitorTracker() {
       const sessionId = getSessionId();
       if (!sessionId) return;
 
-      // Get all visitors from localStorage
-      const stored = localStorage.getItem("visitors");
-      if (!stored) {
+      // Ambil data dari window.storage
+      const result = await window.storage.get("visitors", true);
+
+      if (!result || !result.value) {
         console.log("⚠️ No visitors data, re-tracking...");
         trackVisitor();
         return;
       }
 
-      const visitors = JSON.parse(stored);
+      const visitors = JSON.parse(result.value);
       const visitorIndex = visitors.findIndex((v) => v.sessionId === sessionId);
 
       if (visitorIndex !== -1) {
-        // Update existing visitor's lastSeen
         visitors[visitorIndex].lastSeen = new Date().toISOString();
         visitors[visitorIndex].isActive = true;
 
-        localStorage.setItem("visitors", JSON.stringify(visitors));
-        window.dispatchEvent(new Event("storage"));
+        await window.storage.set("visitors", JSON.stringify(visitors), true);
         console.log("💓 Heartbeat updated for session:", sessionId);
       } else {
         console.log("⚠️ Session not found, re-tracking...");
@@ -79,11 +76,11 @@ export default function VisitorTracker() {
     const sessionId = getSessionId();
     if (!sessionId) return;
 
-    // Check if already tracked recently
+    // Cek apakah sudah ditrack
     try {
-      const stored = localStorage.getItem("visitors");
-      if (stored) {
-        const visitors = JSON.parse(stored);
+      const result = await window.storage.get("visitors", true);
+      if (result && result.value) {
+        const visitors = JSON.parse(result.value);
         const existing = visitors.find((v) => v.sessionId === sessionId);
 
         if (existing) {
@@ -101,7 +98,7 @@ export default function VisitorTracker() {
       console.log("🔄 No existing session found, tracking new visitor");
     }
 
-    // Try IP geolocation providers
+    // IP geolocation providers
     const providers = [
       {
         name: "ipapi.co",
@@ -177,11 +174,18 @@ export default function VisitorTracker() {
 
   async function saveVisitor(visitor) {
     try {
-      // Get existing visitors from localStorage
-      const stored = localStorage.getItem("visitors");
-      const visitors = stored ? JSON.parse(stored) : [];
+      // Ambil existing visitors
+      let visitors = [];
+      try {
+        const result = await window.storage.get("visitors", true);
+        if (result && result.value) {
+          visitors = JSON.parse(result.value);
+        }
+      } catch (error) {
+        console.log("Creating new visitors array");
+      }
 
-      // Add new visitor at the beginning
+      // Tambah visitor baru di awal
       visitors.unshift(visitor);
 
       // Keep only last 100 visitors
@@ -189,11 +193,8 @@ export default function VisitorTracker() {
         visitors.splice(100);
       }
 
-      // Save back to localStorage
-      localStorage.setItem("visitors", JSON.stringify(visitors));
-
-      // Trigger storage event for other tabs/components
-      window.dispatchEvent(new Event("storage"));
+      // Save ke window.storage (shared=true agar bisa diakses semua user)
+      await window.storage.set("visitors", JSON.stringify(visitors), true);
 
       console.log("✅ Visitor saved:", visitor);
     } catch (error) {
