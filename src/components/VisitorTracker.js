@@ -28,12 +28,17 @@ export default function VisitorTracker() {
   function getSessionId() {
     if (typeof window === "undefined") return null;
 
-    if (!window.visitorSessionId) {
-      window.visitorSessionId =
+    // Cek sessionStorage untuk session ID saat ini
+    let sessionId = sessionStorage.getItem("visitorSessionId");
+
+    if (!sessionId) {
+      sessionId =
         "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-      console.log("🆔 New session ID:", window.visitorSessionId);
+      sessionStorage.setItem("visitorSessionId", sessionId);
+      console.log("🆔 New session ID:", sessionId);
     }
-    return window.visitorSessionId;
+
+    return sessionId;
   }
 
   async function updateHeartbeat() {
@@ -41,23 +46,27 @@ export default function VisitorTracker() {
       const sessionId = getSessionId();
       if (!sessionId) return;
 
-      // Ambil data dari window.storage
-      const result = await window.storage.get("visitors", true);
+      // Ambil data dari localStorage
+      const stored = localStorage.getItem("visitors");
 
-      if (!result || !result.value) {
+      if (!stored) {
         console.log("⚠️ No visitors data, re-tracking...");
         trackVisitor();
         return;
       }
 
-      const visitors = JSON.parse(result.value);
+      const visitors = JSON.parse(stored);
       const visitorIndex = visitors.findIndex((v) => v.sessionId === sessionId);
 
       if (visitorIndex !== -1) {
         visitors[visitorIndex].lastSeen = new Date().toISOString();
         visitors[visitorIndex].isActive = true;
 
-        await window.storage.set("visitors", JSON.stringify(visitors), true);
+        localStorage.setItem("visitors", JSON.stringify(visitors));
+
+        // Trigger custom event untuk update UI
+        window.dispatchEvent(new CustomEvent("visitorUpdate"));
+
         console.log("💓 Heartbeat updated for session:", sessionId);
       } else {
         console.log("⚠️ Session not found, re-tracking...");
@@ -78,9 +87,9 @@ export default function VisitorTracker() {
 
     // Cek apakah sudah ditrack
     try {
-      const result = await window.storage.get("visitors", true);
-      if (result && result.value) {
-        const visitors = JSON.parse(result.value);
+      const stored = localStorage.getItem("visitors");
+      if (stored) {
+        const visitors = JSON.parse(stored);
         const existing = visitors.find((v) => v.sessionId === sessionId);
 
         if (existing) {
@@ -177,9 +186,9 @@ export default function VisitorTracker() {
       // Ambil existing visitors
       let visitors = [];
       try {
-        const result = await window.storage.get("visitors", true);
-        if (result && result.value) {
-          visitors = JSON.parse(result.value);
+        const stored = localStorage.getItem("visitors");
+        if (stored) {
+          visitors = JSON.parse(stored);
         }
       } catch (error) {
         console.log("Creating new visitors array");
@@ -193,8 +202,11 @@ export default function VisitorTracker() {
         visitors.splice(100);
       }
 
-      // Save ke window.storage (shared=true agar bisa diakses semua user)
-      await window.storage.set("visitors", JSON.stringify(visitors), true);
+      // Save ke localStorage
+      localStorage.setItem("visitors", JSON.stringify(visitors));
+
+      // Trigger custom event untuk update UI
+      window.dispatchEvent(new CustomEvent("visitorUpdate"));
 
       console.log("✅ Visitor saved:", visitor);
     } catch (error) {

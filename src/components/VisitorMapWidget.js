@@ -28,18 +28,27 @@ export default function VisitorMapWidget() {
       loadVisitors();
     }, 5000);
 
+    // Listen for visitor updates
+    const handleVisitorUpdate = () => {
+      console.log("📡 Visitor update detected");
+      loadVisitors();
+    };
+
+    window.addEventListener("visitorUpdate", handleVisitorUpdate);
+
     return () => {
       clearInterval(interval);
+      window.removeEventListener("visitorUpdate", handleVisitorUpdate);
     };
   }, []);
 
-  const loadVisitors = async () => {
+  const loadVisitors = () => {
     try {
       setIsLoading(true);
-      const result = await window.storage.get("visitors", true);
+      const stored = localStorage.getItem("visitors");
 
-      if (result && result.value) {
-        const visitorsData = JSON.parse(result.value);
+      if (stored) {
+        const visitorsData = JSON.parse(stored);
 
         visitorsData.sort(
           (a, b) =>
@@ -114,33 +123,36 @@ export default function VisitorMapWidget() {
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const handleClear = async () => {
+  const handleClear = () => {
     if (!window.confirm("Are you sure you want to clear all visitor data?"))
       return;
 
     try {
       console.log("🗑️ Clear data triggered");
-      await window.storage.delete("visitors", true);
+      localStorage.removeItem("visitors");
 
       setVisitors([]);
       setStats({ total: 0, countries: 0, today: 0, online: 0 });
       showToast("All data cleared!", "success");
+
+      // Notify other components
+      window.dispatchEvent(new CustomEvent("visitorUpdate"));
     } catch (error) {
       console.error("❌ Error clearing data:", error);
       showToast("Error clearing data", "error");
     }
   };
 
-  const handleCleanup = async () => {
+  const handleCleanup = () => {
     try {
-      const result = await window.storage.get("visitors", true);
+      const stored = localStorage.getItem("visitors");
 
-      if (!result || !result.value) {
+      if (!stored) {
         showToast("No data to cleanup", "error");
         return;
       }
 
-      const allVisitors = JSON.parse(result.value);
+      const allVisitors = JSON.parse(stored);
       const beforeCount = allVisitors.length;
 
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
@@ -149,16 +161,13 @@ export default function VisitorMapWidget() {
         return lastSeenTime > oneHourAgo;
       });
 
-      await window.storage.set(
-        "visitors",
-        JSON.stringify(activeVisitors),
-        true
-      );
+      localStorage.setItem("visitors", JSON.stringify(activeVisitors));
 
       const removedCount = beforeCount - activeVisitors.length;
       showToast(`Removed ${removedCount} inactive visitors`, "success");
 
       loadVisitors();
+      window.dispatchEvent(new CustomEvent("visitorUpdate"));
     } catch (error) {
       console.error("❌ Error cleaning up:", error);
       showToast("Error cleaning up data", "error");
@@ -198,7 +207,7 @@ export default function VisitorMapWidget() {
 
       <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 backdrop-blur-xl border border-cyan-500/30 rounded-3xl overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-slate-700/50">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center">
                 <svg
@@ -417,7 +426,7 @@ export default function VisitorMapWidget() {
         <div className="px-6 py-3 bg-slate-900/40 border-t border-slate-800/50">
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Last refresh: {new Date().toLocaleTimeString()}</span>
-            <span>Storage: window.storage (shared)</span>
+            <span>Storage: localStorage (browser)</span>
           </div>
         </div>
       </div>
