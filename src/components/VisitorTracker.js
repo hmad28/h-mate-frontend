@@ -4,7 +4,7 @@ export default function VisitorTracker() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    console.log("🚀 VisitorTracker mounted");
+    console.log("🚀 VisitorTracker mounted (API version)");
     trackVisitor();
 
     // Heartbeat setiap 30 detik
@@ -28,7 +28,6 @@ export default function VisitorTracker() {
   function getSessionId() {
     if (typeof window === "undefined") return null;
 
-    // Cek sessionStorage untuk session ID saat ini
     let sessionId = sessionStorage.getItem("visitorSessionId");
 
     if (!sessionId) {
@@ -46,35 +45,35 @@ export default function VisitorTracker() {
       const sessionId = getSessionId();
       if (!sessionId) return;
 
-      // Ambil data dari localStorage
-      const stored = localStorage.getItem("visitors");
+      // Get current visitor data from API
+      const response = await fetch("/api/visitors");
+      const result = await response.json();
 
-      if (!stored) {
-        console.log("⚠️ No visitors data, re-tracking...");
-        trackVisitor();
-        return;
-      }
+      if (result.success && result.data) {
+        const existingVisitor = result.data.find(
+          (v) => v.sessionId === sessionId
+        );
 
-      const visitors = JSON.parse(stored);
-      const visitorIndex = visitors.findIndex((v) => v.sessionId === sessionId);
+        if (existingVisitor) {
+          // Update heartbeat
+          await fetch("/api/visitors", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...existingVisitor,
+              lastSeen: new Date().toISOString(),
+              isActive: true,
+            }),
+          });
 
-      if (visitorIndex !== -1) {
-        visitors[visitorIndex].lastSeen = new Date().toISOString();
-        visitors[visitorIndex].isActive = true;
-
-        localStorage.setItem("visitors", JSON.stringify(visitors));
-
-        // Trigger custom event untuk update UI
-        window.dispatchEvent(new CustomEvent("visitorUpdate"));
-
-        console.log("💓 Heartbeat updated for session:", sessionId);
-      } else {
-        console.log("⚠️ Session not found, re-tracking...");
-        trackVisitor();
+          console.log("💓 Heartbeat updated for session:", sessionId);
+        } else {
+          console.log("⚠️ Session not found, re-tracking...");
+          trackVisitor();
+        }
       }
     } catch (error) {
       console.log("⚠️ Heartbeat error:", error.message);
-      trackVisitor();
     }
   }
 
@@ -85,12 +84,13 @@ export default function VisitorTracker() {
     const sessionId = getSessionId();
     if (!sessionId) return;
 
-    // Cek apakah sudah ditrack
+    // Check if already tracked
     try {
-      const stored = localStorage.getItem("visitors");
-      if (stored) {
-        const visitors = JSON.parse(stored);
-        const existing = visitors.find((v) => v.sessionId === sessionId);
+      const response = await fetch("/api/visitors");
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        const existing = result.data.find((v) => v.sessionId === sessionId);
 
         if (existing) {
           const timeSince =
@@ -104,7 +104,7 @@ export default function VisitorTracker() {
         }
       }
     } catch (error) {
-      console.log("🔄 No existing session found, tracking new visitor");
+      console.log("🔄 Checking for existing session...");
     }
 
     // IP geolocation providers
@@ -183,32 +183,21 @@ export default function VisitorTracker() {
 
   async function saveVisitor(visitor) {
     try {
-      // Ambil existing visitors
-      let visitors = [];
-      try {
-        const stored = localStorage.getItem("visitors");
-        if (stored) {
-          visitors = JSON.parse(stored);
-        }
-      } catch (error) {
-        console.log("Creating new visitors array");
+      const response = await fetch("/api/visitors", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(visitor),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("✅ Visitor saved to API:", visitor);
+      } else {
+        console.error("❌ Failed to save visitor:", result.error);
       }
-
-      // Tambah visitor baru di awal
-      visitors.unshift(visitor);
-
-      // Keep only last 100 visitors
-      if (visitors.length > 100) {
-        visitors.splice(100);
-      }
-
-      // Save ke localStorage
-      localStorage.setItem("visitors", JSON.stringify(visitors));
-
-      // Trigger custom event untuk update UI
-      window.dispatchEvent(new CustomEvent("visitorUpdate"));
-
-      console.log("✅ Visitor saved:", visitor);
     } catch (error) {
       console.error("❌ Error saving visitor:", error);
     }
